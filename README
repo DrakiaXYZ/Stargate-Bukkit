@@ -1,0 +1,57 @@
+Changes in 0.03
+ - Changed package to net.TheDgtl.*
+ - Everything now uses Blox instead of Block objects
+ - Started on vehicle code, but it's still buggy
+
+Installation:
+ - Move Stargate.jar to your /plugins/ location
+ - Setup Permissions
+
+Permissions:
+ - stargate.use
+   - Allow this player/group to use stargates
+ - stargate.create
+   - Allow this player/group to create new stargates
+ - stargate.destroy
+   - Allow this player/group to destroy existing stargates
+ - stargate.hidden
+   - Allow this player/group to see all hidden stargates
+
+Building a gate:
+    OO 
+   O  O - These are Obsidian blocks. You need 10.
+   O  O - Place a sign on either of these two blocks of Obsidian.
+   O  O
+    OO
+ - Type a name on the first line on the sign, it must be less than 12 characters long.
+
+Sign Layout:
+ - Line 1: Gate Name (Max 12 characters)
+ - Line 2: Destination Name (Max 12 characters, used for fixed-gates only)
+ - Line 3: Network name (Max 12 characters)
+ - Line 4: Options ('A' for always-on fixed gate, 'H' for hidden networked gate)
+
+Using a gate:
+ - Right click the sign to choose a destination.
+ - Right click the button to open up a portal.
+ - Step through.
+
+Fixed gates:
+ - Fixed gates are like normal gates, but only go to one destination.
+ - If you create two fixed gates that point to eachother, you will have a two-way portal.
+ - You can link fixed gates to normal gates, or to other fixed gates which can link to another fixed gate etc. You can't link a normal gate to a fixed gate though.
+ - Creating a fixed gate is the same as a normal gate, but you must specify the destination on the second line.
+ - Set the 4th line to "A" to enable an always-open fixed gate.
+
+Gate networks:
+ - Gates are all part of a network, by default this is "central".
+ - You can specify (and create) your own network on the third line of the sign when making a new gate.
+ - Gates on one network will not see gates on the second network, and vice versa.
+ 
+Hidden Gates:
+ - Hidden gates are like normal gates, but only show on the destination list of other gates under certain conditions.
+ - They are visible to anyone with the stargate.hidden permission, or to the creator of the hidden gate.
+ - Set the 4th line to "H" to make it a hidden gate.
+ 
+Configuration:
+ - You can edit all values in stargate.txt to your choosing, mostly the RP text on doing actions involving a gate.
