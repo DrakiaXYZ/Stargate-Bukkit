@@ -2,6 +2,10 @@ Changes in 0.03
  - Changed package to net.TheDgtl.*
  - Everything now uses Blox instead of Block objects
  - Started on vehicle code, but it's still buggy
+ 
+Known Issues:
+ - Vehicle implementation is nowhere near done.
+ - Signs aren't always updating, I don't know what's causing this, I think it's a Bukkit thing.
 
 Installation:
  - Move Stargate.jar to your /plugins/ location
@@ -9,13 +13,13 @@ Installation:
 
 Permissions:
  - stargate.use
-   - Allow this player/group to use stargates
+   - Allow this player/group to use stargates.
  - stargate.create
-   - Allow this player/group to create new stargates
+   - Allow this player/group to create new stargates.
  - stargate.destroy
-   - Allow this player/group to destroy existing stargates
+   - Allow this player/group to destroy existing stargates.
  - stargate.hidden
-   - Allow this player/group to see all hidden stargates
+   - Allow this player/group to see all hidden stargates.
 
 Building a gate:
     OO 
@@ -24,6 +28,10 @@ Building a gate:
    O  O
     OO
  - Type a name on the first line on the sign, it must be less than 12 characters long.
+ - Type a set destination name on the second line if desired.
+ - Type a network name on the third line if desired.
+ - Type any options on the 4th line if desired.
+ - Right click the sign block to initialize the gate as a Stargate.
 
 Sign Layout:
  - Line 1: Gate Name (Max 12 characters)
