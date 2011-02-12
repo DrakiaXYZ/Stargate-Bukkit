@@ -50,7 +50,8 @@ public class Stargate extends JavaPlugin implements Runnable {
     public static Logger log;
     private Configuration config;
     private PluginManager pm;
-    private static String portalFile = "stargates/locations.dat";
+    private static String portalFile;
+    private static String gateFolder;
     private static String teleMsg = "Teleported";
     private static String regMsg = "Gate Created";
     private static String dmgMsg = "Gate Destroyed";
@@ -69,10 +70,9 @@ public class Stargate extends JavaPlugin implements Runnable {
     	super(pluginLoader, instance, desc, folder, plugin, cLoader);
     	log = Logger.getLogger("Minecraft");
     	
-    	// Migrate old settings if applicable.
-        File oldFile = new File("stargates.txt");
-        if (oldFile.exists())
-            oldFile.renameTo(new File(portalFile));
+    	// Set portalFile and gateFolder to the plugin folder as defaults.
+    	portalFile = folder + File.separator + "stargate.db";
+    	gateFolder = folder + File.separator + "gates" + File.separator;
     }
 	
     public void onDisable() {
@@ -92,6 +92,8 @@ public class Stargate extends JavaPlugin implements Runnable {
     	pm.registerEvent(Event.Type.BLOCK_PHYSICS, blockListener, Priority.Normal, this);
 		
     	this.reloadConfig();
+    	this.migrate();
+    	this.reloadGates();
     	this.setupPermissions();
     	
     	pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
@@ -100,6 +102,7 @@ public class Stargate extends JavaPlugin implements Runnable {
     	pm.registerEvent(Event.Type.BLOCK_PLACED, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.BLOCK_DAMAGED, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
+    	//pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
     	
         setInterval(160); // 8 seconds.
 
@@ -109,18 +112,53 @@ public class Stargate extends JavaPlugin implements Runnable {
     public void reloadConfig() {
     	config.load();
         portalFile = config.getString("portal-save-location", portalFile);
+        gateFolder = config.getString("gate-folder", gateFolder);
         teleMsg = config.getString("teleport-message", teleMsg);
         regMsg = config.getString("portal-create-message", regMsg);
         dmgMsg = config.getString("portal-destroy-message", dmgMsg);
         denyMsg = config.getString("not-owner-message", denyMsg);
         invMsg = config.getString("not-selected-message", invMsg);
         blockMsg = config.getString("other-side-blocked-message", blockMsg);
-
         defNetwork = config.getString("default-gate-network", defNetwork).trim();
+        saveConfig();
+    }
 
+	public void saveConfig() {
+        config.setProperty("portal-save-location", portalFile);
+        config.setProperty("gate-folder", gateFolder);
+        config.setProperty("teleport-message", teleMsg);
+        config.setProperty("portal-create-message", regMsg);
+        config.setProperty("portal-destroy-message", dmgMsg);
+        config.setProperty("not-owner-message", denyMsg);
+        config.setProperty("not-selected-message", invMsg);
+        config.setProperty("other-side-blocked-message", blockMsg);
+        config.setProperty("default-gate-network", defNetwork);
+        config.save();
+	}
+
+	public void reloadGates() {
         Gate.loadGates();
-        //Portal.loadAllGates(this.getServer().getWorlds().get(0));
-        Portal.loadAllGates(this.getServer().getWorlds()[0]);
+        Portal.loadAllGates(this.getServer().getWorlds().get(0));
+	}
+	
+	private void migrate() {
+    	// Migrate old stargates if applicable.
+        File oldFile = new File("stargates/locations.dat");
+        if (oldFile.exists()) {
+        	Stargate.log.info("[Stargate] Migrated existing locations.dat");
+            oldFile.renameTo(new File(portalFile));
+        }
+        
+        // Migrate old gates if applicaple
+        File oldDir = new File("stargates");
+        if (oldDir.exists()) {
+        	File newDir = new File(gateFolder);
+        	if (!newDir.exists()) newDir.mkdirs();
+            for (File file : oldDir.listFiles(new Gate.StargateFilenameFilter())) {
+            	Stargate.log.info("[Stargate] Migrating existing gate " + file.getName());
+            	file.renameTo(new File(gateFolder + file.getName()));
+            }
+        }
     }
 
     public synchronized void doWork() {

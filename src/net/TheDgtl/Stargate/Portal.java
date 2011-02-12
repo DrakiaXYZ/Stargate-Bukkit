@@ -516,7 +516,7 @@ public class Portal {
             lookupBlocks.remove(block);
         }
         // Include the sign and button
-        lookupBlocks.remove(id.getBlock());
+        lookupBlocks.remove(new Blox(id.getBlock()));
         if (button != null) {
             lookupBlocks.remove(button);
         }

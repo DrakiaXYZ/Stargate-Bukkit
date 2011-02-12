@@ -1,26 +1,31 @@
-Changes in 0.03
- - Changed package to net.TheDgtl.*
- - Everything now uses Blox instead of Block objects
- - Started on vehicle code, but it's still buggy
- 
-Known Issues:
+=============
+ Description
+=============
+This is a port of the Stargate plugin from hMod.
+Create gates that allow for instant-teleportation between large distances. Gates can be always-open, or triggered, they can be hidden, or accessible to everybody, they can share a network, or they can be split into clusters.
+This port will import your existing locations.dat file from the hMod Stargate plugin, as well as any custom .gate files you had!
+All of the iConomy code was removed.
+
+This version of Stargate is still heavily under development. There are going to be issues for a while yet.
+
+=============
+Known Issues
+=============
  - Vehicle implementation is nowhere near done.
  - Signs aren't always updating, I don't know what's causing this, I think it's a Bukkit thing.
+ - You need to right-click the sign to initialize the gate, waiting on SIGN_CHANGE hook update.
+ 
+=============
+ Permissions
+=============
+ - stargate.use - Allow this player/group to use stargates.
+ - stargate.create - Allow this player/group to create new stargates.
+ - stargate.destroy - Allow this player/group to destroy existing stargates.
+ - stargate.hidden - Allow this player/group to see all hidden stargates.
 
-Installation:
- - Move Stargate.jar to your /plugins/ location
- - Setup Permissions
-
-Permissions:
- - stargate.use
-   - Allow this player/group to use stargates.
- - stargate.create
-   - Allow this player/group to create new stargates.
- - stargate.destroy
-   - Allow this player/group to destroy existing stargates.
- - stargate.hidden
-   - Allow this player/group to see all hidden stargates.
-
+=============
+Instructions
+=============
 Building a gate:
     OO 
    O  O - These are Obsidian blocks. You need 10.
@@ -31,7 +36,7 @@ Building a gate:
  - Type a set destination name on the second line if desired.
  - Type a network name on the third line if desired.
  - Type any options on the 4th line if desired.
- - Right click the sign block to initialize the gate as a Stargate.
+ - Right click the sign block to initialize the gate as a Stargate. (Bug Alert: Sign may not update right away)
 
 Sign Layout:
  - Line 1: Gate Name (Max 12 characters)
@@ -45,11 +50,10 @@ Using a gate:
  - Step through.
 
 Fixed gates:
- - Fixed gates are like normal gates, but only go to one destination.
- - If you create two fixed gates that point to eachother, you will have a two-way portal.
- - You can link fixed gates to normal gates, or to other fixed gates which can link to another fixed gate etc. You can't link a normal gate to a fixed gate though.
- - Creating a fixed gate is the same as a normal gate, but you must specify the destination on the second line.
- - Set the 4th line to "A" to enable an always-open fixed gate.
+ - Fixed gates go to only one set destination.
+ - Fixed gates can be linked to other fixed gates, or normal gates. A normal gate cannot open a portal to a fixed gate however.
+ - To create a fixed gate, specify a destination on the second line of the stargate sign.
+ - Set the 4th line of the stargate sign to "A" to enable an always-open fixed gate.
 
 Gate networks:
  - Gates are all part of a network, by default this is "central".
@@ -58,8 +62,25 @@ Gate networks:
  
 Hidden Gates:
  - Hidden gates are like normal gates, but only show on the destination list of other gates under certain conditions.
- - They are visible to anyone with the stargate.hidden permission, or to the creator of the hidden gate.
- - Set the 4th line to "H" to make it a hidden gate.
+ - A hidden gate is only visible to the creator of the gate, or somebody with the stargate.hidden permission.
+ - Set the 4th line of the stargate sign to "H" to make it a hidden gate.
  
-Configuration:
- - You can edit all values in stargate.txt to your choosing, mostly the RP text on doing actions involving a gate.
+==============
+Configuration
+==============
+ - To change the text shown during events edit stargates.txt
+ 
+=============
+  Changes
+=============
+[Version 0.05]
+ - Moved Stargate files into the plugins/Stargate/ folder
+ - Added migration code so old gates/portals are ported to new folder structure
+ - Create default config.yml if it doesn't exist
+ - Fixed removing a gate, it is now completely removed
+[Version 0.04]
+ - Updated to multi-world Bukkit
+[Version 0.03]
+ - Changed package to net.TheDgtl.*
+ - Everything now uses Blox instead of Block objects
+ - Started on vehicle code, but it's still buggy
