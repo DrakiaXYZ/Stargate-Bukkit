@@ -137,7 +137,7 @@ public class Stargate extends JavaPlugin implements Runnable {
 	}
 
 	public void reloadGates() {
-        Gate.loadGates();
+		Gate.loadGates(gateFolder);
         Portal.loadAllGates(this.getServer().getWorlds().get(0));
 	}
 	

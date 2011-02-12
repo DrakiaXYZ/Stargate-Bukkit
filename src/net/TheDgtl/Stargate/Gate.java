@@ -330,8 +330,8 @@ public class Gate {
         return def;
     }
 
-    public static void loadGates() {
-        File dir = new File("stargates");
+    public static void loadGates(String gateFolder) {
+        File dir = new File(gateFolder);
         File[] files;
 
         if (dir.exists()) {
