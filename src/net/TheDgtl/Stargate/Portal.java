@@ -311,7 +311,8 @@ public class Portal {
     }
 
     public boolean isVerified() {
-        verified = verified || getBlockAt(1, 0).getBlock().getTypeId() == gate.getControlBlock();
+        for (RelativeBlockVector control : gate.getControls())
+        	verified = verified || getBlockAt(control).getBlock().getTypeId() == gate.getControlBlock();
         return verified;
     }
 

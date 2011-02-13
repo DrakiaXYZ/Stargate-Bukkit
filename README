@@ -79,6 +79,8 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.09]
+ - Gates can now be any shape 
 [Version 0.08]
  - Gates can now consist of any material.
  - You can left or right click the button to open a gate
