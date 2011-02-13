@@ -20,6 +20,7 @@ import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRightClickEvent;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.vehicle.VehicleListener;
@@ -102,14 +103,14 @@ public class Stargate extends JavaPlugin implements Runnable {
     	pm.registerEvent(Event.Type.BLOCK_PLACED, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.BLOCK_DAMAGED, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
-    	//pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
+    	pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
     	
         setInterval(160); // 8 seconds.
 
 		clock.start();
     }
 
-    public void reloadConfig() {
+	public void reloadConfig() {
     	config.load();
         portalFile = config.getString("portal-save-location", portalFile);
         gateFolder = config.getString("gate-folder", gateFolder);
@@ -122,7 +123,7 @@ public class Stargate extends JavaPlugin implements Runnable {
         defNetwork = config.getString("default-gate-network", defNetwork).trim();
         saveConfig();
     }
-
+	
 	public void saveConfig() {
         config.setProperty("portal-save-location", portalFile);
         config.setProperty("gate-folder", gateFolder);
@@ -135,7 +136,7 @@ public class Stargate extends JavaPlugin implements Runnable {
         config.setProperty("default-gate-network", defNetwork);
         config.save();
 	}
-
+	
 	public void reloadGates() {
 		Gate.loadGates(gateFolder);
         Portal.loadAllGates(this.getServer().getWorlds().get(0));
@@ -159,7 +160,7 @@ public class Stargate extends JavaPlugin implements Runnable {
             	file.renameTo(new File(gateFolder + file.getName()));
             }
         }
-    }
+	}
 
     public synchronized void doWork() {
         Portal open = Portal.getNextOpen();
@@ -219,12 +220,12 @@ public class Stargate extends JavaPlugin implements Runnable {
     public void setupPermissions() {
     	Plugin perm = pm.getPlugin("Permissions");
 
-    	    if(perm != null) {
-    	    	Stargate.Permissions = ((Permissions)perm).getHandler();
-    	    } else {
-    	    	log.info("[" + this.getDescription().getName() + "] Permission system not enabled. Disabling plugin.");
+	    if(perm != null) {
+	    	Stargate.Permissions = ((Permissions)perm).getHandler();
+	    } else {
+	    	log.info("[" + this.getDescription().getName() + "] Permission system not enabled. Disabling plugin.");
 			pm.disablePlugin(this);
-    	}
+	    }
     }
     
     private class vListener extends VehicleListener {
@@ -236,24 +237,24 @@ public class Stargate extends JavaPlugin implements Runnable {
         	Portal portal = Portal.getByEntrance(event.getTo());
         	if (portal != null && portal.isOpen()) {
         		if (passenger instanceof Player) {
-        	Player player = (Player)event.getVehicle().getPassenger();
+        			Player player = (Player)event.getVehicle().getPassenger();
         			if (!portal.isOpenFor(player)) {
         				player.sendMessage(ChatColor.RED + denyMsg);
         				return;
-            }
+        			}
         			Portal dest = portal.getDestination();
         			if (dest == null) return;
         			dest.teleport(vehicle, portal);
-
+        			
         			if (!teleMsg.isEmpty())
         				player.sendMessage(ChatColor.BLUE + teleMsg);
-                            portal.close(false);
-                    } else {
+        			portal.close(false);
+        		} else {
         			
-                    }
-                }
-            }
+        		}
+        	}
         }
+    }
     
     private class pListener extends PlayerListener {
         @Override
@@ -293,6 +294,34 @@ public class Stargate extends JavaPlugin implements Runnable {
     			if (portal != null) event.setCancelled(true);
     		}
     	}
+    	
+    	@Override
+    	public void onSignChange(SignChangeEvent event) {
+    		Player player = event.getPlayer();
+    		Block block = event.getBlock();
+    		// Initialize a stargate
+            if (Stargate.Permissions.has(player, "stargate.create")) {
+	            SignPost sign = new SignPost(new Blox(block));
+	            // Set sign text so we can create a gate with it.
+	            sign.setText(0, event.getLine(0));
+	            sign.setText(1, event.getLine(1));
+	            sign.setText(2, event.getLine(2));
+	            sign.setText(3, event.getLine(3));
+                Portal portal = Portal.createPortal(sign, player);
+                if (portal == null) return;
+                
+                if (!regMsg.isEmpty()) {
+                    player.sendMessage(ChatColor.GREEN + regMsg);
+                }
+                log.info("Initialized stargate: " + portal.getName());
+                portal.drawSign(true);
+                // Set event text so our new sign is instantly initialized
+                event.setLine(0, sign.getText(0));
+                event.setLine(1, sign.getText(1));
+                event.setLine(2, sign.getText(2));
+                event.setLine(3, sign.getText(3));
+            }
+    	}
 
         @Override
         public void onBlockRightClick(BlockRightClickEvent event) {
@@ -308,21 +337,7 @@ public class Stargate extends JavaPlugin implements Runnable {
 	                    }
                 	}
                 }
-                
-                // Check if the player is initializing a stargate
-                if (portal == null && Stargate.Permissions.has(player, "stargate.create")) {
-    	            SignPost sign = new SignPost(new Blox(block));
-    	                portal = Portal.createPortal(sign, player);
-    	    
-	                if (portal != null && !regMsg.isEmpty()) {
-	                    player.sendMessage(ChatColor.GREEN + regMsg);
-    	                }
-
-    	                if (portal == null) return;
-    	                log.info("Initialized stargate: " + portal.getName());
-                        portal.drawSign(true);
-    	            }
-                }
+            }
             
             // Implement right-click to toggle a stargate, gets around spawn protection problem.
             if ((block.getType() == Material.STONE_BUTTON)) {
@@ -339,7 +354,20 @@ public class Stargate extends JavaPlugin implements Runnable {
         public void onBlockDamage(BlockDamageEvent event) {
         	Player player = event.getPlayer();
         	Block block = event.getBlock();
-            if (block.getType() != Material.WALL_SIGN && block.getType() != Material.OBSIDIAN && block.getType() != Material.STONE_BUTTON) {
+        	// Check if we're pushing a button.
+        	if (block.getType() == Material.STONE_BUTTON && event.getDamageLevel() == BlockDamageLevel.STOPPED) {
+            	if (Stargate.Permissions.has(player, "stargate.use")) {
+            		Portal portal = Portal.getByBlock(block);
+            		if (portal != null) {
+            			onButtonPressed(player, portal);
+            		}
+            	}
+        	}
+        	
+        	// Drop out if we're not breaking a block
+        	if (event.getDamageLevel() != BlockDamageLevel.BROKEN) return;
+        	
+            if (block.getType() != Material.WALL_SIGN && block.getType() != Material.STONE_BUTTON && Gate.getGatesByControlBlock(block).length == 0) {
                 return;
             }
             
@@ -351,11 +379,9 @@ public class Stargate extends JavaPlugin implements Runnable {
             	return;
             }
 
-        	if (event.getDamageLevel() == BlockDamageLevel.BROKEN) {
-                portal.unregister();
-                if (!dmgMsg.isEmpty()) {
-                    player.sendMessage(ChatColor.RED + dmgMsg);
-                }
+            portal.unregister();
+            if (!dmgMsg.isEmpty()) {
+                player.sendMessage(ChatColor.RED + dmgMsg);
             }
         }
 

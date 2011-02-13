@@ -217,7 +217,7 @@ public class Portal {
     public void teleport(Vehicle vehicle, Portal origin) {
         Location traveller = new Location(this.world, vehicle.getLocation().getX(), vehicle.getLocation().getY(), vehicle.getLocation().getZ());
         Location exit = getExit(traveller, origin);
-
+        
         double velocity = vehicle.getVelocity().length();
         
         // Stop and teleport
@@ -311,7 +311,7 @@ public class Portal {
     }
 
     public boolean isVerified() {
-        verified = verified || getBlockAt(1, 0).getType() == OBSIDIAN;
+        verified = verified || getBlockAt(1, 0).getBlock().getTypeId() == gate.getControlBlock();
         return verified;
     }
 
@@ -584,7 +584,7 @@ public class Portal {
 
     public static Portal createPortal(SignPost id, Player player) {
         Block idParent = id.getParent();
-        if (idParent.getType() != Material.OBSIDIAN) return null;
+        if (Gate.getGatesByControlBlock(idParent).length == 0) return null;
 
         Blox parent = new Blox(player.getWorld(), idParent.getX(), idParent.getY(), idParent.getZ());
         Blox topleft = null;

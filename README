@@ -13,7 +13,6 @@ Known Issues
 =============
  - Vehicle implementation is nowhere near done.
  - Signs aren't always updating, I don't know what's causing this, I think it's a Bukkit thing.
- - You need to right-click the sign to initialize the gate, waiting on SIGN_CHANGE hook update.
  
 =============
  Permissions
@@ -36,17 +35,16 @@ Building a gate:
  - Type a set destination name on the second line if desired.
  - Type a network name on the third line if desired.
  - Type any options on the 4th line if desired.
- - Right click the sign block to initialize the gate as a Stargate. (Bug Alert: Sign may not update right away)
 
 Sign Layout:
  - Line 1: Gate Name (Max 12 characters)
- - Line 2: Destination Name (Max 12 characters, used for fixed-gates only)
- - Line 3: Network name (Max 12 characters)
- - Line 4: Options ('A' for always-on fixed gate, 'H' for hidden networked gate)
+ - Line 2: Destination Name [Optional] (Max 12 characters, used for fixed-gates only)
+ - Line 3: Network name [Optional] (Max 12 characters)
+ - Line 4: Options [Optional] ('A' for always-on fixed gate, 'H' for hidden networked gate)
 
 Using a gate:
  - Right click the sign to choose a destination.
- - Right click the button to open up a portal.
+ - Right/left click the button to open up a portal.
  - Step through.
 
 Fixed gates:
@@ -68,11 +66,23 @@ Hidden Gates:
 ==============
 Configuration
 ==============
- - To change the text shown during events edit stargates.txt
+default-gate-network - The default gate network
+not-selected-message - The message when no destination is selected
+portal-destroy-message - The message when a gate is destroyed
+portal-create-message - The message when a gate is created
+not-owner-message - The message when you aren't allowed to push the gate button
+other-side-blocked-message - The message when the gate you're dialing is open
+teleport-message - The message when you are teleported
+portal-save-location - The file your portal database is saved as
+gate-folder - The folder containing your .gate files
  
 =============
   Changes
 =============
+[Version 0.08]
+ - Gates can now consist of any material.
+ - You can left or right click the button to open a gate
+ - Gates are now initialized on sign placement, not more right clicking!
 [Version 0.07]
  - Fixed where the default gate is saved to.
 [Version 0.06]
