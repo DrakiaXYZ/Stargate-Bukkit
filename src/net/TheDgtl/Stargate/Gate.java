@@ -87,11 +87,11 @@ public class Gate {
         this.controls = controlList.toArray(this.controls);
     }
     
-    public void save() {
+    public void save(String gateFolder) {
         HashMap<Integer, Character> reverse = new HashMap<Integer, Character>();
 
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter("stargates/" + filename));
+            BufferedWriter bw = new BufferedWriter(new FileWriter(gateFolder + filename));
 
             writeConfig(bw, "portal-open", portalBlockOpen);
             writeConfig(bw, "portal-closed", portalBlockClosed);
@@ -313,7 +313,7 @@ public class Gate {
             Stargate.log.log(Level.SEVERE, "Could not load Gate " + file.getName() + " - Gates must have exactly 2 control points.");
             return null;
         } else {
-            gate.save(); // Updates format for version changes
+            gate.save(file.getParent() + File.separator); // Updates format for version changes
             return gate;
         }
     }
@@ -342,7 +342,7 @@ public class Gate {
 
         if (files.length == 0) {
             dir.mkdir();
-            populateDefaults(dir);
+            populateDefaults(gateFolder);
         } else {
             for (File file : files) {
                 Gate gate = loadGate(file);
@@ -351,7 +351,7 @@ public class Gate {
         }
     }
     
-    public static void populateDefaults(File dir) {
+    public static void populateDefaults(String gateFolder) {
         Integer[][] layout = new Integer[][] {
             {ANYTHING, Portal.OBSIDIAN, Portal.OBSIDIAN, ANYTHING},
             {Portal.OBSIDIAN, ENTRANCE, ENTRANCE, Portal.OBSIDIAN},
@@ -364,7 +364,7 @@ public class Gate {
         types.put('-', Portal.OBSIDIAN);
 
         Gate gate = new Gate("nethergate.gate", layout, types);
-        gate.save();
+        gate.save(gateFolder);
         registerGate(gate);
     }
 

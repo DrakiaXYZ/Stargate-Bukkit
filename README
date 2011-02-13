@@ -73,6 +73,8 @@ Configuration
 =============
   Changes
 =============
+[Version 0.07]
+ - Fixed where the default gate is saved to.
 [Version 0.06]
  - Forgot to make gates load from new location, oops
 [Version 0.05]
