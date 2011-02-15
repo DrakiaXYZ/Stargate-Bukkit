@@ -79,6 +79,8 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.11]
+ - Fuuuu- Some code got undid and broke everything. Fixed.
 [Version 0.10]
  - Hopefully fixed the "No position found" bug.
  - If dest > origin, any blocks past origin.size will drop you at dest[0]

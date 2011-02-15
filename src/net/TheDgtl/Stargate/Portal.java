@@ -277,7 +277,7 @@ public class Portal {
             Blox exit = getReverseExits().get(position);
             // Workaround for different size gates. Just drop them at the first exit block.
             if (exit == null) {
-            	exit = (Blox)getReverseExits().values();
+            	exit = (Blox)getReverseExits().values().toArray()[0];
             }
 
             if (exit != null) {
