@@ -1,7 +1,8 @@
 package net.TheDgtl.Stargate;
 
 import java.io.File;
-import java.util.concurrent.SynchronousQueue;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
@@ -41,7 +42,7 @@ import com.nijiko.permissions.PermissionHandler;
  * @author Shaun (sturmeh)
  * @author Dinnerbone
  */
-public class Stargate extends JavaPlugin implements Runnable {
+public class Stargate extends JavaPlugin {
 	// Permissions
 	public static PermissionHandler Permissions = null;
 	
@@ -60,12 +61,11 @@ public class Stargate extends JavaPlugin implements Runnable {
     private static String invMsg = "Invalid Destination"; 
     private static String blockMsg = "Destination Blocked";
     private static String defNetwork = "central";
-    private static SynchronousQueue<Portal> slip = new SynchronousQueue<Portal>();
+    private static int activeLimit = 10;
+    private static int openLimit = 10;
+    public static ConcurrentLinkedQueue<Portal> openList = new ConcurrentLinkedQueue<Portal>();
+    public static ConcurrentLinkedQueue<Portal> activeList = new ConcurrentLinkedQueue<Portal>();
     //private HashMap<Integer, Location> vehicles = new HashMap<Integer, Location>();
-    
-    // Threading stuff
-    private Thread clock;
-    private long interval = 0;
 
 	public Stargate(PluginLoader pluginLoader, Server instance, PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
     	super(pluginLoader, instance, desc, folder, plugin, cLoader);
@@ -86,8 +86,6 @@ public class Stargate extends JavaPlugin implements Runnable {
         
     	pm = getServer().getPluginManager();
     	config = this.getConfiguration();
-		if (clock == null)
-			clock = new Thread(this);
 		
     	pm.registerEvent(Event.Type.BLOCK_FLOW, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.BLOCK_PHYSICS, blockListener, Priority.Normal, this);
@@ -105,9 +103,7 @@ public class Stargate extends JavaPlugin implements Runnable {
     	pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
     	
-        setInterval(160); // 8 seconds.
-
-		clock.start();
+    	getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
     }
 
 	public void reloadConfig() {
@@ -162,28 +158,6 @@ public class Stargate extends JavaPlugin implements Runnable {
         }
 	}
 
-    public synchronized void doWork() {
-        Portal open = Portal.getNextOpen();
-
-        if (open != null) {
-            try {
-                slip.put(open);
-            } catch (InterruptedException e) {
-            }
-        }
-    }
-
-    public void threadSafeOperation() {
-        Portal open = slip.poll();
-        if (open != null) {
-            if (open.isOpen()) {
-                open.close(false);
-            } else if (open.isActive()) {
-                open.deactivate();
-            }
-        }
-    }
-
     public static String getSaveLocation() {
         return portalFile;
     }
@@ -223,8 +197,7 @@ public class Stargate extends JavaPlugin implements Runnable {
 	    if(perm != null) {
 	    	Stargate.Permissions = ((Permissions)perm).getHandler();
 	    } else {
-	    	log.info("[" + this.getDescription().getName() + "] Permission system not enabled. Disabling plugin.");
-			pm.disablePlugin(this);
+	    	log.info("[" + this.getDescription().getName() + "] Permission system not enabled.");
 	    }
     }
     
@@ -259,7 +232,6 @@ public class Stargate extends JavaPlugin implements Runnable {
     private class pListener extends PlayerListener {
         @Override
         public void onPlayerMove(PlayerMoveEvent event) {
-            threadSafeOperation();
             Player player = event.getPlayer();
             Portal portal = Portal.getByEntrance(event.getTo());
 
@@ -300,7 +272,7 @@ public class Stargate extends JavaPlugin implements Runnable {
     		Player player = event.getPlayer();
     		Block block = event.getBlock();
     		// Initialize a stargate
-            if (Stargate.Permissions.has(player, "stargate.create")) {
+            if (Stargate.hasPerm(player, "stargate.create", player.isOp())) {
 	            SignPost sign = new SignPost(new Blox(block));
 	            // Set sign text so we can create a gate with it.
 	            sign.setText(0, event.getLine(0));
@@ -331,7 +303,7 @@ public class Stargate extends JavaPlugin implements Runnable {
                 Portal portal = Portal.getByBlock(block);
                 // Cycle through a stargates locations
                 if (portal != null) {
-                	if (Stargate.Permissions.has(player, "stargate.use")) {
+                	if (Stargate.hasPerm(player, "stargate.use", true)) {
 	                    if ((!portal.isOpen()) && (!portal.isFixed())) {
 	                        portal.cycleDestination(player);
 	                    }
@@ -341,7 +313,7 @@ public class Stargate extends JavaPlugin implements Runnable {
             
             // Implement right-click to toggle a stargate, gets around spawn protection problem.
             if ((block.getType() == Material.STONE_BUTTON)) {
-            	if (Stargate.Permissions.has(player, "stargate.use")) {
+            	if (Stargate.hasPerm(player, "stargate.use", true)) {
             		Portal portal = Portal.getByBlock(block);
             		if (portal != null) {
             			onButtonPressed(player, portal);
@@ -356,7 +328,7 @@ public class Stargate extends JavaPlugin implements Runnable {
         	Block block = event.getBlock();
         	// Check if we're pushing a button.
         	if (block.getType() == Material.STONE_BUTTON && event.getDamageLevel() == BlockDamageLevel.STOPPED) {
-            	if (Stargate.Permissions.has(player, "stargate.use")) {
+            	if (Stargate.hasPerm(player, "stargate.use", true)) {
             		Portal portal = Portal.getByBlock(block);
             		if (portal != null) {
             			onButtonPressed(player, portal);
@@ -374,7 +346,7 @@ public class Stargate extends JavaPlugin implements Runnable {
             Portal portal = Portal.getByBlock(block);
             if (portal == null) return;
             
-            if (!Stargate.Permissions.has(player, "stargate.destroy")) {
+            if (!Stargate.hasPerm(player, "stargate.destroy", player.isOp())) {
             	event.setCancelled(true);
             	return;
             }
@@ -403,19 +375,29 @@ public class Stargate extends JavaPlugin implements Runnable {
         }
     }
     
-    public void run() {
-    	while (isEnabled()) {
-    		try {
-    			while (interval <= 0)
-    				Thread.sleep(50); // Thread is dormant
-    			for (long i = 0; i < interval && isEnabled(); i++)
-    				Thread.sleep(50); // Sleep for an in-game second?
-    			if (isEnabled()) doWork();
-    		} catch (InterruptedException e) {}
-    	}
+    public static Boolean hasPerm(Player player, String perm, Boolean def) {
+    	if (Permissions != null)
+    		return Permissions.has(player, perm);
+    	return def;
     }
     
-	public void setInterval(long interval) {
-		this.interval = interval;
-	}
+    private class SGThread implements Runnable {
+	    public void run() {
+	    	long time = System.currentTimeMillis() / 1000;
+	    	for (Iterator<Portal> iter = Stargate.openList.iterator(); iter.hasNext();) {
+	    		Portal p = iter.next();
+	    		if (time > p.getOpenTime() + Stargate.openLimit) {
+	    			p.close(false);
+	    			iter.remove();
+	    		}
+	    	}
+	    	for (Iterator<Portal> iter = Stargate.activeList.iterator(); iter.hasNext();) {
+	    		Portal p = iter.next();
+	    		if (time > p.getOpenTime() + Stargate.activeLimit) {
+	    			p.deactivate();
+	    			iter.remove();
+	    		}
+	    	}
+	    }
+    }
 }

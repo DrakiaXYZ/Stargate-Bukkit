@@ -79,6 +79,11 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.10]
+ - Hopefully fixed the "No position found" bug.
+ - If dest > origin, any blocks past origin.size will drop you at dest[0]
+ - Switched to scheduler instead of our own thread for closing gates and deactivating signs
+ - No longer depend on Permissions, use it as an option. isOp() used as defaults.
 [Version 0.09]
  - Gates can now be any shape 
 [Version 0.08]

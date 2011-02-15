@@ -61,6 +61,7 @@ public class Portal {
     private Player activePlayer;
     private boolean alwaysOn = false;
     private World world;
+    private long openTime;
 
     private Portal(Blox topLeft, int modX, int modZ,
             float rotX, SignPost id, Blox button,
@@ -141,6 +142,8 @@ public class Portal {
         }
 
         isOpen = true;
+        openTime = System.currentTimeMillis() / 1000;
+        Stargate.openList.add(this);
         // Open remote gate
         if (!isFixed()) {
             player = openFor;
@@ -174,6 +177,7 @@ public class Portal {
 
         player = null;
         isOpen = false;
+        Stargate.openList.remove(this);
 
         deactivate();
     }
@@ -254,17 +258,31 @@ public class Portal {
     }
 
     public Location getExit(Location traveller, Portal origin) {
-        Blox entrance = new Blox(world.getBlockAt((int)Math.floor(traveller.getX()), (int)Math.floor(traveller.getY()), (int)Math.floor(traveller.getZ())));
+    	// Move the "entrance" to the first portal block up at the current x/z
+    	// "Exits" seem to only consist of the lowest Y coord
+    	int bX = traveller.getBlockX();
+    	int bY = traveller.getBlockY();
+    	int bZ = traveller.getBlockZ();
+    	while (traveller.getWorld().getBlockTypeIdAt(bX, bY, bZ) == gate.getPortalBlockOpen())
+    		bY --;
+    	bY++;
+    	// End
+        Blox entrance = new Blox(world, bX, bY, bZ);
         HashMap<Blox, Integer> originExits = origin.getExits();
         HashMap<Blox, Integer> destExits = this.getExits();
 
         if (originExits.containsKey(entrance)) {
+        	
             int position = (int)(((float)originExits.get(entrance) / originExits.size()) * destExits.size());
             Blox exit = getReverseExits().get(position);
+            // Workaround for different size gates. Just drop them at the first exit block.
+            if (exit == null) {
+            	exit = (Blox)getReverseExits().values();
+            }
 
             if (exit != null) {
                 Location loc = exit.modRelativeLoc(0D, 0D, 1D, traveller.getYaw(), traveller.getPitch(), modX, 1, modZ);
-                Block block = world.getBlockAt((int)Math.floor(loc.getX()), (int)Math.floor(loc.getY()), (int)Math.floor(loc.getZ()));
+                Block block = world.getBlockAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
                 if (block.getType() == Material.STEP) {
                     loc.setY(loc.getY() + 0.5);
@@ -336,12 +354,13 @@ public class Portal {
         destinations.clear();
         destination = "";
         drawSign(true);
+        Stargate.activeList.add(this);
         activePlayer = player;
         for (String dest : allPortals) {
             Portal portal = getByName(dest);
             if (	(portal.getNetwork().equalsIgnoreCase(network)) && 				// In the network
             		(!dest.equalsIgnoreCase(getName())) && 							// Not this portal
-            		(!portal.isHidden() || Stargate.Permissions.has(player, "stargate.hidden") || portal.getOwner().equals(player.getName()))	// Is not hidden, player can view hidden, or player created
+            		(!portal.isHidden() || Stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName()))	// Is not hidden, player can view hidden, or player created
             	) {
                 destinations.add(dest);
             }
@@ -352,6 +371,7 @@ public class Portal {
         if (fixed) {
             return;
         }
+        Stargate.activeList.remove(this);
         destinations.clear();
         destination = "";
         activePlayer = null;
@@ -369,6 +389,10 @@ public class Portal {
     public String getNetwork() {
         return network;
     }
+    
+    public long getOpenTime() {
+    	return openTime;
+    }
 
     public void cycleDestination(Player player) {
         if (!isActive() || getActivePlayer() != player) {
@@ -382,7 +406,7 @@ public class Portal {
             }
             destination = destinations.get(index);
         }
-
+        openTime = System.currentTimeMillis() / 1000;
         drawSign(true);
     }
 
