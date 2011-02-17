@@ -79,6 +79,12 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.12]
+ - Implemented fixed destination block using * in .gate file. This is the recommended method of doing an exit point for custom gates, as the automatic method doesn't work in a lot of cases.
+ - Split networks up in memory, can now use same name in different networks. As a result, fixed gates must now specify a network.
+ - Added the ability to have a private gate, which only you can activate. Use the 'P' option to create.
+ - Fixed but not AlwaysOn gates now open the destination gate.
+ - Fixed gates now show their network. Existing fixed gates are added to the default network (Sorry! It had to be done)
 [Version 0.11]
  - Fuuuu- Some code got undid and broke everything. Fixed.
 [Version 0.10]

@@ -22,6 +22,7 @@ public class Gate {
     public static final int ANYTHING = -1;
     public static final int ENTRANCE = -2;
     public static final int CONTROL = -3;
+    public static final int EXIT = -4;
     private static HashMap<String, Gate> gates = new HashMap<String, Gate>();
     private static HashMap<Integer, ArrayList<Gate>> controlBlocks = new HashMap<Integer, ArrayList<Gate>>();
 
@@ -31,6 +32,7 @@ public class Gate {
     private RelativeBlockVector[] entrances = new RelativeBlockVector[0];
     private RelativeBlockVector[] border = new RelativeBlockVector[0];
     private RelativeBlockVector[] controls = new RelativeBlockVector[0];
+    private RelativeBlockVector exitBlock = null;
     private HashMap<RelativeBlockVector, Integer> exits = new HashMap<RelativeBlockVector, Integer>();
     private int portalBlockOpen = Material.PORTAL.getId();
     private int portalBlockClosed = Material.AIR.getId();
@@ -56,9 +58,11 @@ public class Gate {
             for (int x = 0; x < layout[y].length; x++) {
                 Integer id = layout[y][x];
 
-                if (id == ENTRANCE) {
+                if (id == ENTRANCE || id == EXIT) {
                     entranceList.add(new RelativeBlockVector(x, y, 0));
                     exitDepths[x] = y;
+                    if (id == EXIT)
+                    	this.exitBlock = new RelativeBlockVector(x, y, 0);
                     //bottom = y;
                 } else if (id == CONTROL) {
                     controlList.add(new RelativeBlockVector(x, y, 0));
@@ -122,6 +126,8 @@ public class Gate {
                         symbol = ' ';
                     } else if (id == CONTROL) {
                         symbol = '-';
+                    } else if (id == EXIT) {
+                    	symbol = '*';
                     } else if (reverse.containsKey(id)) {
                         symbol = reverse.get(id);
                     } else {
@@ -163,6 +169,9 @@ public class Gate {
     public HashMap<RelativeBlockVector, Integer> getExits() {
         return exits;
     }
+    public RelativeBlockVector getExit() {
+    	return exitBlock;
+    }
 
     public int getControlBlock() {
         return types.get('-');
@@ -189,7 +198,7 @@ public class Gate {
             for (int x = 0; x < layout[y].length; x++) {
                 int id = layout[y][x];
 
-                if (id == ENTRANCE) {
+                if (id == ENTRANCE || id == EXIT) {
                     if (topleft.modRelative(x, y, 0, modX, 1, modZ).getType() != 0) {
                         return false;
                     }
@@ -246,6 +255,8 @@ public class Gate {
 
                         if (symbol.equals('.')) {
                             id = ENTRANCE;
+                        } else if (symbol.equals('*')) {
+                        	id = EXIT;
                         } else if (symbol.equals(' ')) {
                             id = ANYTHING;
                         } else if (symbol.equals('-')) {
@@ -356,7 +367,7 @@ public class Gate {
             {ANYTHING, Portal.OBSIDIAN, Portal.OBSIDIAN, ANYTHING},
             {Portal.OBSIDIAN, ENTRANCE, ENTRANCE, Portal.OBSIDIAN},
             {CONTROL, ENTRANCE, ENTRANCE, CONTROL},
-            {Portal.OBSIDIAN, ENTRANCE, ENTRANCE, Portal.OBSIDIAN},
+            {Portal.OBSIDIAN, EXIT, ENTRANCE, Portal.OBSIDIAN},
             {ANYTHING, Portal.OBSIDIAN, Portal.OBSIDIAN, ANYTHING},
         };
         HashMap<Character, Integer> types = new HashMap<Character, Integer>();

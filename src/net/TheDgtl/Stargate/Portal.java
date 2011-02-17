@@ -33,9 +33,10 @@ public class Portal {
     public static final int SIGN = 68;
     public static final int BUTTON = 77;
     private static final HashMap<Blox, Portal> lookupBlocks = new HashMap<Blox, Portal>();
-    private static final HashMap<String, Portal> lookupNames = new HashMap<String, Portal>();
     private static final HashMap<Blox, Portal> lookupEntrances = new HashMap<Blox, Portal>();
-    private static final ArrayList<String> allPortals = new ArrayList<String>();
+    private static final ArrayList<Portal> allPortals = new ArrayList<Portal>();
+    private static final HashMap<String, ArrayList<String>> allPortalsNet = new HashMap<String, ArrayList<String>>();
+    private static final HashMap<String, HashMap<String, Portal>> lookupNamesNet = new HashMap<String, HashMap<String, Portal>>();
     private Blox topLeft;
     private int modX;
     private int modZ;
@@ -60,6 +61,7 @@ public class Portal {
     private boolean hidden = false;
     private Player activePlayer;
     private boolean alwaysOn = false;
+    private boolean priv = false;
     private World world;
     private long openTime;
 
@@ -67,7 +69,7 @@ public class Portal {
             float rotX, SignPost id, Blox button,
             String dest, String name,
             boolean verified, String network, Gate gate,
-            String owner, boolean hidden, boolean alwaysOn) {
+            String owner, boolean hidden, boolean alwaysOn, boolean priv) {
         this.topLeft = topLeft;
         this.modX = modX;
         this.modZ = modZ;
@@ -84,6 +86,7 @@ public class Portal {
         this.owner = owner;
         this.hidden = hidden;
         this.alwaysOn = alwaysOn;
+        this.priv = priv;
         this.world = topLeft.getWorld();
         
         if (this.alwaysOn && !this.fixed) {
@@ -105,17 +108,6 @@ public class Portal {
         return false;
     }
 
-    private boolean pastGrace() {
-    	if (isAlwaysOn()) return false; // Ignore always open fixed gates.
-        if (manipGrace(false, false)) {
-            return manipGrace(true, false);
-        }
-        if (isActive() || isOpen()) {
-            return true;
-        }
-        return false; // else.
-    }
-
     public boolean isOpen() {
         return isOpen || isAlwaysOn();
     }
@@ -126,6 +118,10 @@ public class Portal {
     
     public boolean isHidden() {
     	return hidden;
+    }
+    
+    public boolean isPrivate() {
+    	return priv;
     }
 
     public boolean open(boolean force) {
@@ -145,7 +141,7 @@ public class Portal {
         openTime = System.currentTimeMillis() / 1000;
         Stargate.openList.add(this);
         // Open remote gate
-        if (!isFixed()) {
+        if (!isAlwaysOn()) {
             player = openFor;
             manipGrace(true, true);
 
@@ -162,7 +158,7 @@ public class Portal {
 
     public void close(boolean force) {
     	if (isAlwaysOn() && !force) return; // Never close an always open gate
-        if (!isFixed()) {
+        if (!isAlwaysOn()) {
         	Portal end = getDestination();
 
 	        if (end != null && end.isOpen()) {
@@ -258,43 +254,50 @@ public class Portal {
     }
 
     public Location getExit(Location traveller, Portal origin) {
-    	// Move the "entrance" to the first portal block up at the current x/z
-    	// "Exits" seem to only consist of the lowest Y coord
-    	int bX = traveller.getBlockX();
-    	int bY = traveller.getBlockY();
-    	int bZ = traveller.getBlockZ();
-    	while (traveller.getWorld().getBlockTypeIdAt(bX, bY, bZ) == gate.getPortalBlockOpen())
-    		bY --;
-    	bY++;
-    	// End
-        Blox entrance = new Blox(world, bX, bY, bZ);
-        HashMap<Blox, Integer> originExits = origin.getExits();
-        HashMap<Blox, Integer> destExits = this.getExits();
+    	Location loc = null;
+    	// Check if the gate has an exit block
+    	 if (gate.getExit() != null) {
+    		 Blox exit = getBlockAt(gate.getExit());
+    		 loc = exit.modRelativeLoc(0D, 0D, 1D, traveller.getYaw(), traveller.getPitch(), modX, 1, modZ);
+    	 } else {
+	    	// Move the "entrance" to the first portal block up at the current x/z
+	    	// "Exits" seem to only consist of the lowest Y coord
+	    	int bX = traveller.getBlockX();
+	    	int bY = traveller.getBlockY();
+	    	int bZ = traveller.getBlockZ();
+	    	while (traveller.getWorld().getBlockTypeIdAt(bX, bY, bZ) == gate.getPortalBlockOpen())
+	    		bY --;
+	    	bY++;
+	    	// End
+	    	
+	        Blox entrance = new Blox(world, bX, bY, bZ);
+	        HashMap<Blox, Integer> originExits = origin.getExits();
+	        HashMap<Blox, Integer> destExits = this.getExits();
+	
+	        if (originExits.containsKey(entrance)) {
+	            int position = (int)(((float)originExits.get(entrance) / originExits.size()) * destExits.size());
+	            Blox exit = getReverseExits().get(position);
+	            // Workaround for different size gates. Just drop them at the first exit block.
+	            if (exit == null) {
+	            	exit = (Blox)getReverseExits().values().toArray()[0];
+	            }
+	            if (exit != null) {
+	                loc = exit.modRelativeLoc(0D, 0D, 1D, traveller.getYaw(), traveller.getPitch(), modX, 1, modZ);
+	            }
+	        }
+    	}
+    	if (loc != null) {
+            Block block = world.getBlockAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
-        if (originExits.containsKey(entrance)) {
-        	
-            int position = (int)(((float)originExits.get(entrance) / originExits.size()) * destExits.size());
-            Blox exit = getReverseExits().get(position);
-            // Workaround for different size gates. Just drop them at the first exit block.
-            if (exit == null) {
-            	exit = (Blox)getReverseExits().values().toArray()[0];
+            if (block.getType() == Material.STEP) {
+                loc.setY(loc.getY() + 0.5);
             }
 
-            if (exit != null) {
-                Location loc = exit.modRelativeLoc(0D, 0D, 1D, traveller.getYaw(), traveller.getPitch(), modX, 1, modZ);
-                Block block = world.getBlockAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+            loc.setPitch(traveller.getPitch());
+            return loc;
+    	}
 
-                if (block.getType() == Material.STEP) {
-                    loc.setY(loc.getY() + 0.5);
-                }
-
-                loc.setPitch(traveller.getPitch());
-                return loc;
-            }
-        }
-
-        Stargate.log.log(Level.WARNING, "No position found calculting route from " + this + " to " + origin);
-        Stargate.log.info(originExits.get(entrance) + " / " + originExits.size() + " * " + destExits.size());
+        Stargate.log.log(Level.WARNING, "No position found calculating route from " + this + " to " + origin);
         return traveller;
     }
 
@@ -321,7 +324,7 @@ public class Portal {
     }
 
     public Portal getDestination() {
-        return Portal.getByName(destination);
+        return Portal.getByName(destination, getNetwork());
     }
 
     public String getDestinationName() {
@@ -356,13 +359,12 @@ public class Portal {
         drawSign(true);
         Stargate.activeList.add(this);
         activePlayer = player;
-        for (String dest : allPortals) {
-            Portal portal = getByName(dest);
-            if (	(portal.getNetwork().equalsIgnoreCase(network)) && 				// In the network
-            		(!dest.equalsIgnoreCase(getName())) && 							// Not this portal
+        for (String dest : allPortalsNet.get(getNetwork().toLowerCase())) {
+            Portal portal = getByName(dest, getNetwork());
+            if (	(!dest.equalsIgnoreCase(getName())) && 							// Not this portal
             		(!portal.isHidden() || Stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName()))	// Is not hidden, player can view hidden, or player created
             	) {
-                destinations.add(dest);
+                destinations.add(portal.getName());
             }
         }
     }
@@ -422,6 +424,7 @@ public class Portal {
         } else {
             if (isFixed()) {
                 id.setText(++done, "To: " + destination);
+                id.setText(++done, " (" + network + ") ");
             } else {
                 manipGrace(true, true);
                 int index = destinations.indexOf(destination);
@@ -535,7 +538,7 @@ public class Portal {
     public void unregister() {
     	Stargate.log.info("[Stargate] Unregistering gate " + getName());
     	close(true);
-        lookupNames.remove(getName().toLowerCase());
+        lookupNamesNet.get(getNetwork().toLowerCase()).remove(getName().toLowerCase());
 
         for (Blox block : getFrame()) {
             lookupBlocks.remove(block);
@@ -550,7 +553,8 @@ public class Portal {
             lookupEntrances.remove(entrance);
         }
 
-        allPortals.remove(getName());
+        allPortals.remove(this);
+        allPortalsNet.get(getNetwork().toLowerCase()).remove(getName().toLowerCase());
 
         if (id.getBlock().getType() == Material.WALL_SIGN) {
             id.setText(0, getName());
@@ -560,8 +564,8 @@ public class Portal {
             id.update();
         }
 
-        for (String originName : allPortals) {
-            Portal origin = Portal.getByName(originName);
+        for (String originName : allPortalsNet.get(getNetwork().toLowerCase())) {
+            Portal origin = Portal.getByName(originName, getNetwork());
             if ((origin != null) && (origin.isAlwaysOn()) && (origin.getDestinationName().equalsIgnoreCase(getName())) && (origin.isVerified())) {
                 origin.close(true);
             }
@@ -583,8 +587,9 @@ public class Portal {
     }
 
     private void register() {
-    	Stargate.log.info("[Stargate] Registering gate " + getName());
-        lookupNames.put(getName().toLowerCase(), this);
+        if (!lookupNamesNet.containsKey(getNetwork().toLowerCase()))
+        	lookupNamesNet.put(getNetwork().toLowerCase(), new HashMap<String, Portal>());
+        lookupNamesNet.get(getNetwork().toLowerCase()).put(getName().toLowerCase(), this);
 
         for (Blox block : getFrame()) {
             lookupBlocks.put(block, this);
@@ -599,7 +604,11 @@ public class Portal {
             lookupEntrances.put(entrance, this);
         }
 
-        allPortals.add(getName());
+        allPortals.add(this);
+        // Check if this network exists
+        if (!allPortalsNet.containsKey(getNetwork().toLowerCase()))
+        	allPortalsNet.put(getNetwork().toLowerCase(), new ArrayList<String>());
+        allPortalsNet.get(getNetwork().toLowerCase()).add(getName().toLowerCase());
     }
 
     @Override
@@ -619,20 +628,18 @@ public class Portal {
         String options = filterName(id.getText(3));
         boolean hidden = (options.indexOf('h') != -1 || options.indexOf('H') != -1);
         boolean alwaysOn = (options.indexOf('a') != -1 || options.indexOf('A') != -1);
+        boolean priv = (options.indexOf('p') != -1 || options.indexOf('P') != -1);
         
         // Can not create a non-fixed always-on gate.
         if (alwaysOn && destName.length() == 0) {
         	alwaysOn = false;
         }
 
-        if ((name.length() < 1) || (name.length() > 11) || (getByName(name) != null)) {
-            return null;
-        }
         if ((network.length() < 1) || (network.length() > 11)) {
             network = Stargate.getDefaultNetwork();
         }
-        if (destName.length() > 0) {
-            network = "";
+        if ((name.length() < 1) || (name.length() > 11) || (getByName(name, network) != null)) {
+            return null;
         }
 
         int modX = 0;
@@ -695,18 +702,18 @@ public class Portal {
         	button = topleft.modRelative(buttonVector.getRight(), buttonVector.getDepth(), buttonVector.getDistance() + 1, modX, 1, modZ);
         button.setType(BUTTON);
         }
-        portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn);
+        portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv);
 
         // Open always on gate
         if (portal.isAlwaysOn()) {
-        	Portal dest = Portal.getByName(destName);
+        	Portal dest = Portal.getByName(destName, portal.getNetwork());
         	if (dest != null)
         		portal.open(true);
         }
         
         // Open any always on gate pointing at this gate
-        for (String originName : allPortals) {
-        	Portal origin = Portal.getByName(originName);
+        for (String originName : allPortalsNet.get(portal.getNetwork().toLowerCase())) {
+        	Portal origin = Portal.getByName(originName, portal.getNetwork());
         	if (origin != null && origin.isAlwaysOn() && origin.getDestinationName().equalsIgnoreCase(portal.getName()) && origin.isVerified()) 
         		origin.open(true);
         }
@@ -716,8 +723,10 @@ public class Portal {
         return portal;
     }
 
-    public static Portal getByName(String name) {
-        return lookupNames.get(name.toLowerCase());
+    public static Portal getByName(String name, String network) {
+        if (!lookupNamesNet.containsKey(network.toLowerCase())) return null;
+        return lookupNamesNet.get(network.toLowerCase()).get(name.toLowerCase());
+        
     }
 
     public static Portal getByEntrance(Location location) {
@@ -738,8 +747,7 @@ public class Portal {
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(loc, false));
 
-            for (String name : allPortals) {
-                Portal portal = Portal.getByName(name);
+            for (Portal portal : allPortals) {
                 StringBuilder builder = new StringBuilder();
                 Blox sign = new Blox(portal.id.getBlock());
                 Blox button = portal.button;
@@ -769,6 +777,8 @@ public class Portal {
                 builder.append(portal.isHidden());
                 builder.append(':');
                 builder.append(portal.isAlwaysOn());
+                builder.append(':');
+                builder.append(portal.isPrivate());
 
                 bw.append(builder.toString());
                 bw.newLine();
@@ -784,9 +794,10 @@ public class Portal {
         String location = Stargate.getSaveLocation();
 
         lookupBlocks.clear();
-        lookupNames.clear();
+        lookupNamesNet.clear();
         lookupEntrances.clear();
         allPortals.clear();
+        allPortalsNet.clear();
 
         if (new File(location).exists()) {
         	int l = 0;
@@ -816,17 +827,15 @@ public class Portal {
                     Blox topLeft = new Blox(world, split[6]);
                     Gate gate = (split[7].contains(";")) ? Gate.getGateByName("nethergate.gate") : Gate.getGateByName(split[7]);
 
-                    String fixed = (split.length > 8) ? split[8] : "";
+                    String dest = (split.length > 8) ? split[8] : "";
                     String network = (split.length > 9) ? split[9] : Stargate.getDefaultNetwork();
+                    if (network.isEmpty()) network = Stargate.getDefaultNetwork();
                     String owner = (split.length > 10) ? split[10] : "";
                     boolean hidden = (split.length > 11) ? split[11].equalsIgnoreCase("true") : false;
                     boolean alwaysOn = (split.length > 12) ? split[12].equalsIgnoreCase("true") : false;
+                    boolean priv = (split.length > 13) ? split[13].equalsIgnoreCase("true") : false;
 
-                    if (fixed.length() > 0) {
-                        network = "";
-                    }
-
-                    Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, fixed, name, false, network, gate, owner, hidden, alwaysOn);
+                    Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv);
                     portal.close(true);
                     // Verify portal integrity/register portal
                     if (!portal.isVerified() || !portal.checkIntegrity()) {
@@ -842,8 +851,7 @@ public class Portal {
                 
                 // Open any always-on gates. Do this here as it should be more efficient than in the loop.
                 int OpenCount = 0;
-                for (String srcName : allPortals) {
-                	Portal portal = Portal.getByName(srcName);
+                for (Portal portal : allPortals) {
                 	if (portal == null) continue;
                 	if (!portal.isAlwaysOn()) continue;
 					if (!portal.wasVerified()) continue;
@@ -864,23 +872,12 @@ public class Portal {
     
     public static void closeAllGates() {
     	Stargate.log.info("Closing all stargates.");
-    	for (String name : allPortals) {
-    		Portal p = Portal.getByName(name);
+    	for (Portal p : allPortals) {
     		p.close(true);
     	}
     }
 
     public static String filterName(String input) {
         return input.replaceAll("[\\|:#]", "").trim();
-    }
-
-    public static Portal getNextOpen() {
-        for (String name : allPortals) {
-            Portal tmp = getByName(name);
-            if (tmp.pastGrace()) {
-                return tmp;
-            }
-        }
-        return null;
     }
 }

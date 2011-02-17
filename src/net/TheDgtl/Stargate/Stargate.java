@@ -35,7 +35,6 @@ import org.bukkit.util.config.Configuration;
 
 // Permissions
 import com.nijikokun.bukkit.Permissions.Permissions;
-import com.nijiko.permissions.PermissionHandler;
 
 /**
  * Stargate.java - Plug-in for hey0's minecraft mod.
@@ -44,7 +43,7 @@ import com.nijiko.permissions.PermissionHandler;
  */
 public class Stargate extends JavaPlugin {
 	// Permissions
-	public static PermissionHandler Permissions = null;
+	public static Permissions Permissions = null;
 	
     private final bListener blockListener = new bListener();
     private final pListener playerListener = new pListener();
@@ -82,9 +81,19 @@ public class Stargate extends JavaPlugin {
 
     public void onEnable() {
         PluginDescriptionFile pdfFile = this.getDescription();
+        pm = getServer().getPluginManager();
+        
+        /* Lamesauce, they broke this. No way to check build number anymore as far as I know D:
+        String cbVerStr = CraftServer.class.getPackage().getImplementationVersion();
+        int cbVersion = Integer.parseInt(cbVerStr.substring(cbVerStr.length() - 3));
+        if (cbVersion < 319) {
+        	log.info("[" + pdfFile.getName() + " v." + pdfFile.getVersion() + "] CraftBukkit build " + cbVersion + " too old to run Stargate.");
+        	pm.disablePlugin(this);
+        	return;
+        }*/
+        
         log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
         
-    	pm = getServer().getPluginManager();
     	config = this.getConfiguration();
 		
     	pm.registerEvent(Event.Type.BLOCK_FLOW, blockListener, Priority.Normal, this);
@@ -139,12 +148,22 @@ public class Stargate extends JavaPlugin {
 	}
 	
 	private void migrate() {
-    	// Migrate old stargates if applicable.
-        File oldFile = new File("stargates/locations.dat");
-        if (oldFile.exists()) {
-        	Stargate.log.info("[Stargate] Migrated existing locations.dat");
-            oldFile.renameTo(new File(portalFile));
-        }
+		// Only migrate if new file doesn't exist.
+		File newFile = new File(portalFile);
+		if (!newFile.exists()) {
+			// Migrate REALLY old stargates if applicable
+			File olderFile = new File("stargates.txt");
+			if (olderFile.exists()) {
+				Stargate.log.info("[Stargate] Migrated old stargates.txt");
+				olderFile.renameTo(newFile);
+			}
+	    	// Migrate old stargates if applicable.
+	        File oldFile = new File("stargates/locations.dat");
+	        if (oldFile.exists()) {
+	        	Stargate.log.info("[Stargate] Migrated existing locations.dat");
+	            oldFile.renameTo(newFile);
+	        }
+		}
         
         // Migrate old gates if applicaple
         File oldDir = new File("stargates");
@@ -170,16 +189,20 @@ public class Stargate extends JavaPlugin {
         Portal destination = gate.getDestination();
 
         if (!gate.isOpen()) {
-        	if ((!gate.isFixed()) && (gate.getActivePlayer() != player)) {
+        	if ((!gate.isFixed()) && gate.isActive() &&  (gate.getActivePlayer() != player)) {
         		gate.deactivate();
                 if (!denyMsg.isEmpty()) {
                     player.sendMessage(ChatColor.RED + denyMsg);
                 }
+        	} else if (gate.isPrivate() && !gate.getOwner().equals(player.getName()) && !hasPerm(player, "stargate.private", player.isOp())) {
+            	if (!denyMsg.isEmpty()) {
+            		player.sendMessage(ChatColor.RED + denyMsg);
+            	}
         	} else if ((destination == null) || (destination == gate)) {
                 if (!invMsg.isEmpty()) {
                     player.sendMessage(ChatColor.RED + invMsg);
                 }
-            } else if ((destination.isOpen()) && (!destination.isFixed())) {
+            } else if ((destination.isOpen()) && (!destination.isAlwaysOn())) {
                 if (!blockMsg.isEmpty()) {
                     player.sendMessage(ChatColor.RED + blockMsg);
                 }
@@ -195,7 +218,7 @@ public class Stargate extends JavaPlugin {
     	Plugin perm = pm.getPlugin("Permissions");
 
 	    if(perm != null) {
-	    	Stargate.Permissions = ((Permissions)perm).getHandler();
+	    	Stargate.Permissions = ((Permissions)perm);
 	    } else {
 	    	log.info("[" + this.getDescription().getName() + "] Permission system not enabled.");
 	    }
@@ -307,6 +330,10 @@ public class Stargate extends JavaPlugin {
 	                    if ((!portal.isOpen()) && (!portal.isFixed())) {
 	                        portal.cycleDestination(player);
 	                    }
+                	} else {
+                		if (!denyMsg.isEmpty()) {
+                			player.sendMessage(denyMsg);
+                		}
                 	}
                 }
             }
@@ -375,9 +402,10 @@ public class Stargate extends JavaPlugin {
         }
     }
     
-    public static Boolean hasPerm(Player player, String perm, Boolean def) {
+    @SuppressWarnings("static-access")
+	public static Boolean hasPerm(Player player, String perm, Boolean def) {
     	if (Permissions != null)
-    		return Permissions.has(player, perm);
+    		return Permissions.Security.permission(player, perm);
     	return def;
     }
     
