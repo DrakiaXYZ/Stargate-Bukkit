@@ -64,6 +64,7 @@ public class Portal {
     private boolean priv = false;
     private World world;
     private long openTime;
+    private boolean loaded = false;
 
     private Portal(Blox topLeft, int modX, int modZ,
             float rotX, SignPost id, Blox button,
@@ -96,7 +97,7 @@ public class Portal {
 
         this.register();
         if (verified) {
-            this.drawSign(true);
+            this.drawSign();
         }
     }
 
@@ -123,6 +124,10 @@ public class Portal {
     public boolean isPrivate() {
     	return priv;
     }
+    
+    public boolean isLoaded() {
+    	return loaded;
+    }
 
     public boolean open(boolean force) {
         return open(null, force);
@@ -140,6 +145,7 @@ public class Portal {
         isOpen = true;
         openTime = System.currentTimeMillis() / 1000;
         Stargate.openList.add(this);
+        Stargate.activeList.remove(this);
         // Open remote gate
         if (!isAlwaysOn()) {
             player = openFor;
@@ -149,7 +155,7 @@ public class Portal {
             if (end != null && !end.isOpen()) {
                 end.open(openFor, false);
                 end.setDestination(this);
-                if (end.isVerified()) end.drawSign(true);
+                if (end.isVerified()) end.drawSign();
             }
         }
 
@@ -174,6 +180,7 @@ public class Portal {
         player = null;
         isOpen = false;
         Stargate.openList.remove(this);
+        Stargate.activeList.remove(this);
 
         deactivate();
     }
@@ -308,7 +315,7 @@ public class Portal {
     public void setName(String name) {
         this.name = filterName(name);
 
-        drawSign(true);
+        drawSign();
     }
 
     public String getName() {
@@ -356,13 +363,15 @@ public class Portal {
     public void activate(Player player) {
         destinations.clear();
         destination = "";
-        drawSign(true);
+        drawSign();
         Stargate.activeList.add(this);
         activePlayer = player;
         for (String dest : allPortalsNet.get(getNetwork().toLowerCase())) {
             Portal portal = getByName(dest, getNetwork());
-            if (	(!dest.equalsIgnoreCase(getName())) && 							// Not this portal
-            		(!portal.isHidden() || Stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName()))	// Is not hidden, player can view hidden, or player created
+            // Not fixed, not this portal, and visible to this player.
+            if (	(!portal.isFixed()) &&
+            		(!dest.equalsIgnoreCase(getName())) && 							// Not this portal
+            		(!portal.isHidden() || Stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName()))
             	) {
                 destinations.add(portal.getName());
             }
@@ -370,14 +379,14 @@ public class Portal {
     }
 
     public void deactivate() {
-        if (fixed) {
+    	Stargate.activeList.remove(this);
+        if (isFixed()) {
             return;
         }
-        Stargate.activeList.remove(this);
         destinations.clear();
         destination = "";
         activePlayer = null;
-        drawSign(true);
+        drawSign();
     }
 
     public boolean isActive() {
@@ -409,10 +418,10 @@ public class Portal {
             destination = destinations.get(index);
         }
         openTime = System.currentTimeMillis() / 1000;
-        drawSign(true);
+        drawSign();
     }
 
-    public final void drawSign(boolean update) {
+    public final void drawSign() {
         id.setText(0, "--" + name + "--");
         int max = destinations.size() - 1;
         int done = 0;
@@ -451,9 +460,7 @@ public class Portal {
             id.setText(done, "");
         }
 
-        if (update) {
-            id.update();
-        }
+        id.update();
     }
 
     public Blox[] getEntrances() {
@@ -779,6 +786,9 @@ public class Portal {
                 builder.append(portal.isAlwaysOn());
                 builder.append(':');
                 builder.append(portal.isPrivate());
+                builder.append(':');
+                builder.append(portal.world.getName());
+                
 
                 bw.append(builder.toString());
                 bw.newLine();
@@ -843,7 +853,7 @@ public class Portal {
                             portal.unregister();
                             Stargate.log.info("Destroying stargate at " + portal.toString());
                     } else {
-                    	portal.drawSign(true);
+                    	portal.drawSign();
                     }
 
                 }
@@ -873,6 +883,8 @@ public class Portal {
     public static void closeAllGates() {
     	Stargate.log.info("Closing all stargates.");
     	for (Portal p : allPortals) {
+    		if (p == null) continue;
+    		//if (!p.isLoaded()) continue;
     		p.close(true);
     	}
     }

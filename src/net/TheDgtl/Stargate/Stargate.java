@@ -26,6 +26,8 @@ import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.vehicle.VehicleListener;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
+import org.bukkit.event.world.WorldEvent;
+import org.bukkit.event.world.WorldListener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginLoader;
@@ -48,6 +50,7 @@ public class Stargate extends JavaPlugin {
     private final bListener blockListener = new bListener();
     private final pListener playerListener = new pListener();
     private final vListener vehicleListener = new vListener();
+    private final wListener worldListener = new wListener();
     public static Logger log;
     private Configuration config;
     private PluginManager pm;
@@ -82,19 +85,9 @@ public class Stargate extends JavaPlugin {
     public void onEnable() {
         PluginDescriptionFile pdfFile = this.getDescription();
         pm = getServer().getPluginManager();
-        
-        /* Lamesauce, they broke this. No way to check build number anymore as far as I know D:
-        String cbVerStr = CraftServer.class.getPackage().getImplementationVersion();
-        int cbVersion = Integer.parseInt(cbVerStr.substring(cbVerStr.length() - 3));
-        if (cbVersion < 319) {
-        	log.info("[" + pdfFile.getName() + " v." + pdfFile.getVersion() + "] CraftBukkit build " + cbVersion + " too old to run Stargate.");
-        	pm.disablePlugin(this);
-        	return;
-        }*/
+        config = this.getConfiguration();
         
         log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
-        
-    	config = this.getConfiguration();
 		
     	pm.registerEvent(Event.Type.BLOCK_FLOW, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.BLOCK_PHYSICS, blockListener, Priority.Normal, this);
@@ -111,6 +104,8 @@ public class Stargate extends JavaPlugin {
     	pm.registerEvent(Event.Type.BLOCK_DAMAGED, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
+    	
+    	pm.registerEvent(Event.Type.WORLD_LOADED, worldListener, Priority.Normal, this);
     	
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
     }
@@ -309,7 +304,7 @@ public class Stargate extends JavaPlugin {
                     player.sendMessage(ChatColor.GREEN + regMsg);
                 }
                 log.info("Initialized stargate: " + portal.getName());
-                portal.drawSign(true);
+                portal.drawSign();
                 // Set event text so our new sign is instantly initialized
                 event.setLine(0, sign.getText(0));
                 event.setLine(1, sign.getText(1));
@@ -400,6 +395,13 @@ public class Stargate extends JavaPlugin {
             	event.setCancelled((event.getBlock().getY() == event.getToBlock().getY()));
             }
         }
+    }
+    
+    private class wListener extends WorldListener {
+    	@Override
+    	public void onWorldLoaded(WorldEvent event) {
+    		//Portal.loadQueue(event.getWorld());
+    	}
     }
     
     @SuppressWarnings("static-access")

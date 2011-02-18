@@ -79,6 +79,8 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.13]
+ - Fixed gates no longer show in destination list.
 [Version 0.12]
  - Implemented fixed destination block using * in .gate file. This is the recommended method of doing an exit point for custom gates, as the automatic method doesn't work in a lot of cases.
  - Split networks up in memory, can now use same name in different networks. As a result, fixed gates must now specify a network.
