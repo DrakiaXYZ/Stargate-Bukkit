@@ -79,6 +79,9 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.14]
+ - Fixed infinite loop in fixed gates.
+ - Fixed gate destination will not open when dialed into.
 [Version 0.13]
  - Fixed gates no longer show in destination list.
 [Version 0.12]

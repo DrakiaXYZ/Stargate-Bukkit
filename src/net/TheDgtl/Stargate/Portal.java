@@ -50,7 +50,6 @@ public class Portal {
     private Blox[] entrances;
     private boolean verified;
     private boolean fixed;
-    private boolean gracePeriod;
     private ArrayList<String> destinations = new ArrayList<String>();
     private String network;
     private Gate gate;
@@ -80,7 +79,6 @@ public class Portal {
         this.button = button;
         this.verified = verified;
         this.fixed = dest.length() > 0;
-        this.gracePeriod = false;
         this.network = network;
         this.name = name;
         this.gate = gate;
@@ -99,14 +97,6 @@ public class Portal {
         if (verified) {
             this.drawSign();
         }
-    }
-
-    public synchronized boolean manipGrace(boolean set, boolean var) {
-        if (!set) {
-            return gracePeriod;
-        }
-        gracePeriod = var;
-        return false;
     }
 
     public boolean isOpen() {
@@ -149,10 +139,9 @@ public class Portal {
         // Open remote gate
         if (!isAlwaysOn()) {
             player = openFor;
-            manipGrace(true, true);
 
             Portal end = getDestination();
-            if (end != null && !end.isOpen()) {
+            if (end != null && !end.isFixed() && !end.isOpen()) {
                 end.open(openFor, false);
                 end.setDestination(this);
                 if (end.isVerified()) end.drawSign();
@@ -164,15 +153,8 @@ public class Portal {
 
     public void close(boolean force) {
     	if (isAlwaysOn() && !force) return; // Never close an always open gate
-        if (!isAlwaysOn()) {
-        	Portal end = getDestination();
-
-	        if (end != null && end.isOpen()) {
-	            end.deactivate(); // Clear it's destination first.
-	            end.close(false);
-	        }
-        }
-
+    	
+    	// Close this gate, then the dest gate.
         for (Blox inside : getEntrances()) {
             inside.setType(gate.getPortalBlockClosed());
         }
@@ -181,7 +163,16 @@ public class Portal {
         isOpen = false;
         Stargate.openList.remove(this);
         Stargate.activeList.remove(this);
+        
+        if (!isAlwaysOn()) {
+        	Portal end = getDestination();
 
+	        if (end != null && end.isOpen()) {
+	            end.deactivate(); // Clear it's destination first.
+	            end.close(false);
+	        }
+        }
+        
         deactivate();
     }
 
@@ -435,7 +426,6 @@ public class Portal {
                 id.setText(++done, "To: " + destination);
                 id.setText(++done, " (" + network + ") ");
             } else {
-                manipGrace(true, true);
                 int index = destinations.indexOf(destination);
 
                 if ((index == max) && (max > 1) && (++done <= 3)) {
