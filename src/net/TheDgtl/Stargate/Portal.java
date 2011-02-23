@@ -697,7 +697,7 @@ public class Portal {
         // No button on an always-open gate.
         if (!alwaysOn) {
         	button = topleft.modRelative(buttonVector.getRight(), buttonVector.getDepth(), buttonVector.getDistance() + 1, modX, 1, modZ);
-        button.setType(BUTTON);
+        	button.setType(BUTTON);
         }
         portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv);
 

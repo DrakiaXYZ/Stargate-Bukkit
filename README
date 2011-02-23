@@ -13,6 +13,7 @@ Known Issues
 =============
  - Vehicle implementation is nowhere near done.
  - Signs aren't always updating, I don't know what's causing this, I think it's a Bukkit thing.
+ - Minecraft bug is causing buttons to look odd, they still work though.
  
 =============
  Permissions
@@ -21,6 +22,7 @@ Known Issues
  - stargate.create - Allow this player/group to create new stargates.
  - stargate.destroy - Allow this player/group to destroy existing stargates.
  - stargate.hidden - Allow this player/group to see all hidden stargates.
+ - stargate.private - Allow this player/group to use all private stargates.
 
 =============
 Instructions
@@ -79,6 +81,10 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.15]
+ - Built against b424jnks -- As such nothing lower is supported at the moment.
+ - Moved gate destruction code to onBlockBreak since onBlockDamage no longer handles breaking blocks.
+ - Removed long constructor.
 [Version 0.14]
  - Fixed infinite loop in fixed gates.
  - Fixed gate destination will not open when dialed into.

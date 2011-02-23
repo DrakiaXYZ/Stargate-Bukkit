@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockListener;
@@ -68,15 +69,6 @@ public class Stargate extends JavaPlugin {
     public static ConcurrentLinkedQueue<Portal> openList = new ConcurrentLinkedQueue<Portal>();
     public static ConcurrentLinkedQueue<Portal> activeList = new ConcurrentLinkedQueue<Portal>();
     //private HashMap<Integer, Location> vehicles = new HashMap<Integer, Location>();
-
-	public Stargate(PluginLoader pluginLoader, Server instance, PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
-    	super(pluginLoader, instance, desc, folder, plugin, cLoader);
-    	log = Logger.getLogger("Minecraft");
-    	
-    	// Set portalFile and gateFolder to the plugin folder as defaults.
-    	portalFile = folder + File.separator + "stargate.db";
-    	gateFolder = folder + File.separator + "gates" + File.separator;
-    }
 	
     public void onDisable() {
     	Portal.closeAllGates();
@@ -86,6 +78,11 @@ public class Stargate extends JavaPlugin {
         PluginDescriptionFile pdfFile = this.getDescription();
         pm = getServer().getPluginManager();
         config = this.getConfiguration();
+    	log = Logger.getLogger("Minecraft");
+    	
+    	// Set portalFile and gateFolder to the plugin folder as defaults.
+    	portalFile = getDataFolder() + File.separator + "stargate.db";
+    	gateFolder = getDataFolder() + File.separator + "gates" + File.separator;
         
         log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
 		
@@ -102,6 +99,7 @@ public class Stargate extends JavaPlugin {
     	pm.registerEvent(Event.Type.BLOCK_RIGHTCLICKED, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.BLOCK_PLACED, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.BLOCK_DAMAGED, blockListener, Priority.Normal, this);
+    	pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
     	pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
     	
@@ -357,14 +355,16 @@ public class Stargate extends JavaPlugin {
             		}
             	}
         	}
-        	
-        	// Drop out if we're not breaking a block
-        	if (event.getDamageLevel() != BlockDamageLevel.BROKEN) return;
-        	
+        }
+        
+        @Override
+        public void onBlockBreak(BlockBreakEvent event) {
+        	Block block = event.getBlock();
+        	Player player = event.getPlayer();
             if (block.getType() != Material.WALL_SIGN && block.getType() != Material.STONE_BUTTON && Gate.getGatesByControlBlock(block).length == 0) {
                 return;
             }
-            
+
             Portal portal = Portal.getByBlock(block);
             if (portal == null) return;
             
