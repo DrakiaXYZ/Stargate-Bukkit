@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockDamageLevel;
 import org.bukkit.entity.Entity;
@@ -31,7 +30,6 @@ import org.bukkit.event.world.WorldEvent;
 import org.bukkit.event.world.WorldListener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.config.Configuration;
@@ -46,9 +44,10 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  */
 public class Stargate extends JavaPlugin {
 	// Permissions
-	public static Permissions Permissions = null;
+	private Permissions permissions = null;
+	private double permVersion = 0;
 	
-    private final bListener blockListener = new bListener();
+    private final bListener blockListener = new bListener(this);
     private final pListener playerListener = new pListener();
     private final vListener vehicleListener = new vListener();
     private final wListener worldListener = new wListener();
@@ -92,7 +91,12 @@ public class Stargate extends JavaPlugin {
     	this.reloadConfig();
     	this.migrate();
     	this.reloadGates();
-    	this.setupPermissions();
+    	if (!this.setupPermissions()) {
+    		log.info("[Stargate] Permissions not loaded, using defaults");
+    	} else {
+    		if (permissions != null)
+    			log.info("[Stargate] Using Permissions " + permVersion + " (" + Permissions.version + ") for permissions");
+    	}
     	
     	pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
     	
@@ -207,15 +211,43 @@ public class Stargate extends JavaPlugin {
         }
     }
     
-    public void setupPermissions() {
-    	Plugin perm = pm.getPlugin("Permissions");
+	/*
+	 * Find what Permissions plugin we're using and enable it.
+	 */
+	private boolean setupPermissions() {
+		Plugin perm;
+		// Apparently GM isn't a new permissions plugin, it's Permissions "2.0.1"
+		// API change broke my plugin.
+		perm = pm.getPlugin("Permissions");
+		// We're running Permissions
+		if (perm != null) {
+			if (!perm.isEnabled()) {
+				pm.enablePlugin(perm);
+			}
+			permissions = (Permissions)perm;
+			try {
+				String[] permParts = Permissions.version.split("\\.");
+				permVersion = Double.parseDouble(permParts[0] + "." + permParts[1]);
+			} catch (Exception e) {
+				log.info("Could not determine Permissions version: " + Permissions.version);
+				return true;
+			}
+			return true;
+		}
+		// Permissions not loaded
+		return false;
+	}
 
-	    if(perm != null) {
-	    	Stargate.Permissions = ((Permissions)perm);
-	    } else {
-	    	log.info("[" + this.getDescription().getName() + "] Permission system not enabled.");
-	    }
-    }
+	/*
+	 * Check whether the player has the given permissions.
+	 */
+	public boolean hasPerm(Player player, String perm, boolean def) {
+		if (permissions != null) {
+			return permissions.getHandler().has(player, perm);
+		} else {
+			return def;
+		}
+	}
     
     private class vListener extends VehicleListener {
         @Override
@@ -273,6 +305,12 @@ public class Stargate extends JavaPlugin {
     }
 
     private class bListener extends BlockListener {
+    	Stargate stargate;
+    	
+    	bListener(Stargate stargate) {
+    		this.stargate = stargate;
+    	}
+    	
     	@Override
     	public void onBlockPlace(BlockPlaceEvent event) {
     		// Stop player from placing a block touching a portals controls
@@ -288,7 +326,7 @@ public class Stargate extends JavaPlugin {
     		Player player = event.getPlayer();
     		Block block = event.getBlock();
     		// Initialize a stargate
-            if (Stargate.hasPerm(player, "stargate.create", player.isOp())) {
+            if (hasPerm(player, "stargate.create", player.isOp())) {
 	            SignPost sign = new SignPost(new Blox(block));
 	            // Set sign text so we can create a gate with it.
 	            sign.setText(0, event.getLine(0));
@@ -319,9 +357,9 @@ public class Stargate extends JavaPlugin {
                 Portal portal = Portal.getByBlock(block);
                 // Cycle through a stargates locations
                 if (portal != null) {
-                	if (Stargate.hasPerm(player, "stargate.use", true)) {
+                	if (hasPerm(player, "stargate.use", true)) {
 	                    if ((!portal.isOpen()) && (!portal.isFixed())) {
-	                        portal.cycleDestination(player);
+	                        portal.cycleDestination(player, stargate);
 	                    }
                 	} else {
                 		if (!denyMsg.isEmpty()) {
@@ -333,7 +371,7 @@ public class Stargate extends JavaPlugin {
             
             // Implement right-click to toggle a stargate, gets around spawn protection problem.
             if ((block.getType() == Material.STONE_BUTTON)) {
-            	if (Stargate.hasPerm(player, "stargate.use", true)) {
+            	if (hasPerm(player, "stargate.use", true)) {
             		Portal portal = Portal.getByBlock(block);
             		if (portal != null) {
             			onButtonPressed(player, portal);
@@ -347,8 +385,8 @@ public class Stargate extends JavaPlugin {
         	Player player = event.getPlayer();
         	Block block = event.getBlock();
         	// Check if we're pushing a button.
-        	if (block.getType() == Material.STONE_BUTTON && event.getDamageLevel() == BlockDamageLevel.STOPPED) {
-            	if (Stargate.hasPerm(player, "stargate.use", true)) {
+        	if (block.getType() == Material.STONE_BUTTON && event.getDamageLevel() == BlockDamageLevel.STARTED) {
+            	if (hasPerm(player, "stargate.use", true)) {
             		Portal portal = Portal.getByBlock(block);
             		if (portal != null) {
             			onButtonPressed(player, portal);
@@ -368,7 +406,7 @@ public class Stargate extends JavaPlugin {
             Portal portal = Portal.getByBlock(block);
             if (portal == null) return;
             
-            if (!Stargate.hasPerm(player, "stargate.destroy", player.isOp())) {
+            if (!hasPerm(player, "stargate.destroy", player.isOp())) {
             	event.setCancelled(true);
             	return;
             }
@@ -402,13 +440,6 @@ public class Stargate extends JavaPlugin {
     	public void onWorldLoaded(WorldEvent event) {
     		//Portal.loadQueue(event.getWorld());
     	}
-    }
-    
-    @SuppressWarnings("static-access")
-	public static Boolean hasPerm(Player player, String perm, Boolean def) {
-    	if (Permissions != null)
-    		return Permissions.Security.permission(player, perm);
-    	return def;
     }
     
     private class SGThread implements Runnable {

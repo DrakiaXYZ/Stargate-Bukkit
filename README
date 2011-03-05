@@ -81,6 +81,13 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.18]
+ - Small permissions handling update.
+[Version 0.17]
+ - Core GM support removed, depends on FakePermissions if you use GM.
+[Version 0.16]
+ - Fixed Permissions, will work with GroupManager, Permissions 2.0, or Permissions 2.1
+ - Left-clicking to activate a stargate works again
 [Version 0.15]
  - Built against b424jnks -- As such nothing lower is supported at the moment.
  - Moved gate destruction code to onBlockBreak since onBlockDamage no longer handles breaking blocks.

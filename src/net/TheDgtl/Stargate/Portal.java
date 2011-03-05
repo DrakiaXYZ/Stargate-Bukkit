@@ -351,7 +351,7 @@ public class Portal {
         return owner;
     }
 
-    public void activate(Player player) {
+    public void activate(Player player, Stargate stargate) {
         destinations.clear();
         destination = "";
         drawSign();
@@ -362,7 +362,7 @@ public class Portal {
             // Not fixed, not this portal, and visible to this player.
             if (	(!portal.isFixed()) &&
             		(!dest.equalsIgnoreCase(getName())) && 							// Not this portal
-            		(!portal.isHidden() || Stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName()))
+            		(!portal.isHidden() || stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName()))
             	) {
                 destinations.add(portal.getName());
             }
@@ -396,9 +396,9 @@ public class Portal {
     	return openTime;
     }
 
-    public void cycleDestination(Player player) {
+    public void cycleDestination(Player player, Stargate stargate) {
         if (!isActive() || getActivePlayer() != player) {
-            activate(player);
+            activate(player, stargate);
         }
 
         if (destinations.size() > 0) {
