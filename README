@@ -13,7 +13,8 @@ Known Issues
 =============
  - Vehicle implementation is nowhere near done.
  - Signs aren't always updating, I don't know what's causing this, I think it's a Bukkit thing.
- - Minecraft bug is causing buttons to look odd, they still work though.
+ - There are many bugs with portal material not showing properly. This is a bug I can not track down, and have no fix for at the moment.
+ - Multi-world support is VERY BETA. Please don't just say "it doesn't work" I will ignore you.
  
 =============
  Permissions
@@ -75,12 +76,17 @@ portal-create-message - The message when a gate is created
 not-owner-message - The message when you aren't allowed to push the gate button
 other-side-blocked-message - The message when the gate you're dialing is open
 teleport-message - The message when you are teleported
-portal-save-location - The file your portal database is saved as
+portal-folder - The folder your portal databases are saved in
 gate-folder - The folder containing your .gate files
  
 =============
   Changes
 =============
+[Version 0.20]
+ - Fixed the bug SIGN_CHANGE exception when using plugins such as Lockette
+[Version 0.19]
+ - Set button facing on new gates, fixes weirdass button glitch
+ - Beginning of very buggy multi-world support
 [Version 0.18]
  - Small permissions handling update.
 [Version 0.17]

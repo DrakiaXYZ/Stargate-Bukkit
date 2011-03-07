@@ -121,6 +121,6 @@ public class Blox {
 		if (getClass() != obj.getClass()) return false;
 		
 		Blox blox = (Blox) obj;
-		return (x == blox.x) && (y == blox.y) && (z == blox.z) && (world == blox.world); 
+		return (x == blox.x) && (y == blox.y) && (z == blox.z) && (world.getName().equals(blox.world.getName())); 
 	}
 }

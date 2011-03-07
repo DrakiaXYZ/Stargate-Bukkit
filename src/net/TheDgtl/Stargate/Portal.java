@@ -63,7 +63,6 @@ public class Portal {
     private boolean priv = false;
     private World world;
     private long openTime;
-    private boolean loaded = false;
 
     private Portal(Blox topLeft, int modX, int modZ,
             float rotX, SignPost id, Blox button,
@@ -113,10 +112,6 @@ public class Portal {
     
     public boolean isPrivate() {
     	return priv;
-    }
-    
-    public boolean isLoaded() {
-    	return loaded;
     }
 
     public boolean open(boolean force) {
@@ -254,35 +249,11 @@ public class Portal {
     public Location getExit(Location traveller, Portal origin) {
     	Location loc = null;
     	// Check if the gate has an exit block
-    	 if (gate.getExit() != null) {
-    		 Blox exit = getBlockAt(gate.getExit());
-    		 loc = exit.modRelativeLoc(0D, 0D, 1D, traveller.getYaw(), traveller.getPitch(), modX, 1, modZ);
-    	 } else {
-	    	// Move the "entrance" to the first portal block up at the current x/z
-	    	// "Exits" seem to only consist of the lowest Y coord
-	    	int bX = traveller.getBlockX();
-	    	int bY = traveller.getBlockY();
-	    	int bZ = traveller.getBlockZ();
-	    	while (traveller.getWorld().getBlockTypeIdAt(bX, bY, bZ) == gate.getPortalBlockOpen())
-	    		bY --;
-	    	bY++;
-	    	// End
-	    	
-	        Blox entrance = new Blox(world, bX, bY, bZ);
-	        HashMap<Blox, Integer> originExits = origin.getExits();
-	        HashMap<Blox, Integer> destExits = this.getExits();
-	
-	        if (originExits.containsKey(entrance)) {
-	            int position = (int)(((float)originExits.get(entrance) / originExits.size()) * destExits.size());
-	            Blox exit = getReverseExits().get(position);
-	            // Workaround for different size gates. Just drop them at the first exit block.
-	            if (exit == null) {
-	            	exit = (Blox)getReverseExits().values().toArray()[0];
-	            }
-	            if (exit != null) {
-	                loc = exit.modRelativeLoc(0D, 0D, 1D, traveller.getYaw(), traveller.getPitch(), modX, 1, modZ);
-	            }
-	        }
+		if (gate.getExit() != null) {
+			Blox exit = getBlockAt(gate.getExit());
+			loc = exit.modRelativeLoc(0D, 0D, 1D, traveller.getYaw(), traveller.getPitch(), modX, 1, modZ);
+		} else {
+    		Stargate.log.log(Level.WARNING, "[Stargate] Missing destination point in .gate file " + gate.getFilename());
     	}
     	if (loc != null) {
             Block block = world.getBlockAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
@@ -294,8 +265,6 @@ public class Portal {
             loc.setPitch(traveller.getPitch());
             return loc;
     	}
-
-        Stargate.log.log(Level.WARNING, "No position found calculating route from " + this + " to " + origin);
         return traveller;
     }
 
@@ -568,7 +537,7 @@ public class Portal {
             }
         }
 
-        saveAllGates();
+        saveAllGates(world);
     }
 
     private Blox getBlockAt(int right, int depth) {
@@ -615,6 +584,7 @@ public class Portal {
 
     public static Portal createPortal(SignPost id, Player player) {
         Block idParent = id.getParent();
+        if (idParent == null) return null;
         if (Gate.getGatesByControlBlock(idParent).length == 0) return null;
 
         Blox parent = new Blox(player.getWorld(), idParent.getX(), idParent.getY(), idParent.getZ());
@@ -642,19 +612,24 @@ public class Portal {
         int modX = 0;
         int modZ = 0;
         float rotX = 0f;
+        int facing = 0;
 
         if (idParent.getX() > id.getBlock().getX()) {
             modZ -= 1;
             rotX = 90f;
+            facing = 2;
         } else if (idParent.getX() < id.getBlock().getX()) {
             modZ += 1;
             rotX = 270f;
+            facing = 1;
         } else if (idParent.getZ() > id.getBlock().getZ()) {
             modX += 1;
             rotX = 180f;
+            facing = 4;
         } else if (idParent.getZ() < id.getBlock().getZ()) {
             modX -= 1;
             rotX = 0f;
+            facing = 3;
         }
 
         Gate[] possibleGates = Gate.getGatesByControlBlock(idParent);
@@ -698,6 +673,7 @@ public class Portal {
         if (!alwaysOn) {
         	button = topleft.modRelative(buttonVector.getRight(), buttonVector.getDepth(), buttonVector.getDistance() + 1, modX, 1, modZ);
         	button.setType(BUTTON);
+        	button.setData(facing);
         }
         portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv);
 
@@ -715,7 +691,7 @@ public class Portal {
         		origin.open(true);
         }
 
-        saveAllGates();
+        saveAllGates(topleft.getWorld());
 
         return portal;
     }
@@ -738,13 +714,14 @@ public class Portal {
         return lookupBlocks.get(new Blox(block));
     }
 
-    public static void saveAllGates() {
-        String loc = Stargate.getSaveLocation();
+    public static void saveAllGates(World world) {
+        String loc = Stargate.getSaveLocation() + File.separator + world.getName() + ".db";
 
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(loc, false));
 
             for (Portal portal : allPortals) {
+            	if (!portal.world.getName().equals(world.getName())) continue;
                 StringBuilder builder = new StringBuilder();
                 Blox sign = new Blox(portal.id.getBlock());
                 Blox button = portal.button;
@@ -789,20 +766,25 @@ public class Portal {
             Stargate.log.log(Level.SEVERE, "Exception while writing stargates to " + loc + ": " + e);
         }
     }
-
-    public static void loadAllGates(World world) {
-        String location = Stargate.getSaveLocation();
-
+    
+    public static void clearGates() {
         lookupBlocks.clear();
         lookupNamesNet.clear();
         lookupEntrances.clear();
         allPortals.clear();
         allPortalsNet.clear();
+    }
 
-        if (new File(location).exists()) {
+    public static void loadAllGates(World world) {
+        String location = Stargate.getSaveLocation();
+        
+        File db = new File(location, world.getName() + ".db");
+
+        if (db.exists()) {
         	int l = 0;
+        	int portalCount = 0;
             try {
-                Scanner scanner = new Scanner(new File(location));
+                Scanner scanner = new Scanner(db);
                 while (scanner.hasNextLine()) {
                 	l++;
                     String line = scanner.nextLine().trim();
@@ -841,9 +823,10 @@ public class Portal {
                     if (!portal.isVerified() || !portal.checkIntegrity()) {
                             portal.close(true);
                             portal.unregister();
-                            Stargate.log.info("Destroying stargate at " + portal.toString());
+                            Stargate.log.info("[Stargate] Destroying stargate at " + portal.toString());
                     } else {
                     	portal.drawSign();
+                    	portalCount++;
                     }
 
                 }
@@ -862,11 +845,13 @@ public class Portal {
                 		OpenCount++;
                 	}
                 }
-                Stargate.log.info("[Stargate] Loaded " + allPortals.size() + " stargates with " + OpenCount + " set as always-on");
+                Stargate.log.info("[Stargate] {" + world.getName() + "} Loaded " + portalCount + " stargates with " + OpenCount + " set as always-on");
             } catch (Exception e) {
                 Stargate.log.log(Level.SEVERE, "Exception while reading stargates from " + location + ": " + l);
                 e.printStackTrace();
             }
+        } else {
+        	Stargate.log.info("[Stargate] {" + world.getName() + "} No stargates for world ");
         }
     }
     

@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockDamageLevel;
 import org.bukkit.entity.Entity;
@@ -54,7 +55,8 @@ public class Stargate extends JavaPlugin {
     public static Logger log;
     private Configuration config;
     private PluginManager pm;
-    private static String portalFile;
+    
+    private static String portalFolder;
     private static String gateFolder;
     private static String teleMsg = "Teleported";
     private static String regMsg = "Gate Created";
@@ -65,12 +67,14 @@ public class Stargate extends JavaPlugin {
     private static String defNetwork = "central";
     private static int activeLimit = 10;
     private static int openLimit = 10;
+    
     public static ConcurrentLinkedQueue<Portal> openList = new ConcurrentLinkedQueue<Portal>();
     public static ConcurrentLinkedQueue<Portal> activeList = new ConcurrentLinkedQueue<Portal>();
     //private HashMap<Integer, Location> vehicles = new HashMap<Integer, Location>();
 	
     public void onDisable() {
     	Portal.closeAllGates();
+    	Portal.clearGates();
     }
 
     public void onEnable() {
@@ -80,7 +84,7 @@ public class Stargate extends JavaPlugin {
     	log = Logger.getLogger("Minecraft");
     	
     	// Set portalFile and gateFolder to the plugin folder as defaults.
-    	portalFile = getDataFolder() + File.separator + "stargate.db";
+    	portalFolder = getDataFolder() + File.separator + "portals";
     	gateFolder = getDataFolder() + File.separator + "gates" + File.separator;
         
         log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
@@ -91,6 +95,7 @@ public class Stargate extends JavaPlugin {
     	this.reloadConfig();
     	this.migrate();
     	this.reloadGates();
+    	
     	if (!this.setupPermissions()) {
     		log.info("[Stargate] Permissions not loaded, using defaults");
     	} else {
@@ -114,7 +119,7 @@ public class Stargate extends JavaPlugin {
 
 	public void reloadConfig() {
     	config.load();
-        portalFile = config.getString("portal-save-location", portalFile);
+        portalFolder = config.getString("portal-folder", portalFolder);
         gateFolder = config.getString("gate-folder", gateFolder);
         teleMsg = config.getString("teleport-message", teleMsg);
         regMsg = config.getString("portal-create-message", regMsg);
@@ -127,7 +132,7 @@ public class Stargate extends JavaPlugin {
     }
 	
 	public void saveConfig() {
-        config.setProperty("portal-save-location", portalFile);
+        config.setProperty("portal-folder", portalFolder);
         config.setProperty("gate-folder", gateFolder);
         config.setProperty("teleport-message", teleMsg);
         config.setProperty("portal-create-message", regMsg);
@@ -141,24 +146,29 @@ public class Stargate extends JavaPlugin {
 	
 	public void reloadGates() {
 		Gate.loadGates(gateFolder);
-        Portal.loadAllGates(this.getServer().getWorlds().get(0));
+		// Replace nethergate.gate if it doesn't have an exit point.
+		if (Gate.getGateByName("nethergate.gate").getExit() == null) {
+			Gate.populateDefaults(gateFolder);
+		}
+		
+		for (World world : getServer().getWorlds()) {
+			Portal.loadAllGates(world);
+		}
 	}
 	
 	private void migrate() {
 		// Only migrate if new file doesn't exist.
-		File newFile = new File(portalFile);
+		File newPortalDir = new File(portalFolder);
+		if (!newPortalDir.exists()) {
+			newPortalDir.mkdirs();
+		}
+		File newFile = new File(portalFolder, getServer().getWorlds().get(0).getName() + ".db");
 		if (!newFile.exists()) {
-			// Migrate REALLY old stargates if applicable
-			File olderFile = new File("stargates.txt");
-			if (olderFile.exists()) {
-				Stargate.log.info("[Stargate] Migrated old stargates.txt");
-				olderFile.renameTo(newFile);
-			}
-	    	// Migrate old stargates if applicable.
-	        File oldFile = new File("stargates/locations.dat");
-	        if (oldFile.exists()) {
-	        	Stargate.log.info("[Stargate] Migrated existing locations.dat");
-	            oldFile.renameTo(newFile);
+	        // Migrate not-so-old stargate db
+	        File oldishFile = new File("plugins/Stargate/stargate.db");
+	        if (oldishFile.exists()) {
+	        	Stargate.log.info("[Stargate] Migrating existing stargate.db");
+	        	oldishFile.renameTo(newFile);
 	        }
 		}
         
@@ -169,13 +179,13 @@ public class Stargate extends JavaPlugin {
         	if (!newDir.exists()) newDir.mkdirs();
             for (File file : oldDir.listFiles(new Gate.StargateFilenameFilter())) {
             	Stargate.log.info("[Stargate] Migrating existing gate " + file.getName());
-            	file.renameTo(new File(gateFolder + file.getName()));
+            	file.renameTo(new File(gateFolder, file.getName()));
             }
         }
 	}
 
     public static String getSaveLocation() {
-        return portalFile;
+        return portalFolder;
     }
 
     public static String getDefaultNetwork() {
@@ -216,8 +226,6 @@ public class Stargate extends JavaPlugin {
 	 */
 	private boolean setupPermissions() {
 		Plugin perm;
-		// Apparently GM isn't a new permissions plugin, it's Permissions "2.0.1"
-		// API change broke my plugin.
 		perm = pm.getPlugin("Permissions");
 		// We're running Permissions
 		if (perm != null) {
@@ -325,6 +333,8 @@ public class Stargate extends JavaPlugin {
     	public void onSignChange(SignChangeEvent event) {
     		Player player = event.getPlayer();
     		Block block = event.getBlock();
+    		if (block.getType() != Material.WALL_SIGN) return;
+    		
     		// Initialize a stargate
             if (hasPerm(player, "stargate.create", player.isOp())) {
 	            SignPost sign = new SignPost(new Blox(block));
@@ -339,7 +349,7 @@ public class Stargate extends JavaPlugin {
                 if (!regMsg.isEmpty()) {
                     player.sendMessage(ChatColor.GREEN + regMsg);
                 }
-                log.info("Initialized stargate: " + portal.getName());
+                log.info("[Stargate] Initialized stargate: " + portal.getName());
                 portal.drawSign();
                 // Set event text so our new sign is instantly initialized
                 event.setLine(0, sign.getText(0));
@@ -438,7 +448,7 @@ public class Stargate extends JavaPlugin {
     private class wListener extends WorldListener {
     	@Override
     	public void onWorldLoaded(WorldEvent event) {
-    		//Portal.loadQueue(event.getWorld());
+    		Portal.loadAllGates(event.getWorld());
     	}
     }
     

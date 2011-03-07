@@ -24,6 +24,7 @@ public class SignPost {
 	
 	public Block getParent() {
 		if (parent == null) findParent();
+		if (parent == null) return null;
 		return parent.getBlock();
 	}
 	
@@ -61,8 +62,11 @@ public class SignPost {
 	
 	public void update() {
 		Sign sign = findSign();
-		if (sign == null) return;
-		sign.update();
+		if (sign == null) {
+			Stargate.log.info("[Stargate::SignPost::update] Sign null");
+			return;
+		}
+		sign.update(true);
 	}
 	
 	private void findParent() {
