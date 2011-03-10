@@ -791,7 +791,7 @@ public class Portal {
                 }
                 Stargate.log.info("[Stargate] {" + world.getName() + "} Loaded " + portalCount + " stargates with " + OpenCount + " set as always-on");
             } catch (Exception e) {
-                Stargate.log.log(Level.SEVERE, "Exception while reading stargates from " + location + ": " + l);
+                Stargate.log.log(Level.SEVERE, "Exception while reading stargates from " + db.getName() + ": " + l);
                 e.printStackTrace();
             }
         } else {

@@ -82,6 +82,12 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.22]
+ - Fixed multi-world stargates causing an NPE
+[Version 0.21]
+ - Code cleanup
+ - Added a few more errors when a gate can't be loaded
+ - Hopefully fixed path issue on some Linux installs
 [Version 0.20]
  - Fixed the bug SIGN_CHANGE exception when using plugins such as Lockette
 [Version 0.19]

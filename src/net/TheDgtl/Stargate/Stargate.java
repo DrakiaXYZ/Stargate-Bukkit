@@ -449,13 +449,18 @@ public class Stargate extends JavaPlugin {
     private class wListener extends WorldListener {
     	@Override
     	public void onWorldLoaded(WorldEvent event) {
-    		Portal.loadAllGates(event.getWorld());
+    		World w = event.getWorld();
+    		// We have to make sure the world is actually loaded. This gets called twice for some reason.
+    		if (w.getBlockAt(w.getSpawnLocation()).getWorld() != null) {
+    			Portal.loadAllGates(w);
+    		}
     	}
     }
     
     private class SGThread implements Runnable {
 	    public void run() {
 	    	long time = System.currentTimeMillis() / 1000;
+	    	// Close open portals
 	    	for (Iterator<Portal> iter = Stargate.openList.iterator(); iter.hasNext();) {
 	    		Portal p = iter.next();
 	    		if (time > p.getOpenTime() + Stargate.openLimit) {
@@ -463,6 +468,7 @@ public class Stargate extends JavaPlugin {
 	    			iter.remove();
 	    		}
 	    	}
+	    	// Deactivate active portals
 	    	for (Iterator<Portal> iter = Stargate.activeList.iterator(); iter.hasNext();) {
 	    		Portal p = iter.next();
 	    		if (time > p.getOpenTime() + Stargate.activeLimit) {
