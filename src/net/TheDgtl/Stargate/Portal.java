@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.logging.Level;
 
 import org.bukkit.Location;
@@ -28,40 +27,41 @@ import org.bukkit.util.Vector;
  * @author Dinnerbone
  */
 public class Portal {
-    public static final int OBSIDIAN = 49;
-    public static final int FIRE = 51;
-    public static final int SIGN = 68;
-    public static final int BUTTON = 77;
+	// Variables used to store portal lists
     private static final HashMap<Blox, Portal> lookupBlocks = new HashMap<Blox, Portal>();
     private static final HashMap<Blox, Portal> lookupEntrances = new HashMap<Blox, Portal>();
     private static final ArrayList<Portal> allPortals = new ArrayList<Portal>();
     private static final HashMap<String, ArrayList<String>> allPortalsNet = new HashMap<String, ArrayList<String>>();
     private static final HashMap<String, HashMap<String, Portal>> lookupNamesNet = new HashMap<String, HashMap<String, Portal>>();
+    
+    // Gate location block info
     private Blox topLeft;
     private int modX;
     private int modZ;
     private float rotX;
+    // Block references
     private SignPost id;
-    private String name;
-    private String destination;
     private Blox button;
-    private Player player;
     private Blox[] frame;
     private Blox[] entrances;
-    private boolean verified;
-    private boolean fixed;
-    private ArrayList<String> destinations = new ArrayList<String>();
+    // Gate information
+    private String name;
+    private String destination;
     private String network;
     private Gate gate;
-    private boolean isOpen = false;
     private String owner = "";
-    private HashMap<Blox, Integer> exits;
-    private HashMap<Integer, Blox> reverseExits;
     private boolean hidden = false;
-    private Player activePlayer;
     private boolean alwaysOn = false;
     private boolean priv = false;
     private World world;
+    // Gate options
+    private boolean verified;
+    private boolean fixed;
+    // In-use information
+    private Player player;
+    private Player activePlayer;
+    private ArrayList<String> destinations = new ArrayList<String>();
+    private boolean isOpen = false;
     private long openTime;
 
     private Portal(Blox topLeft, int modX, int modZ,
@@ -211,7 +211,7 @@ public class Portal {
         Location traveller = new Location(this.world, vehicle.getLocation().getX(), vehicle.getLocation().getY(), vehicle.getLocation().getZ());
         Location exit = getExit(traveller, origin);
         
-        double velocity = vehicle.getVelocity().length();
+        //double velocity = vehicle.getVelocity().length();
         
         // Stop and teleport
         vehicle.setVelocity(new Vector());
@@ -454,53 +454,6 @@ public class Portal {
         return frame;
     }
 
-    public HashMap<Blox, Integer> getExits() {
-        if (exits == null) {
-            exits = new HashMap<Blox, Integer>();
-            reverseExits = new HashMap<Integer, Blox>();
-            HashMap<RelativeBlockVector, Integer> relativeExits = gate.getExits();
-            Set<RelativeBlockVector> exitBlocks = relativeExits.keySet();
-
-            for (RelativeBlockVector vector : exitBlocks) {
-                Blox block = getBlockAt(vector);
-                Integer position = relativeExits.get(vector);
-                exits.put(block, position);
-                reverseExits.put(position, block);
-            }
-        }
-
-        return exits;
-    }
-
-    public HashMap<Integer, Blox> getReverseExits() {
-        if (reverseExits == null) {
-            getExits();
-        }
-
-        return reverseExits;
-    }
-
-    @Override
-    public int hashCode() {
-        return getName().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-
-        Portal portal = (Portal) obj;
-        return this.getName().equalsIgnoreCase(portal.getName());
-    }
-
     public void unregister() {
     	Stargate.log.info("[Stargate] Unregistering gate " + getName());
     	close(true);
@@ -540,16 +493,8 @@ public class Portal {
         saveAllGates(world);
     }
 
-    private Blox getBlockAt(int right, int depth) {
-        return getBlockAt(right, depth, 0);
-    }
-
     private Blox getBlockAt(RelativeBlockVector vector) {
         return topLeft.modRelative(vector.getRight(), vector.getDepth(), vector.getDistance(), modX, 1, modZ);
-    }
-
-    private Blox getBlockAt(int right, int depth, int distance) {
-        return topLeft.modRelative(right, depth, distance, modX, 1, modZ);
     }
 
     private void register() {
@@ -575,11 +520,6 @@ public class Portal {
         if (!allPortalsNet.containsKey(getNetwork().toLowerCase()))
         	allPortalsNet.put(getNetwork().toLowerCase(), new ArrayList<String>());
         allPortalsNet.get(getNetwork().toLowerCase()).add(getName().toLowerCase());
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Portal [id=%s, name=%s, type=%s]", id, name, gate.getFilename());
     }
 
     public static Portal createPortal(SignPost id, Player player) {
@@ -672,7 +612,7 @@ public class Portal {
         // No button on an always-open gate.
         if (!alwaysOn) {
         	button = topleft.modRelative(buttonVector.getRight(), buttonVector.getDepth(), buttonVector.getDistance() + 1, modX, 1, modZ);
-        	button.setType(BUTTON);
+        	button.setType(Material.STONE_BUTTON.getId());
         	button.setData(facing);
         }
         portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv);
@@ -721,7 +661,8 @@ public class Portal {
             BufferedWriter bw = new BufferedWriter(new FileWriter(loc, false));
 
             for (Portal portal : allPortals) {
-            	if (!portal.world.getName().equals(world.getName())) continue;
+            	String wName = portal.world.getName();
+            	if (!wName.equalsIgnoreCase(world.getName())) continue;
                 StringBuilder builder = new StringBuilder();
                 Blox sign = new Blox(portal.id.getBlock());
                 Blox button = portal.button;
@@ -756,7 +697,6 @@ public class Portal {
                 builder.append(':');
                 builder.append(portal.world.getName());
                 
-
                 bw.append(builder.toString());
                 bw.newLine();
             }
@@ -793,6 +733,7 @@ public class Portal {
                     }
                     String[] split = line.split(":");
                     if (split.length < 8) {
+                    	Stargate.log.info("[Stargate] Invalid line - " + l);
                         continue;
                     }
                     String name = split[0];
@@ -808,6 +749,10 @@ public class Portal {
                     float rotX = Float.parseFloat(split[5]);
                     Blox topLeft = new Blox(world, split[6]);
                     Gate gate = (split[7].contains(";")) ? Gate.getGateByName("nethergate.gate") : Gate.getGateByName(split[7]);
+                    if (gate == null) {
+                    	Stargate.log.info("[Stargate] Invalid gate layout on line " + l + " [" + split[7] + "]");
+                    	continue;
+                    }
 
                     String dest = (split.length > 8) ? split[8] : "";
                     String network = (split.length > 9) ? split[9] : Stargate.getDefaultNetwork();
@@ -821,7 +766,6 @@ public class Portal {
                     portal.close(true);
                     // Verify portal integrity/register portal
                     if (!portal.isVerified() || !portal.checkIntegrity()) {
-                            portal.close(true);
                             portal.unregister();
                             Stargate.log.info("[Stargate] Destroying stargate at " + portal.toString());
                     } else {
@@ -859,12 +803,38 @@ public class Portal {
     	Stargate.log.info("Closing all stargates.");
     	for (Portal p : allPortals) {
     		if (p == null) continue;
-    		//if (!p.isLoaded()) continue;
     		p.close(true);
     	}
     }
 
     public static String filterName(String input) {
         return input.replaceAll("[\\|:#]", "").trim();
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("Portal [id=%s, network=%s name=%s, type=%s]", id, network, name, gate.getFilename());
+    }
+    
+    @Override
+    public int hashCode() {
+        return getName().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        Portal portal = (Portal) obj;
+        return (this.getNetwork().equalsIgnoreCase(portal.getNetwork()) && 
+        		this.getName().equalsIgnoreCase(portal.getName()));
     }
 }

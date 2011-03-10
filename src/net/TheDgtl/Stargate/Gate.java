@@ -363,16 +363,17 @@ public class Gate {
     }
     
     public static void populateDefaults(String gateFolder) {
+    	int Obsidian = Material.OBSIDIAN.getId();
         Integer[][] layout = new Integer[][] {
-            {ANYTHING, Portal.OBSIDIAN, Portal.OBSIDIAN, ANYTHING},
-            {Portal.OBSIDIAN, ENTRANCE, ENTRANCE, Portal.OBSIDIAN},
+            {ANYTHING, Obsidian,Obsidian, ANYTHING},
+            {Obsidian, ENTRANCE, ENTRANCE, Obsidian},
             {CONTROL, ENTRANCE, ENTRANCE, CONTROL},
-            {Portal.OBSIDIAN, EXIT, ENTRANCE, Portal.OBSIDIAN},
-            {ANYTHING, Portal.OBSIDIAN, Portal.OBSIDIAN, ANYTHING},
+            {Obsidian, EXIT, ENTRANCE, Obsidian},
+            {ANYTHING, Obsidian, Obsidian, ANYTHING},
         };
         HashMap<Character, Integer> types = new HashMap<Character, Integer>();
-        types.put('X', Portal.OBSIDIAN);
-        types.put('-', Portal.OBSIDIAN);
+        types.put('X', Obsidian);
+        types.put('-', Obsidian);
 
         Gate gate = new Gate("nethergate.gate", layout, types);
         gate.save(gateFolder);
@@ -401,10 +402,4 @@ public class Gate {
             return name.endsWith(".gate");
         }
     }
-
-    public enum CostFor {
-        Using,
-        Activating,
-        Creating
-    };
 }
