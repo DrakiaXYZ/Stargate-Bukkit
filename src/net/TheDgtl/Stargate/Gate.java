@@ -324,7 +324,7 @@ public class Gate {
             Stargate.log.log(Level.SEVERE, "Could not load Gate " + file.getName() + " - Gates must have exactly 2 control points.");
             return null;
         } else {
-            gate.save(file.getParent() + File.separator); // Updates format for version changes
+            gate.save(file.getParent() + "/"); // Updates format for version changes
             return gate;
         }
     }

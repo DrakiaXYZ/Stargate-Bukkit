@@ -84,8 +84,9 @@ public class Stargate extends JavaPlugin {
     	log = Logger.getLogger("Minecraft");
     	
     	// Set portalFile and gateFolder to the plugin folder as defaults.
-    	portalFolder = getDataFolder() + File.separator + "portals";
-    	gateFolder = getDataFolder() + File.separator + "gates" + File.separator;
+    	portalFolder = getDataFolder() + "/portals";
+    	gateFolder = getDataFolder() + "/gates/";
+    	
         
         log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
 		

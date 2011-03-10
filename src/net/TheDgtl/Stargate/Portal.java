@@ -655,7 +655,7 @@ public class Portal {
     }
 
     public static void saveAllGates(World world) {
-        String loc = Stargate.getSaveLocation() + File.separator + world.getName() + ".db";
+        String loc = Stargate.getSaveLocation() + "/" + world.getName() + ".db";
 
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(loc, false));
