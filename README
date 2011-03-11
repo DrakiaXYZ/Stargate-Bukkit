@@ -82,6 +82,10 @@ gate-folder - The folder containing your .gate files
 =============
   Changes
 =============
+[Version 0.24]
+ - Fixed a loading bug in which invalid gates caused file truncation
+[Version 0.23]
+ - Added a check to make sure "nethergate.gate" exists, otherwise create it
 [Version 0.22]
  - Fixed multi-world stargates causing an NPE
 [Version 0.21]

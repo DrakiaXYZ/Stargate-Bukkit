@@ -764,15 +764,6 @@ public class Portal {
 
                     Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv);
                     portal.close(true);
-                    // Verify portal integrity/register portal
-                    if (!portal.isVerified() || !portal.checkIntegrity()) {
-                            portal.unregister();
-                            Stargate.log.info("[Stargate] Destroying stargate at " + portal.toString());
-                    } else {
-                    	portal.drawSign();
-                    	portalCount++;
-                    }
-
                 }
                 scanner.close();
                 
@@ -780,8 +771,18 @@ public class Portal {
                 int OpenCount = 0;
                 for (Portal portal : allPortals) {
                 	if (portal == null) continue;
+
+                    // Verify portal integrity/register portal
+                    if (!portal.isVerified() || !portal.checkIntegrity()) {
+                        portal.unregister();
+                        Stargate.log.info("[Stargate] Destroying stargate at " + portal.toString());
+                        continue;
+                    } else {
+                    	portal.drawSign();
+                    	portalCount++;
+                    }
+
                 	if (!portal.isAlwaysOn()) continue;
-					if (!portal.wasVerified()) continue;
                 	
                 	Portal dest = portal.getDestination();
                 	if (dest != null) {
