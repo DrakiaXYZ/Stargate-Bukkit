@@ -21,7 +21,9 @@ Known Issues
 =============
  - stargate.use - Allow this player/group to use stargates.
  - stargate.create - Allow this player/group to create new stargates.
- - stargate.destroy - Allow this player/group to destroy existing stargates.
+ - stargate.destroy - Allow this player/group to destroy existing stargates. (Deprecated)
+ - stargate.destroy.all - Allow this player/group to destroy any existing stargate (Replaces stargate.destroy)
+ - stargate.destroy.owner - Allow this player/group to destroy any stargate that they are the owner of.
  - stargate.hidden - Allow this player/group to see all hidden stargates.
  - stargate.private - Allow this player/group to use all private stargates.
 
@@ -78,10 +80,15 @@ other-side-blocked-message - The message when the gate you're dialing is open
 teleport-message - The message when you are teleported
 portal-folder - The folder your portal databases are saved in
 gate-folder - The folder containing your .gate files
- 
+destroyexplosion - Whether to destroy a stargate with explosions, or stop an explosion if it contains a gates controls.
+
 =============
   Changes
 =============
+[Version 0.25]
+ - Fixed a bug with worlds in subfolders
+ - Fixed gates being destroyed with explosions
+ - Added stargate.destroy.owner
 [Version 0.24]
  - Fixed a loading bug in which invalid gates caused file truncation
 [Version 0.23]

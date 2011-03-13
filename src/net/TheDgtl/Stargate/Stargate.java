@@ -23,6 +23,8 @@ import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRightClickEvent;
 import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.vehicle.VehicleListener;
@@ -52,6 +54,7 @@ public class Stargate extends JavaPlugin {
     private final pListener playerListener = new pListener();
     private final vListener vehicleListener = new vListener();
     private final wListener worldListener = new wListener();
+    private final eListener entityListener = new eListener();
     public static Logger log;
     private Configuration config;
     private PluginManager pm;
@@ -65,6 +68,7 @@ public class Stargate extends JavaPlugin {
     private static String invMsg = "Invalid Destination"; 
     private static String blockMsg = "Destination Blocked";
     private static String defNetwork = "central";
+    private static boolean destroyExplosion = false;
     private static int activeLimit = 10;
     private static int openLimit = 10;
     
@@ -115,6 +119,8 @@ public class Stargate extends JavaPlugin {
     	
     	pm.registerEvent(Event.Type.WORLD_LOADED, worldListener, Priority.Normal, this);
     	
+    	pm.registerEvent(Event.Type.ENTITY_EXPLODE, entityListener, Priority.Normal, this);
+    	
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
     }
 
@@ -129,6 +135,7 @@ public class Stargate extends JavaPlugin {
         invMsg = config.getString("not-selected-message", invMsg);
         blockMsg = config.getString("other-side-blocked-message", blockMsg);
         defNetwork = config.getString("default-gate-network", defNetwork).trim();
+        destroyExplosion = config.getBoolean("destroyexplosion", destroyExplosion);
         saveConfig();
     }
 	
@@ -142,6 +149,7 @@ public class Stargate extends JavaPlugin {
         config.setProperty("not-selected-message", invMsg);
         config.setProperty("other-side-blocked-message", blockMsg);
         config.setProperty("default-gate-network", defNetwork);
+        config.setProperty("destroyexplosion", destroyExplosion);
         config.save();
 	}
 	
@@ -165,6 +173,7 @@ public class Stargate extends JavaPlugin {
 		}
 		File newFile = new File(portalFolder, getServer().getWorlds().get(0).getName() + ".db");
 		if (!newFile.exists()) {
+			newFile.getParentFile().mkdirs();
 	        // Migrate not-so-old stargate db
 	        File oldishFile = new File("plugins/Stargate/stargate.db");
 	        if (oldishFile.exists()) {
@@ -417,15 +426,15 @@ public class Stargate extends JavaPlugin {
             Portal portal = Portal.getByBlock(block);
             if (portal == null) return;
             
-            if (!hasPerm(player, "stargate.destroy", player.isOp())) {
-            	event.setCancelled(true);
-            	return;
+            if (hasPerm(player, "stargate.destroy", player.isOp()) || hasPerm(player, "stargate.destroy.all", player.isOp()) ||
+               ( portal.getOwner().equalsIgnoreCase(player.getName()) && hasPerm(player, "stargate.destroy.owner", false) )) {
+	            portal.unregister();
+	            if (!dmgMsg.isEmpty()) {
+	                player.sendMessage(ChatColor.RED + dmgMsg);
+	            }
             }
-
-            portal.unregister();
-            if (!dmgMsg.isEmpty()) {
-                player.sendMessage(ChatColor.RED + dmgMsg);
-            }
+            
+            event.setCancelled(true);
         }
 
         @Override
@@ -453,6 +462,24 @@ public class Stargate extends JavaPlugin {
     		// We have to make sure the world is actually loaded. This gets called twice for some reason.
     		if (w.getBlockAt(w.getSpawnLocation()).getWorld() != null) {
     			Portal.loadAllGates(w);
+    		}
+    	}
+    }
+    
+    private class eListener extends EntityListener {
+    	@Override
+    	public void onEntityExplode(EntityExplodeEvent event) {
+    		if (event.isCancelled()) return;
+    		for (Block b : event.blockList()) {
+    			if (b.getTypeId() != Material.WALL_SIGN.getId() && b.getTypeId() != Material.STONE_BUTTON.getId()) continue;
+    			Portal portal = Portal.getByBlock(b);
+    			if (portal == null) continue;
+    			if (destroyExplosion) {
+    				portal.unregister();
+    			} else {
+    				b.setType(b.getType());
+    				event.setCancelled(true);
+    			}
     		}
     	}
     }
