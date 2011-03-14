@@ -320,7 +320,7 @@ public class Portal {
         return owner;
     }
 
-    public void activate(Player player, Stargate stargate) {
+    public void activate(Player player) {
         destinations.clear();
         destination = "";
         drawSign();
@@ -331,7 +331,7 @@ public class Portal {
             // Not fixed, not this portal, and visible to this player.
             if (	(!portal.isFixed()) &&
             		(!dest.equalsIgnoreCase(getName())) && 							// Not this portal
-            		(!portal.isHidden() || stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName()))
+            		(!portal.isHidden() || Stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName()))
             	) {
                 destinations.add(portal.getName());
             }
@@ -365,9 +365,9 @@ public class Portal {
     	return openTime;
     }
 
-    public void cycleDestination(Player player, Stargate stargate) {
+    public void cycleDestination(Player player) {
         if (!isActive() || getActivePlayer() != player) {
-            activate(player, stargate);
+            activate(player);
         }
 
         if (destinations.size() > 0) {
@@ -536,6 +536,13 @@ public class Portal {
         boolean hidden = (options.indexOf('h') != -1 || options.indexOf('H') != -1);
         boolean alwaysOn = (options.indexOf('a') != -1 || options.indexOf('A') != -1);
         boolean priv = (options.indexOf('p') != -1 || options.indexOf('P') != -1);
+        
+        // Check if the user can only create personal gates, set network if so
+        if (Stargate.hasPerm(player, "stargate.create.personal", false) && 
+        	!Stargate.hasPerm(player, "stargate.create", player.isOp()) ) {
+        	network = player.getName();
+        	if (network.length() > 11) network = network.substring(0, 11);
+        }
         
         // Can not create a non-fixed always-on gate.
         if (alwaysOn && destName.length() == 0) {
@@ -773,14 +780,16 @@ public class Portal {
                 	if (portal == null) continue;
 
                     // Verify portal integrity/register portal
-                    if (!portal.isVerified() || !portal.checkIntegrity()) {
-                        portal.unregister();
-                        Stargate.log.info("[Stargate] Destroying stargate at " + portal.toString());
-                        continue;
-                    } else {
-                    	portal.drawSign();
-                    	portalCount++;
-                    }
+                	if (!portal.wasVerified()) {
+	                    if (!portal.isVerified() || !portal.checkIntegrity()) {
+	                        portal.unregister();
+	                        Stargate.log.info("[Stargate] Destroying stargate at " + portal.toString());
+	                        continue;
+	                    } else {
+	                    	portal.drawSign();
+	                    	portalCount++;
+	                    }
+                	}
 
                 	if (!portal.isAlwaysOn()) continue;
                 	

@@ -47,10 +47,10 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  */
 public class Stargate extends JavaPlugin {
 	// Permissions
-	private Permissions permissions = null;
+	private static Permissions permissions = null;
 	private double permVersion = 0;
 	
-    private final bListener blockListener = new bListener(this);
+    private final bListener blockListener = new bListener();
     private final pListener playerListener = new pListener();
     private final vListener vehicleListener = new vListener();
     private final wListener worldListener = new wListener();
@@ -259,7 +259,7 @@ public class Stargate extends JavaPlugin {
 	/*
 	 * Check whether the player has the given permissions.
 	 */
-	public boolean hasPerm(Player player, String perm, boolean def) {
+	public static boolean hasPerm(Player player, String perm, boolean def) {
 		if (permissions != null) {
 			return permissions.getHandler().has(player, perm);
 		} else {
@@ -323,12 +323,6 @@ public class Stargate extends JavaPlugin {
     }
 
     private class bListener extends BlockListener {
-    	Stargate stargate;
-    	
-    	bListener(Stargate stargate) {
-    		this.stargate = stargate;
-    	}
-    	
     	@Override
     	public void onBlockPlace(BlockPlaceEvent event) {
     		// Stop player from placing a block touching a portals controls
@@ -346,7 +340,8 @@ public class Stargate extends JavaPlugin {
     		if (block.getType() != Material.WALL_SIGN) return;
     		
     		// Initialize a stargate
-            if (hasPerm(player, "stargate.create", player.isOp())) {
+            if (hasPerm(player, "stargate.create", player.isOp()) ||
+            	hasPerm(player, "stargate.create.personal", false)) {
 	            SignPost sign = new SignPost(new Blox(block));
 	            // Set sign text so we can create a gate with it.
 	            sign.setText(0, event.getLine(0));
@@ -379,7 +374,7 @@ public class Stargate extends JavaPlugin {
                 if (portal != null) {
                 	if (hasPerm(player, "stargate.use", true)) {
 	                    if ((!portal.isOpen()) && (!portal.isFixed())) {
-	                        portal.cycleDestination(player, stargate);
+	                        portal.cycleDestination(player);
 	                    }
                 	} else {
                 		if (!denyMsg.isEmpty()) {
@@ -432,6 +427,7 @@ public class Stargate extends JavaPlugin {
 	            if (!dmgMsg.isEmpty()) {
 	                player.sendMessage(ChatColor.RED + dmgMsg);
 	            }
+	            return;
             }
             
             event.setCancelled(true);

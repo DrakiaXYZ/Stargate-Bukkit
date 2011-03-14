@@ -21,6 +21,7 @@ Known Issues
 =============
  - stargate.use - Allow this player/group to use stargates.
  - stargate.create - Allow this player/group to create new stargates.
+ - stargate.create.personal - Allow this player/group to create new stargates on a network defined as their name.
  - stargate.destroy - Allow this player/group to destroy existing stargates. (Deprecated)
  - stargate.destroy.all - Allow this player/group to destroy any existing stargate (Replaces stargate.destroy)
  - stargate.destroy.owner - Allow this player/group to destroy any stargate that they are the owner of.
@@ -85,6 +86,11 @@ destroyexplosion - Whether to destroy a stargate with explosions, or stop an exp
 =============
   Changes
 =============
+[Version 0.27]
+ - Fixed portal count on load
+[Version 0.26]
+ - Added stargate.create.personal for personal stargate networks
+ - Fixed a bug with destroying stargates by removing sign/button
 [Version 0.25]
  - Fixed a bug with worlds in subfolders
  - Fixed gates being destroyed with explosions
