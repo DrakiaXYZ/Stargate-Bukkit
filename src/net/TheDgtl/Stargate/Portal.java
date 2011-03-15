@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Scanner;
 import java.util.logging.Level;
 
@@ -297,6 +298,14 @@ public class Portal {
     public String getDestinationName() {
         return destination;
     }
+    
+    public boolean isChunkLoaded() {
+    	return topLeft.getWorld().isChunkLoaded(topLeft.getBlock().getChunk());
+    }
+    
+    public void loadChunk() {
+    	topLeft.getWorld().loadChunk(topLeft.getBlock().getChunk());
+    }
 
     public boolean isVerified() {
         for (RelativeBlockVector control : gate.getControls())
@@ -454,7 +463,7 @@ public class Portal {
         return frame;
     }
 
-    public void unregister() {
+    public void unregister(boolean removeAll) {
     	Stargate.log.info("[Stargate] Unregistering gate " + getName());
     	close(true);
         lookupNamesNet.get(getNetwork().toLowerCase()).remove(getName().toLowerCase());
@@ -472,7 +481,9 @@ public class Portal {
             lookupEntrances.remove(entrance);
         }
 
-        allPortals.remove(this);
+        if (removeAll)
+        	allPortals.remove(this);
+        
         allPortalsNet.get(getNetwork().toLowerCase()).remove(getName().toLowerCase());
 
         if (id.getBlock().getType() == Material.WALL_SIGN) {
@@ -776,13 +787,16 @@ public class Portal {
                 
                 // Open any always-on gates. Do this here as it should be more efficient than in the loop.
                 int OpenCount = 0;
-                for (Portal portal : allPortals) {
+                //for (Portal portal : allPortals) {
+                for (Iterator<Portal> iter = allPortals.iterator(); iter.hasNext(); ) {
+                	Portal portal = iter.next();
                 	if (portal == null) continue;
 
                     // Verify portal integrity/register portal
                 	if (!portal.wasVerified()) {
 	                    if (!portal.isVerified() || !portal.checkIntegrity()) {
-	                        portal.unregister();
+	                        portal.unregister(false);
+	                        iter.remove();
 	                        Stargate.log.info("[Stargate] Destroying stargate at " + portal.toString());
 	                        continue;
 	                    } else {

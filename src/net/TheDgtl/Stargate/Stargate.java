@@ -423,7 +423,7 @@ public class Stargate extends JavaPlugin {
             
             if (hasPerm(player, "stargate.destroy", player.isOp()) || hasPerm(player, "stargate.destroy.all", player.isOp()) ||
                ( portal.getOwner().equalsIgnoreCase(player.getName()) && hasPerm(player, "stargate.destroy.owner", false) )) {
-	            portal.unregister();
+	            portal.unregister(true);
 	            if (!dmgMsg.isEmpty()) {
 	                player.sendMessage(ChatColor.RED + dmgMsg);
 	            }
@@ -471,7 +471,7 @@ public class Stargate extends JavaPlugin {
     			Portal portal = Portal.getByBlock(b);
     			if (portal == null) continue;
     			if (destroyExplosion) {
-    				portal.unregister();
+    				portal.unregister(true);
     			} else {
     				b.setType(b.getType());
     				event.setCancelled(true);

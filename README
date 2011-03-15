@@ -86,6 +86,8 @@ destroyexplosion - Whether to destroy a stargate with explosions, or stop an exp
 =============
   Changes
 =============
+[Version 0.28]
+ - Fixed an issue with removing stargates during load
 [Version 0.27]
  - Fixed portal count on load
 [Version 0.26]
