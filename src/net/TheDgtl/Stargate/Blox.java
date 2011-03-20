@@ -105,11 +105,12 @@ public class Blox {
 	
 	@Override
 	public int hashCode() {
-		int result = 0;
+		int result = 18;
 		
-		result += x * 92821;
-		result += y * 92821;
-		result += z * 92821;
+		result = result * 27 + x;
+		result = result * 27 + y;
+		result = result * 27 + z;
+		result = result * 27 + world.hashCode();
 		
 		return result;
 	}
