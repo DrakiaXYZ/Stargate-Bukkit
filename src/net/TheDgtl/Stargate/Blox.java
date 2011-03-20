@@ -47,13 +47,13 @@ public class Blox {
 		return new Location(this.world, (double)this.x + x, (double)this.y + y, (double)this.z + z, rotX, rotY);
 	}
 
-    public Blox modRelative(int right, int depth, int distance, int modX, int modY, int modZ) {
-         return makeRelative(-right * modX + distance * modZ, -depth * modY, -right * modZ + -distance * modX);
-    }
+	public Blox modRelative(int right, int depth, int distance, int modX, int modY, int modZ) {
+		 return makeRelative(-right * modX + distance * modZ, -depth * modY, -right * modZ + -distance * modX);
+	}
 
-    public Location modRelativeLoc(double right, double depth, double distance, float rotX, float rotY, int modX, int modY, int modZ) {
-        return makeRelativeLoc(0.5 + -right * modX + distance * modZ, depth, 0.5 + -right * modZ + -distance * modX, rotX, 0);
-    }
+	public Location modRelativeLoc(double right, double depth, double distance, float rotX, float rotY, int modX, int modY, int modZ) {
+		return makeRelativeLoc(0.5 + -right * modX + distance * modZ, depth, 0.5 + -right * modZ + -distance * modX, rotX, 0);
+	}
 
 	public void setType(int type) {
 		world.getBlockAt(x, y, z).setTypeId(type);
