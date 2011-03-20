@@ -27,6 +27,8 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.server.PluginEvent;
+import org.bukkit.event.server.ServerListener;
 import org.bukkit.event.vehicle.VehicleListener;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.event.world.WorldEvent;
@@ -39,22 +41,26 @@ import org.bukkit.util.config.Configuration;
 
 // Permissions
 import com.nijikokun.bukkit.Permissions.Permissions;
+// iConomy
+import com.nijiko.coelho.iConomy.iConomy;
 
 /**
- * Stargate.java - Plug-in for hey0's minecraft mod.
+ * Stargate.java - A customizeable portal plugin for Bukkit
  * @author Shaun (sturmeh)
  * @author Dinnerbone
+ * @author Steven "Drakia" Scott
  */
 public class Stargate extends JavaPlugin {
 	// Permissions
 	private static Permissions permissions = null;
-	private double permVersion = 0;
 	
     private final bListener blockListener = new bListener();
     private final pListener playerListener = new pListener();
     private final vListener vehicleListener = new vListener();
     private final wListener worldListener = new wListener();
     private final eListener entityListener = new eListener();
+    private final sListener serverListener = new sListener();
+    
     public static Logger log;
     private Configuration config;
     private PluginManager pm;
@@ -91,7 +97,6 @@ public class Stargate extends JavaPlugin {
     	portalFolder = getDataFolder() + "/portals";
     	gateFolder = getDataFolder() + "/gates/";
     	
-        
         log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
 		
     	pm.registerEvent(Event.Type.BLOCK_FLOW, blockListener, Priority.Normal, this);
@@ -101,12 +106,9 @@ public class Stargate extends JavaPlugin {
     	this.migrate();
     	this.reloadGates();
     	
-    	if (!this.setupPermissions()) {
-    		log.info("[Stargate] Permissions not loaded, using defaults");
-    	} else {
-    		if (permissions != null)
-    			log.info("[Stargate] Using Permissions " + permVersion + " (" + Permissions.version + ") for permissions");
-    	}
+    	// Check to see if iConomy/Permissions is loaded yet.
+    	checkiConomy();
+    	checkPermissions();
     	
     	pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
     	
@@ -120,6 +122,10 @@ public class Stargate extends JavaPlugin {
     	pm.registerEvent(Event.Type.WORLD_LOADED, worldListener, Priority.Normal, this);
     	
     	pm.registerEvent(Event.Type.ENTITY_EXPLODE, entityListener, Priority.Normal, this);
+    	
+    	// iConomy Loading
+    	pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Monitor, this);
+    	pm.registerEvent(Event.Type.PLUGIN_DISABLE, serverListener, Priority.Monitor, this);
     	
     	getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
     }
@@ -136,6 +142,13 @@ public class Stargate extends JavaPlugin {
         blockMsg = config.getString("other-side-blocked-message", blockMsg);
         defNetwork = config.getString("default-gate-network", defNetwork).trim();
         destroyExplosion = config.getBoolean("destroyexplosion", destroyExplosion);
+        // iConomy
+        iConomyHandler.useiConomy = config.getBoolean("useiconomy", iConomyHandler.useiConomy);
+        iConomyHandler.createCost = config.getInt("createcost", iConomyHandler.createCost);
+        iConomyHandler.destroyCost = config.getInt("destroycost", iConomyHandler.destroyCost);
+        iConomyHandler.useCost = config.getInt("usecost", iConomyHandler.useCost);
+        iConomyHandler.inFundMsg = config.getString("not-enough-money-message", iConomyHandler.inFundMsg);
+        
         saveConfig();
     }
 	
@@ -150,6 +163,13 @@ public class Stargate extends JavaPlugin {
         config.setProperty("other-side-blocked-message", blockMsg);
         config.setProperty("default-gate-network", defNetwork);
         config.setProperty("destroyexplosion", destroyExplosion);
+        // iConomy
+        config.setProperty("useiconomy", iConomyHandler.useiConomy);
+        config.setProperty("createcost", iConomyHandler.createCost);
+        config.setProperty("destroycost", iConomyHandler.destroyCost);
+        config.setProperty("usecost", iConomyHandler.useCost);
+        config.setProperty("not-enough-money-message", iConomyHandler.inFundMsg);
+        
         config.save();
 	}
 	
@@ -206,7 +226,9 @@ public class Stargate extends JavaPlugin {
         Portal destination = gate.getDestination();
 
         if (!gate.isOpen()) {
-        	if ((!gate.isFixed()) && gate.isActive() &&  (gate.getActivePlayer() != player)) {
+        	if (iConomyHandler.useiConomy() && iConomyHandler.getBalance(player.getName()) < iConomyHandler.useCost) {
+        		player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+        	} else if ((!gate.isFixed()) && gate.isActive() &&  (gate.getActivePlayer() != player)) {
         		gate.deactivate();
                 if (!denyMsg.isEmpty()) {
                     player.sendMessage(ChatColor.RED + denyMsg);
@@ -224,37 +246,35 @@ public class Stargate extends JavaPlugin {
                     player.sendMessage(ChatColor.RED + blockMsg);
                 }
             } else {
-                gate.open(player, false);
+        		gate.open(player, false);
             }
         } else {
             gate.close(false);
         }
     }
     
-	/*
-	 * Find what Permissions plugin we're using and enable it.
-	 */
-	private boolean setupPermissions() {
-		Plugin perm;
-		perm = pm.getPlugin("Permissions");
-		// We're running Permissions
-		if (perm != null) {
-			if (!perm.isEnabled()) {
-				pm.enablePlugin(perm);
-			}
-			permissions = (Permissions)perm;
-			try {
-				String[] permParts = Permissions.version.split("\\.");
-				permVersion = Double.parseDouble(permParts[0] + "." + permParts[1]);
-			} catch (Exception e) {
-				log.info("Could not determine Permissions version: " + Permissions.version);
-				return true;
-			}
-			return true;
-		}
-		// Permissions not loaded
-		return false;
-	}
+    /*
+     * Check if iConomy is loaded/enabled already
+     */
+    private void checkiConomy() {
+    	if (!iConomyHandler.useiConomy) return;
+    	Plugin ico = pm.getPlugin("iConomy");
+    	if (ico != null && ico.isEnabled()) {
+    		iConomyHandler.iConomy = (iConomy)ico;
+    		Stargate.log.info("[Stargate] Using iConomy (v" + iConomyHandler.iConomy.getDescription().getVersion() + ")");
+    	}
+    }
+    
+    /*
+     * Check if Permissions is loaded/enabled already
+     */
+    private void checkPermissions() {
+    	Plugin perm = pm.getPlugin("Permissions");
+    	if (perm != null && perm.isEnabled()) {
+    		permissions = (Permissions)perm;
+    		Stargate.log.info("[Stargate] Using Permissions (v" + permissions.getDescription().getVersion() + ")");
+    	}
+    }
 
 	/*
 	 * Check whether the player has the given permissions.
@@ -306,11 +326,20 @@ public class Stargate extends JavaPlugin {
                     Portal destination = portal.getDestination();
 
                     if (destination != null) {
-                        if (!teleMsg.isEmpty()) {
-                            player.sendMessage(ChatColor.BLUE + teleMsg);
-                        }
-
-                        destination.teleport(player, portal, event);
+                    	if (!iConomyHandler.useiConomy() || iConomyHandler.chargePlayer(player.getName(), iConomyHandler.useCost)) {
+                    		if (iConomyHandler.useiConomy()) {
+                    			player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.useCost));
+                    		}
+	                        if (!teleMsg.isEmpty()) {
+	                            player.sendMessage(ChatColor.BLUE + teleMsg);
+	                        }
+	
+	                        destination.teleport(player, portal, event);
+                    	} else {
+                    		if (!iConomyHandler.inFundMsg.isEmpty()) {
+                    			player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+                    		}
+                    	}
                         portal.close(false);
                     }
                 } else {
@@ -342,6 +371,12 @@ public class Stargate extends JavaPlugin {
     		// Initialize a stargate
             if (hasPerm(player, "stargate.create", player.isOp()) ||
             	hasPerm(player, "stargate.create.personal", false)) {
+            	if (iConomyHandler.useiConomy() && !iConomyHandler.chargePlayer(player.getName(), iConomyHandler.createCost)) {
+            		if (!iConomyHandler.inFundMsg.isEmpty()) {
+            			player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+            		}
+            		return;
+            	}
 	            SignPost sign = new SignPost(new Blox(block));
 	            // Set sign text so we can create a gate with it.
 	            sign.setText(0, event.getLine(0));
@@ -351,6 +386,9 @@ public class Stargate extends JavaPlugin {
                 Portal portal = Portal.createPortal(sign, player);
                 if (portal == null) return;
                 
+                if (iConomyHandler.useiConomy()) {
+                	player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.createCost));
+                }
                 if (!regMsg.isEmpty()) {
                     player.sendMessage(ChatColor.GREEN + regMsg);
                 }
@@ -423,6 +461,23 @@ public class Stargate extends JavaPlugin {
             
             if (hasPerm(player, "stargate.destroy", player.isOp()) || hasPerm(player, "stargate.destroy.all", player.isOp()) ||
                ( portal.getOwner().equalsIgnoreCase(player.getName()) && hasPerm(player, "stargate.destroy.owner", false) )) {
+            	// Can't afford
+            	if (iConomyHandler.useiConomy() && (iConomyHandler.destroyCost > 0 && iConomyHandler.getBalance(player.getName()) < iConomyHandler.destroyCost)) {
+            		if (!iConomyHandler.inFundMsg.isEmpty()) {
+            			player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+            			event.setCancelled(true);
+            			return;
+            		}
+            	}
+            	if (iConomyHandler.useiConomy()) {
+            		iConomyHandler.chargePlayer(player.getName(), iConomyHandler.destroyCost);
+            		if (iConomyHandler.destroyCost > 0) {
+            			player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.destroyCost));
+            		} else if (iConomyHandler.destroyCost < 0) {
+            			player.sendMessage(ChatColor.GREEN + "Refunded " + iConomy.getBank().format(-iConomyHandler.destroyCost));
+            		}
+            	}
+            	
 	            portal.unregister(true);
 	            if (!dmgMsg.isEmpty()) {
 	                player.sendMessage(ChatColor.RED + dmgMsg);
@@ -475,6 +530,40 @@ public class Stargate extends JavaPlugin {
     			} else {
     				b.setType(b.getType());
     				event.setCancelled(true);
+    			}
+    		}
+    	}
+    }
+    
+    private class sListener extends ServerListener {
+    	@Override
+    	public void onPluginEnabled(PluginEvent event) {
+    		if (iConomyHandler.useiConomy && iConomyHandler.iConomy == null) {
+    			if (event.getPlugin().getDescription().getName().equalsIgnoreCase("iConomy")) {
+    				iConomyHandler.iConomy = (iConomy)event.getPlugin();
+    				Stargate.log.info("[Stargate] Using iConomy (v" + iConomyHandler.iConomy.getDescription().getVersion() + ")");
+    			}
+    		}
+    		if (permissions == null) {
+    			if (event.getPlugin().getDescription().getName().equalsIgnoreCase("Permissions")) {
+    				permissions = (Permissions)event.getPlugin();
+    				Stargate.log.info("[Stargate] Using Permissions (v" + permissions.getDescription().getVersion() + ")");
+    			}
+    		}
+    	}
+    	
+    	@Override
+    	public void onPluginDisabled(PluginEvent event) {
+    		if (iConomyHandler.useiConomy && iConomyHandler.iConomy != null) {
+    			if (event.getPlugin().getDescription().getName().equalsIgnoreCase("iConomy")) {
+    				iConomyHandler.iConomy = null;
+    				Stargate.log.info("[Stargate] iConomy Disabled");
+    			}
+    		}
+    		if (permissions != null) {
+    			if (event.getPlugin().getDescription().getName().equalsIgnoreCase("Permissions")) {
+    				permissions = null;
+    				Stargate.log.info("[Stargate] Permissions Disabled");
     			}
     		}
     	}
