@@ -371,12 +371,6 @@ public class Stargate extends JavaPlugin {
 			// Initialize a stargate
 			if (hasPerm(player, "stargate.create", player.isOp()) ||
 				hasPerm(player, "stargate.create.personal", false)) {
-				if (iConomyHandler.useiConomy() && !iConomyHandler.chargePlayer(player.getName(), iConomyHandler.createCost)) {
-					if (!iConomyHandler.inFundMsg.isEmpty()) {
-						player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
-					}
-					return;
-				}
 				SignPost sign = new SignPost(new Blox(block));
 				// Set sign text so we can create a gate with it.
 				sign.setText(0, event.getLine(0));

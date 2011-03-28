@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.Scanner;
 import java.util.logging.Level;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -621,6 +622,13 @@ public class Portal {
 		}
 
 		if ((gate == null) || (buttonVector == null)) {
+			return null;
+		}
+		
+		if (iConomyHandler.useiConomy() && !iConomyHandler.chargePlayer(player.getName(), iConomyHandler.createCost)) {
+			if (!iConomyHandler.inFundMsg.isEmpty()) {
+				player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+			}
 			return null;
 		}
 

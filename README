@@ -90,8 +90,11 @@ not-enough-money-message - The message displayed if a player lacks money to do s
 =============
   Changes
 =============
+[Version 0.30]
+ - Fixed a bug in iConomy checking.
 [Version 0.29]
  - Added iConomy support. Currently only works with iConomy 4.4 until Niji fixes 4.5
+ - Thanks @Jonbas for the base iConomy implementation
 [Version 0.28]
  - Fixed an issue with removing stargates during load
 [Version 0.27]
