@@ -90,6 +90,11 @@ not-enough-money-message - The message displayed if a player lacks money to do s
 =============
   Changes
 =============
+[Version 0.3.2]
+ - Updated to latest RB
+[Version 0.3.1]
+ - Changed version numbering.
+ - Changed how plugins are hooked into.
 [Version 0.30]
  - Fixed a bug in iConomy checking.
 [Version 0.29]

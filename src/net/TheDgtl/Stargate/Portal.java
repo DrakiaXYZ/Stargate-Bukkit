@@ -16,6 +16,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -205,29 +206,21 @@ public class Portal {
 
 		// Change "from" so we don't get hack warnings. Cancel player move event.
 		event.setFrom(exit);
-		player.teleportTo(exit);
+		player.teleport(exit);
 		event.setCancelled(true);
 	}
 
-	public void teleport(Vehicle vehicle, Portal origin) {
+	public void teleport(final Vehicle vehicle, Portal origin) {
 		Location traveller = new Location(this.world, vehicle.getLocation().getX(), vehicle.getLocation().getY(), vehicle.getLocation().getZ());
 		Location exit = getExit(traveller, origin);
 		
-		//double velocity = vehicle.getVelocity().length();
+		double velocity = vehicle.getVelocity().length();
 		
 		// Stop and teleport
 		vehicle.setVelocity(new Vector());
-		Entity passenger = vehicle.getPassenger();
-		
-		vehicle.teleportTo(exit);
-		if (passenger != null) {
-			if (passenger instanceof Player)
-				((Player)passenger).teleportTo(exit);
-			vehicle.setPassenger(passenger);
-		}
 		
 		// Get new velocity
-		Vector newVelocity = new Vector();
+		final Vector newVelocity = new Vector();
 		switch ((int)id.getBlock().getData()) {
 		case 2:
 			newVelocity.setZ(-1);
@@ -242,10 +235,23 @@ public class Portal {
 			newVelocity.setX(1);
 			break;
 		}
-		// TODO: Initial velocity is returning 0, odd.
-		//newVelocity.multiply(velocity);
-		// Set new velocity.
-		vehicle.setVelocity(newVelocity);
+		newVelocity.multiply(velocity);
+		
+		final Entity passenger = vehicle.getPassenger();
+		vehicle.eject();
+		vehicle.remove();
+		final Minecart mc = exit.getWorld().spawnMinecart(exit);
+		if (passenger != null) {
+			passenger.teleport(exit);
+			Stargate.server.getScheduler().scheduleSyncDelayedTask(Stargate.stargate, new Runnable() {
+				public void run() {
+					mc.setPassenger(passenger);
+					mc.setVelocity(newVelocity);
+				}
+			});
+		} else {
+			mc.setVelocity(newVelocity);
+		}
 	}
 
 	public Location getExit(Location traveller, Portal origin) {

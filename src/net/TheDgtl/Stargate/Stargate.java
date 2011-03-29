@@ -7,32 +7,33 @@ import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockDamageLevel;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.BlockRightClickEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityListener;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.server.PluginEvent;
+import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.server.ServerListener;
 import org.bukkit.event.vehicle.VehicleListener;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
-import org.bukkit.event.world.WorldEvent;
 import org.bukkit.event.world.WorldListener;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
@@ -64,6 +65,8 @@ public class Stargate extends JavaPlugin {
 	public static Logger log;
 	private Configuration config;
 	private PluginManager pm;
+	public static Server server;
+	public static Stargate stargate;
 	
 	private static String portalFolder;
 	private static String gateFolder;
@@ -92,6 +95,8 @@ public class Stargate extends JavaPlugin {
 		pm = getServer().getPluginManager();
 		config = this.getConfiguration();
 		log = Logger.getLogger("Minecraft");
+		Stargate.server = getServer();
+		Stargate.stargate = this;
 		
 		// Set portalFile and gateFolder to the plugin folder as defaults.
 		portalFolder = getDataFolder() + "/portals";
@@ -99,7 +104,7 @@ public class Stargate extends JavaPlugin {
 		
 		log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
 		
-		pm.registerEvent(Event.Type.BLOCK_FLOW, blockListener, Priority.Normal, this);
+		pm.registerEvent(Event.Type.BLOCK_FROMTO, blockListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.BLOCK_PHYSICS, blockListener, Priority.Normal, this);
 		
 		this.reloadConfig();
@@ -107,19 +112,20 @@ public class Stargate extends JavaPlugin {
 		this.reloadGates();
 		
 		// Check to see if iConomy/Permissions is loaded yet.
-		checkiConomy();
-		checkPermissions();
+		permissions = (Permissions)checkPlugin("Permissions");
+		iConomyHandler.iConomy = (iConomy)checkPlugin("iConomy");
 		
 		pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
 		
-		pm.registerEvent(Event.Type.BLOCK_RIGHTCLICKED, blockListener, Priority.Normal, this);
-		pm.registerEvent(Event.Type.BLOCK_PLACED, blockListener, Priority.Normal, this);
-		pm.registerEvent(Event.Type.BLOCK_DAMAGED, blockListener, Priority.Normal, this);
+		//pm.registerEvent(Event.Type.BLOCK_RIGHTCLICKED, blockListener, Priority.Normal, this);
+		//pm.registerEvent(Event.Type.BLOCK_PLACED, blockListener, Priority.Normal, this);
+		//pm.registerEvent(Event.Type.BLOCK_DAMAGED, blockListener, Priority.Normal, this);
+		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
 		
-		pm.registerEvent(Event.Type.WORLD_LOADED, worldListener, Priority.Normal, this);
+		pm.registerEvent(Event.Type.WORLD_LOAD, worldListener, Priority.Normal, this);
 		
 		pm.registerEvent(Event.Type.ENTITY_EXPLODE, entityListener, Priority.Normal, this);
 		
@@ -252,29 +258,6 @@ public class Stargate extends JavaPlugin {
 			gate.close(false);
 		}
 	}
-	
-	/*
-	 * Check if iConomy is loaded/enabled already
-	 */
-	private void checkiConomy() {
-		if (!iConomyHandler.useiConomy) return;
-		Plugin ico = pm.getPlugin("iConomy");
-		if (ico != null && ico.isEnabled()) {
-			iConomyHandler.iConomy = (iConomy)ico;
-			Stargate.log.info("[Stargate] Using iConomy (v" + iConomyHandler.iConomy.getDescription().getVersion() + ")");
-		}
-	}
-	
-	/*
-	 * Check if Permissions is loaded/enabled already
-	 */
-	private void checkPermissions() {
-		Plugin perm = pm.getPlugin("Permissions");
-		if (perm != null && perm.isEnabled()) {
-			permissions = (Permissions)perm;
-			Stargate.log.info("[Stargate] Using Permissions (v" + permissions.getDescription().getVersion() + ")");
-		}
-	}
 
 	/*
 	 * Check whether the player has the given permissions.
@@ -287,6 +270,22 @@ public class Stargate extends JavaPlugin {
 		}
 	}
 	
+	/*
+	 * Check if a plugin is loaded/enabled already. Returns the plugin if so, null otherwise
+	 */
+	private Plugin checkPlugin(String p) {
+		Plugin plugin = pm.getPlugin(p);
+		return checkPlugin(plugin);
+	}
+	
+	private Plugin checkPlugin(Plugin plugin) {
+		if (plugin != null && plugin.isEnabled()) {
+			log.info("[Stargate] Found " + plugin.getDescription().getName() + " (v" + plugin.getDescription().getVersion() + ")");
+			return plugin;
+		}
+		return null;
+	}
+	
 	private class vListener extends VehicleListener {
 		@Override
 		public void onVehicleMove(VehicleMoveEvent event) {
@@ -296,7 +295,7 @@ public class Stargate extends JavaPlugin {
 			Portal portal = Portal.getByEntrance(event.getTo());
 			if (portal != null && portal.isOpen()) {
 				if (passenger instanceof Player) {
-					Player player = (Player)event.getVehicle().getPassenger();
+					Player player = (Player)passenger;
 					if (!portal.isOpenFor(player)) {
 						player.sendMessage(ChatColor.RED + denyMsg);
 						return;
@@ -349,6 +348,54 @@ public class Stargate extends JavaPlugin {
 				}
 			}
 		}
+		
+		@Override
+		public void onPlayerInteract(PlayerInteractEvent event) {
+			Player player = event.getPlayer();
+			Block block = event.getClickedBlock();
+			
+			// Right click
+			if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+				if (block.getType() == Material.WALL_SIGN) {
+					Portal portal = Portal.getByBlock(block);
+					// Cycle through a stargates locations
+					if (portal != null) {
+						if (hasPerm(player, "stargate.use", true)) {
+							if ((!portal.isOpen()) && (!portal.isFixed())) {
+								portal.cycleDestination(player);
+							}
+						} else {
+							if (!denyMsg.isEmpty()) {
+								player.sendMessage(denyMsg);
+							}
+						}
+					}
+				}
+
+				// Implement right-click to toggle a stargate, gets around spawn protection problem.
+				if ((block.getType() == Material.STONE_BUTTON)) {
+					if (hasPerm(player, "stargate.use", true)) {
+						Portal portal = Portal.getByBlock(block);
+						if (portal != null) {
+							onButtonPressed(player, portal);
+						}
+					}
+				}
+			}
+			
+			// Left click
+			if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+				// Check if we're pushing a button.
+				if (block.getType() == Material.STONE_BUTTON) {
+					if (hasPerm(player, "stargate.use", true)) {
+						Portal portal = Portal.getByBlock(block);
+						if (portal != null) {
+							onButtonPressed(player, portal);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	private class bListener extends BlockListener {
@@ -393,52 +440,6 @@ public class Stargate extends JavaPlugin {
 				event.setLine(1, sign.getText(1));
 				event.setLine(2, sign.getText(2));
 				event.setLine(3, sign.getText(3));
-			}
-		}
-
-		@Override
-		public void onBlockRightClick(BlockRightClickEvent event) {
-			Player player = event.getPlayer();
-			Block block = event.getBlock();
-			if (block.getType() == Material.WALL_SIGN) {
-				Portal portal = Portal.getByBlock(block);
-				// Cycle through a stargates locations
-				if (portal != null) {
-					if (hasPerm(player, "stargate.use", true)) {
-						if ((!portal.isOpen()) && (!portal.isFixed())) {
-							portal.cycleDestination(player);
-						}
-					} else {
-						if (!denyMsg.isEmpty()) {
-							player.sendMessage(denyMsg);
-						}
-					}
-				}
-			}
-			
-			// Implement right-click to toggle a stargate, gets around spawn protection problem.
-			if ((block.getType() == Material.STONE_BUTTON)) {
-				if (hasPerm(player, "stargate.use", true)) {
-					Portal portal = Portal.getByBlock(block);
-					if (portal != null) {
-						onButtonPressed(player, portal);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void onBlockDamage(BlockDamageEvent event) {
-			Player player = event.getPlayer();
-			Block block = event.getBlock();
-			// Check if we're pushing a button.
-			if (block.getType() == Material.STONE_BUTTON && event.getDamageLevel() == BlockDamageLevel.STARTED) {
-				if (hasPerm(player, "stargate.use", true)) {
-					Portal portal = Portal.getByBlock(block);
-					if (portal != null) {
-						onButtonPressed(player, portal);
-					}
-				}
 			}
 		}
 		
@@ -491,7 +492,7 @@ public class Stargate extends JavaPlugin {
 		}
 
 		@Override
-		public void onBlockFlow(BlockFromToEvent event) {
+		public void onBlockFromTo(BlockFromToEvent event) {
 			Portal portal = Portal.getByEntrance(event.getBlock());
 
 			if (portal != null) {
@@ -502,7 +503,7 @@ public class Stargate extends JavaPlugin {
 	
 	private class wListener extends WorldListener {
 		@Override
-		public void onWorldLoaded(WorldEvent event) {
+		public void onWorldLoad(WorldLoadEvent event) {
 			World w = event.getWorld();
 			// We have to make sure the world is actually loaded. This gets called twice for some reason.
 			if (w.getBlockAt(w.getSpawnLocation()).getWorld() != null) {
@@ -531,34 +532,28 @@ public class Stargate extends JavaPlugin {
 	
 	private class sListener extends ServerListener {
 		@Override
-		public void onPluginEnabled(PluginEvent event) {
-			if (iConomyHandler.useiConomy && iConomyHandler.iConomy == null) {
+		public void onPluginEnable(PluginEnableEvent event) {
+			if (iConomyHandler.iConomy == null) {
 				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("iConomy")) {
-					iConomyHandler.iConomy = (iConomy)event.getPlugin();
-					Stargate.log.info("[Stargate] Using iConomy (v" + iConomyHandler.iConomy.getDescription().getVersion() + ")");
+					iConomyHandler.iConomy = (iConomy)checkPlugin(event.getPlugin());
 				}
 			}
 			if (permissions == null) {
 				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("Permissions")) {
-					permissions = (Permissions)event.getPlugin();
-					Stargate.log.info("[Stargate] Using Permissions (v" + permissions.getDescription().getVersion() + ")");
+					permissions = (Permissions)checkPlugin(event.getPlugin());
 				}
 			}
 		}
 		
 		@Override
-		public void onPluginDisabled(PluginEvent event) {
-			if (iConomyHandler.useiConomy && iConomyHandler.iConomy != null) {
-				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("iConomy")) {
-					iConomyHandler.iConomy = null;
-					Stargate.log.info("[Stargate] iConomy Disabled");
-				}
+		public void onPluginDisable(PluginDisableEvent event) {
+			if (event.getPlugin() == iConomyHandler.iConomy) {
+				log.info("[Stargate] iConomy plugin lost.");
+				iConomyHandler.iConomy = null;
 			}
-			if (permissions != null) {
-				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("Permissions")) {
-					permissions = null;
-					Stargate.log.info("[Stargate] Permissions Disabled");
-				}
+			if (event.getPlugin() == permissions) {
+				log.info("[Stargate] Permissions plugin lost.");
+				permissions = null;
 			}
 		}
 	}
