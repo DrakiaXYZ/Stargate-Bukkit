@@ -397,6 +397,10 @@ public class Gate {
 		return gates.get(name);
 	}
 	
+	public static int getGateCount() {
+		return gates.size();
+	}
+	
 	static class StargateFilenameFilter implements FilenameFilter {
 		public boolean accept(File dir, String name) {
 			return name.endsWith(".gate");

@@ -11,8 +11,6 @@ This version of Stargate is still heavily under development. There are going to 
 =============
 Known Issues
 =============
- - Vehicle implementation is nowhere near done.
- - Signs aren't always updating, I don't know what's causing this, I think it's a Bukkit thing.
  - There are many bugs with portal material not showing properly. This is a bug I can not track down, and have no fix for at the moment.
  
 =============
@@ -90,8 +88,13 @@ not-enough-money-message - The message displayed if a player lacks money to do s
 =============
   Changes
 =============
+[Version 0.3.3]
+ - Moved sign update into a schedule event, should fix signs
 [Version 0.3.2]
  - Updated to latest RB
+ - Implemented proper vehicle handling
+ - Added iConomy to vehicle handling
+ - Can now set cost to go to creator on use
 [Version 0.3.1]
  - Changed version numbering.
  - Changed how plugins are hooked into.

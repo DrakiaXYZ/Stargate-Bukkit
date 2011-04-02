@@ -56,6 +56,7 @@ public class Portal {
 	private boolean hidden = false;
 	private boolean alwaysOn = false;
 	private boolean priv = false;
+	private boolean free = false;
 	private World world;
 	// Gate options
 	private boolean verified;
@@ -71,7 +72,7 @@ public class Portal {
 			float rotX, SignPost id, Blox button,
 			String dest, String name,
 			boolean verified, String network, Gate gate,
-			String owner, boolean hidden, boolean alwaysOn, boolean priv) {
+			String owner, boolean hidden, boolean alwaysOn, boolean priv, boolean free) {
 		this.topLeft = topLeft;
 		this.modX = modX;
 		this.modZ = modZ;
@@ -88,6 +89,7 @@ public class Portal {
 		this.hidden = hidden;
 		this.alwaysOn = alwaysOn;
 		this.priv = priv;
+		this.free = free;
 		this.world = topLeft.getWorld();
 		
 		if (this.alwaysOn && !this.fixed) {
@@ -115,6 +117,10 @@ public class Portal {
 	
 	public boolean isPrivate() {
 		return priv;
+	}
+	
+	public boolean isFree() {
+		return free;
 	}
 
 	public boolean open(boolean force) {
@@ -554,6 +560,7 @@ public class Portal {
 		boolean hidden = (options.indexOf('h') != -1 || options.indexOf('H') != -1);
 		boolean alwaysOn = (options.indexOf('a') != -1 || options.indexOf('A') != -1);
 		boolean priv = (options.indexOf('p') != -1 || options.indexOf('P') != -1);
+		boolean free = (options.indexOf('f') != - 1|| options.indexOf('F') != -1);
 		
 		// Check if the user can only create personal gates, set network if so
 		if (Stargate.hasPerm(player, "stargate.create.personal", false) && 
@@ -631,7 +638,7 @@ public class Portal {
 			return null;
 		}
 		
-		if (iConomyHandler.useiConomy() && !iConomyHandler.chargePlayer(player.getName(), iConomyHandler.createCost)) {
+		if (iConomyHandler.useiConomy() && !iConomyHandler.chargePlayer(player.getName(), null, iConomyHandler.createCost)) {
 			if (!iConomyHandler.inFundMsg.isEmpty()) {
 				player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
 			}
@@ -647,7 +654,7 @@ public class Portal {
 			button.setType(Material.STONE_BUTTON.getId());
 			button.setData(facing);
 		}
-		portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv);
+		portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv, free);
 
 		// Open always on gate
 		if (portal.isAlwaysOn()) {
@@ -728,6 +735,8 @@ public class Portal {
 				builder.append(portal.isPrivate());
 				builder.append(':');
 				builder.append(portal.world.getName());
+				builder.append(':');
+				builder.append(portal.isFree());
 				
 				bw.append(builder.toString());
 				bw.newLine();
@@ -793,8 +802,9 @@ public class Portal {
 					boolean hidden = (split.length > 11) ? split[11].equalsIgnoreCase("true") : false;
 					boolean alwaysOn = (split.length > 12) ? split[12].equalsIgnoreCase("true") : false;
 					boolean priv = (split.length > 13) ? split[13].equalsIgnoreCase("true") : false;
+					boolean free = (split.length > 15) ? split[15].equalsIgnoreCase("true") : false;
 
-					Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv);
+					Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv, free);
 					portal.close(true);
 				}
 				scanner.close();

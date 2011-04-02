@@ -110,7 +110,7 @@ public class Blox {
 		result = result * 27 + x;
 		result = result * 27 + y;
 		result = result * 27 + z;
-		result = result * 27 + world.hashCode();
+		result = result * 27 + world.getName().hashCode();
 		
 		return result;
 	}

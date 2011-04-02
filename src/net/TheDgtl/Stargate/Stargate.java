@@ -113,7 +113,7 @@ public class Stargate extends JavaPlugin {
 		
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
-		iConomyHandler.iConomy = (iConomy)checkPlugin("iConomy");
+		iConomyHandler.iconomy = (iConomy)checkPlugin("iConomy");
 		
 		pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
 		
@@ -185,7 +185,7 @@ public class Stargate extends JavaPlugin {
 		if (Gate.getGateByName("nethergate.gate") == null || Gate.getGateByName("nethergate.gate").getExit() == null) {
 			Gate.populateDefaults(gateFolder);
 		}
-		
+		log.info("[Stargate] Loaded " + Gate.getGateCount() + " gate layouts");
 		for (World world : getServer().getWorlds()) {
 			Portal.loadAllGates(world);
 		}
@@ -232,7 +232,7 @@ public class Stargate extends JavaPlugin {
 		Portal destination = gate.getDestination();
 
 		if (!gate.isOpen()) {
-			if (iConomyHandler.useiConomy() && iConomyHandler.getBalance(player.getName()) < iConomyHandler.useCost) {
+			if (!gate.isFree() && iConomyHandler.useiConomy() && iConomyHandler.getBalance(player.getName()) < iConomyHandler.useCost) {
 				player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
 			} else if ((!gate.isFixed()) && gate.isActive() &&  (gate.getActivePlayer() != player)) {
 				gate.deactivate();
@@ -293,23 +293,31 @@ public class Stargate extends JavaPlugin {
 			Vehicle vehicle = event.getVehicle();
 			
 			Portal portal = Portal.getByEntrance(event.getTo());
-			if (portal != null && portal.isOpen()) {
-				if (passenger instanceof Player) {
-					Player player = (Player)passenger;
-					if (!portal.isOpenFor(player)) {
-						player.sendMessage(ChatColor.RED + denyMsg);
-						return;
-					}
-					Portal dest = portal.getDestination();
-					if (dest == null) return;
-					dest.teleport(vehicle, portal);
-					
-					if (!teleMsg.isEmpty())
-						player.sendMessage(ChatColor.BLUE + teleMsg);
-					portal.close(false);
-				} else {
-					
+			if (portal == null || !portal.isOpen()) return;
+			
+			if (passenger instanceof Player) {
+				Player player = (Player)passenger;
+				if (!portal.isOpenFor(player)) {
+					player.sendMessage(ChatColor.RED + denyMsg);
+					return;
 				}
+				Portal dest = portal.getDestination();
+				if (dest == null) return;
+				
+				if (portal.isFree() || !iConomyHandler.useiConomy() || iConomyHandler.chargePlayer(player.getName(), null, iConomyHandler.useCost)) {
+					if (!portal.isFree() && iConomyHandler.useiConomy()) {
+						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.useCost));
+					}
+					if (!teleMsg.isEmpty()) {
+						player.sendMessage(ChatColor.BLUE + teleMsg);
+					}
+					dest.teleport(vehicle, portal);
+				} else {
+					if (!iConomyHandler.inFundMsg.isEmpty()) {
+						player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+					}
+				}
+				portal.close(false);
 			}
 		}
 	}
@@ -325,8 +333,8 @@ public class Stargate extends JavaPlugin {
 					Portal destination = portal.getDestination();
 
 					if (destination != null) {
-						if (!iConomyHandler.useiConomy() || iConomyHandler.chargePlayer(player.getName(), iConomyHandler.useCost)) {
-							if (iConomyHandler.useiConomy()) {
+						if (portal.isFree() || !iConomyHandler.useiConomy() || iConomyHandler.chargePlayer(player.getName(), null, iConomyHandler.useCost)) {
+							if (!portal.isFree() && iConomyHandler.useiConomy()) {
 								player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.useCost));
 							}
 							if (!teleMsg.isEmpty()) {
@@ -465,7 +473,7 @@ public class Stargate extends JavaPlugin {
 					}
 				}
 				if (iConomyHandler.useiConomy()) {
-					iConomyHandler.chargePlayer(player.getName(), iConomyHandler.destroyCost);
+					iConomyHandler.chargePlayer(player.getName(), null, iConomyHandler.destroyCost);
 					if (iConomyHandler.destroyCost > 0) {
 						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.destroyCost));
 					} else if (iConomyHandler.destroyCost < 0) {
@@ -533,9 +541,9 @@ public class Stargate extends JavaPlugin {
 	private class sListener extends ServerListener {
 		@Override
 		public void onPluginEnable(PluginEnableEvent event) {
-			if (iConomyHandler.iConomy == null) {
+			if (iConomyHandler.iconomy == null) {
 				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("iConomy")) {
-					iConomyHandler.iConomy = (iConomy)checkPlugin(event.getPlugin());
+					iConomyHandler.iconomy = (iConomy)checkPlugin(event.getPlugin());
 				}
 			}
 			if (permissions == null) {
@@ -547,9 +555,9 @@ public class Stargate extends JavaPlugin {
 		
 		@Override
 		public void onPluginDisable(PluginDisableEvent event) {
-			if (event.getPlugin() == iConomyHandler.iConomy) {
+			if (event.getPlugin() == iConomyHandler.iconomy) {
 				log.info("[Stargate] iConomy plugin lost.");
-				iConomyHandler.iConomy = null;
+				iConomyHandler.iconomy = null;
 			}
 			if (event.getPlugin() == permissions) {
 				log.info("[Stargate] Permissions plugin lost.");
