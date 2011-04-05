@@ -36,6 +36,11 @@ public class Gate {
 	private HashMap<RelativeBlockVector, Integer> exits = new HashMap<RelativeBlockVector, Integer>();
 	private int portalBlockOpen = Material.PORTAL.getId();
 	private int portalBlockClosed = Material.AIR.getId();
+	
+	// iConomy information
+	private int useCost = 0;
+	private int createCost = 0;
+	private int destroyCost = 0;
 
 	private Gate(String filename, Integer[][] layout, HashMap<Character, Integer> types) {
 		this.filename = filename;
@@ -99,6 +104,12 @@ public class Gate {
 
 			writeConfig(bw, "portal-open", portalBlockOpen);
 			writeConfig(bw, "portal-closed", portalBlockClosed);
+			if (useCost != iConomyHandler.useCost)
+				writeConfig(bw, "usecost", useCost);
+			if (createCost != iConomyHandler.createCost)
+				writeConfig(bw, "createcost", createCost);
+			if (destroyCost != iConomyHandler.destroyCost)
+				writeConfig(bw, "destroycost", destroyCost);
 
 			for (Character type : types.keySet()) {
 				Integer value = types.get(type);
@@ -187,6 +198,18 @@ public class Gate {
 
 	public int getPortalBlockClosed() {
 		return portalBlockClosed;
+	}
+	
+	public int getUseCost() {
+		return useCost;
+	}
+	
+	public Integer getCreateCost() {
+		return createCost;
+	}
+	
+	public Integer getDestroyCost() {
+		return destroyCost;
 	}
 
 	public boolean matches(Block topleft, int modX, int modZ) {
@@ -319,6 +342,9 @@ public class Gate {
 
 		gate.portalBlockOpen = readConfig(config, gate, file, "portal-open", gate.portalBlockOpen);
 		gate.portalBlockClosed = readConfig(config, gate, file, "portal-closed", gate.portalBlockClosed);
+		gate.useCost = readConfig(config, gate, file, "usecost", iConomyHandler.useCost);
+		gate.destroyCost = readConfig(config, gate, file, "destroycost", iConomyHandler.destroyCost);
+		gate.createCost = readConfig(config, gate, file, "createcost", iConomyHandler.createCost);
 
 		if (gate.getControls().length != 2) {
 			Stargate.log.log(Level.SEVERE, "Could not load Gate " + file.getName() + " - Gates must have exactly 2 control points.");

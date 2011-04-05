@@ -88,6 +88,9 @@ not-enough-money-message - The message displayed if a player lacks money to do s
 =============
   Changes
 =============
+[Version 0.3.4]
+ - Added 'stargate.free' permission
+ - Added iConomy cost into .gate files
 [Version 0.3.3]
  - Moved sign update into a schedule event, should fix signs
 [Version 0.3.2]

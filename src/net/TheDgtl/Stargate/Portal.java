@@ -638,7 +638,7 @@ public class Portal {
 			return null;
 		}
 		
-		if (iConomyHandler.useiConomy() && !iConomyHandler.chargePlayer(player.getName(), null, iConomyHandler.createCost)) {
+		if (iConomyHandler.useiConomy() && !Stargate.hasPerm(player, "stargate.free", player.isOp()) && !iConomyHandler.chargePlayer(player.getName(), null, gate.getCreateCost())) {
 			if (!iConomyHandler.inFundMsg.isEmpty()) {
 				player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
 			}

@@ -232,7 +232,8 @@ public class Stargate extends JavaPlugin {
 		Portal destination = gate.getDestination();
 
 		if (!gate.isOpen()) {
-			if (!gate.isFree() && iConomyHandler.useiConomy() && iConomyHandler.getBalance(player.getName()) < iConomyHandler.useCost) {
+			if (!gate.isFree() && !hasPerm(player, "stargate.free", player.isOp()) && 
+					iConomyHandler.useiConomy() && iConomyHandler.getBalance(player.getName()) < gate.getGate().getUseCost()) {
 				player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
 			} else if ((!gate.isFixed()) && gate.isActive() &&  (gate.getActivePlayer() != player)) {
 				gate.deactivate();
@@ -304,9 +305,10 @@ public class Stargate extends JavaPlugin {
 				Portal dest = portal.getDestination();
 				if (dest == null) return;
 				
-				if (portal.isFree() || !iConomyHandler.useiConomy() || iConomyHandler.chargePlayer(player.getName(), null, iConomyHandler.useCost)) {
+				if (portal.isFree() || !iConomyHandler.useiConomy() || hasPerm(player, "stargate.free", player.isOp()) || 
+						iConomyHandler.chargePlayer(player.getName(), null, portal.getGate().getUseCost())) {
 					if (!portal.isFree() && iConomyHandler.useiConomy()) {
-						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.useCost));
+						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getUseCost()));
 					}
 					if (!teleMsg.isEmpty()) {
 						player.sendMessage(ChatColor.BLUE + teleMsg);
@@ -333,9 +335,10 @@ public class Stargate extends JavaPlugin {
 					Portal destination = portal.getDestination();
 
 					if (destination != null) {
-						if (portal.isFree() || !iConomyHandler.useiConomy() || iConomyHandler.chargePlayer(player.getName(), null, iConomyHandler.useCost)) {
+						if (portal.isFree() || !iConomyHandler.useiConomy() || hasPerm(player, "stargate.free", player.isOp()) || 
+								iConomyHandler.chargePlayer(player.getName(), null, portal.getGate().getUseCost())) {
 							if (!portal.isFree() && iConomyHandler.useiConomy()) {
-								player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.useCost));
+								player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getUseCost()));
 							}
 							if (!teleMsg.isEmpty()) {
 								player.sendMessage(ChatColor.BLUE + teleMsg);
@@ -436,7 +439,7 @@ public class Stargate extends JavaPlugin {
 				if (portal == null) return;
 				
 				if (iConomyHandler.useiConomy()) {
-					player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.createCost));
+					player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getCreateCost()));
 				}
 				if (!regMsg.isEmpty()) {
 					player.sendMessage(ChatColor.GREEN + regMsg);
@@ -465,19 +468,19 @@ public class Stargate extends JavaPlugin {
 			if (hasPerm(player, "stargate.destroy", player.isOp()) || hasPerm(player, "stargate.destroy.all", player.isOp()) ||
 			   ( portal.getOwner().equalsIgnoreCase(player.getName()) && hasPerm(player, "stargate.destroy.owner", false) )) {
 				// Can't afford
-				if (iConomyHandler.useiConomy() && (iConomyHandler.destroyCost > 0 && iConomyHandler.getBalance(player.getName()) < iConomyHandler.destroyCost)) {
-					if (!iConomyHandler.inFundMsg.isEmpty()) {
-						player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
-						event.setCancelled(true);
-						return;
-					}
-				}
 				if (iConomyHandler.useiConomy()) {
-					iConomyHandler.chargePlayer(player.getName(), null, iConomyHandler.destroyCost);
-					if (iConomyHandler.destroyCost > 0) {
-						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(iConomyHandler.destroyCost));
-					} else if (iConomyHandler.destroyCost < 0) {
-						player.sendMessage(ChatColor.GREEN + "Refunded " + iConomy.getBank().format(-iConomyHandler.destroyCost));
+					if(iConomyHandler.getBalance(player.getName()) < portal.getGate().getDestroyCost()) {
+						if (!iConomyHandler.inFundMsg.isEmpty()) {
+							player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+							event.setCancelled(true);
+							return;
+						}
+					}
+					iConomyHandler.chargePlayer(player.getName(), null, portal.getGate().getDestroyCost());
+					if (portal.getGate().getDestroyCost() > 0) {
+						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getDestroyCost()));
+					} else if (portal.getGate().getDestroyCost() < 0) {
+						player.sendMessage(ChatColor.GREEN + "Refunded " + iConomy.getBank().format(-portal.getGate().getDestroyCost()));
 					}
 				}
 				
