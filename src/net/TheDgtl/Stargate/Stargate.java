@@ -78,6 +78,8 @@ public class Stargate extends JavaPlugin {
 	private static String blockMsg = "Destination Blocked";
 	private static String defNetwork = "central";
 	private static boolean destroyExplosion = false;
+	public static boolean networkFilter = false;
+	public static boolean worldFilter = false;
 	private static int activeLimit = 10;
 	private static int openLimit = 10;
 	
@@ -148,6 +150,8 @@ public class Stargate extends JavaPlugin {
 		blockMsg = config.getString("other-side-blocked-message", blockMsg);
 		defNetwork = config.getString("default-gate-network", defNetwork).trim();
 		destroyExplosion = config.getBoolean("destroyexplosion", destroyExplosion);
+		networkFilter = config.getBoolean("networkfilter", networkFilter);
+		worldFilter = config.getBoolean("worldfilter", worldFilter);
 		// iConomy
 		iConomyHandler.useiConomy = config.getBoolean("useiconomy", iConomyHandler.useiConomy);
 		iConomyHandler.createCost = config.getInt("createcost", iConomyHandler.createCost);
@@ -169,6 +173,8 @@ public class Stargate extends JavaPlugin {
 		config.setProperty("other-side-blocked-message", blockMsg);
 		config.setProperty("default-gate-network", defNetwork);
 		config.setProperty("destroyexplosion", destroyExplosion);
+		config.setProperty("networkfilter", networkFilter);
+		config.setProperty("worldfilter", worldFilter);
 		// iConomy
 		config.setProperty("useiconomy", iConomyHandler.useiConomy);
 		config.setProperty("createcost", iConomyHandler.createCost);
@@ -371,14 +377,16 @@ public class Stargate extends JavaPlugin {
 					Portal portal = Portal.getByBlock(block);
 					// Cycle through a stargates locations
 					if (portal != null) {
-						if (hasPerm(player, "stargate.use", true)) {
-							if ((!portal.isOpen()) && (!portal.isFixed())) {
-								portal.cycleDestination(player);
-							}
-						} else {
+						if (!hasPerm(player, "stargate.use", true) ||
+							(networkFilter && !hasPerm(player, "stargate.network." + portal.getNetwork(), player.isOp()))) {
 							if (!denyMsg.isEmpty()) {
 								player.sendMessage(denyMsg);
 							}
+							return;
+						}
+						
+						if ((!portal.isOpen()) && (!portal.isFixed())) {
+							portal.cycleDestination(player);
 						}
 					}
 				}

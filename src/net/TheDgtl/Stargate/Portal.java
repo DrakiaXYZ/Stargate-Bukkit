@@ -348,13 +348,17 @@ public class Portal {
 		drawSign();
 		Stargate.activeList.add(this);
 		activePlayer = player;
+		if (Stargate.worldFilter) Stargate.log.info("[Stargate] Filtering by world");
 		for (String dest : allPortalsNet.get(getNetwork().toLowerCase())) {
 			Portal portal = getByName(dest, getNetwork());
-			// Not fixed, not this portal, and visible to this player.
-			if (	(!portal.isFixed()) &&
-					(!dest.equalsIgnoreCase(getName())) && 							// Not this portal
-					(!portal.isHidden() || Stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName()))
-				) {
+			// Check if this player can access the dest world
+			if (Stargate.worldFilter && !Stargate.hasPerm(player, "stargate.world." + portal.topLeft.getWorld().getName(), player.isOp())) continue;
+			// Check if dest is this portal
+			if (dest.equalsIgnoreCase(getName())) continue;
+			// Check if dest is a fixed gate
+			if (portal.isFixed()) continue;
+			// Visible to this player.
+			if (!portal.isHidden() || Stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName())) {
 				destinations.add(portal.getName());
 			}
 		}

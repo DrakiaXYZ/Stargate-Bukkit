@@ -3,10 +3,8 @@
 =============
 This is a port of the Stargate plugin from hMod.
 Create gates that allow for instant-teleportation between large distances. Gates can be always-open, or triggered, they can be hidden, or accessible to everybody, they can share a network, or they can be split into clusters.
-This port will import your existing locations.dat file from the hMod Stargate plugin, as well as any custom .gate files you had!
-iConomy support added back in, only costs are create, destroy and use. No permission bypasses. 
-
-This version of Stargate is still heavily under development. There are going to be issues for a while yet.
+This port will import your existing locations.dat file from the hMod Stargate plugin!
+iConomy support added back in, only costs are create, destroy and use.
 
 =============
 Known Issues
@@ -25,6 +23,8 @@ Known Issues
  - stargate.hidden - Allow this player/group to see all hidden stargates.
  - stargate.private - Allow this player/group to use all private stargates.
  - stargate.free - This player/group is not charged to use gates even if the gate has a cost.
+ - stargate.world.{worldname} - Allow this user/group access to gates on the world {worldname}
+ - stargate.network.{networkname} - Allow this user/group access to the network {networkname}
 
 =============
 Instructions
@@ -35,20 +35,19 @@ Building a gate:
    O  O - Place a sign on either of these two blocks of Obsidian.
    O  O
     OO
- - Type a name on the first line on the sign, it must be less than 12 characters long.
- - Type a set destination name on the second line if desired.
- - Type a network name on the third line if desired.
- - Type any options on the 4th line if desired.
 
 Sign Layout:
  - Line 1: Gate Name (Max 12 characters)
  - Line 2: Destination Name [Optional] (Max 12 characters, used for fixed-gates only)
  - Line 3: Network name [Optional] (Max 12 characters)
- - Line 4: Options [Optional] ('A' for always-on fixed gate, 'H' for hidden networked gate)
+ - Line 4: Options [Optional] ('A' for always-on fixed gate, 'H' for hidden networked gate, 'P' for a private gate, 'F' for a free gate)
+
+Options:
+The options are the single letter, not the word. So to make a private hidden gate, your 4th line would be 'PH'.
 
 Using a gate:
  - Right click the sign to choose a destination.
- - Right/left click the button to open up a portal.
+ - Right click the button to open up a portal.
  - Step through.
 
 Fixed gates:
@@ -61,11 +60,12 @@ Gate networks:
  - Gates are all part of a network, by default this is "central".
  - You can specify (and create) your own network on the third line of the sign when making a new gate.
  - Gates on one network will not see gates on the second network, and vice versa.
+ - Gates on different worlds, but in the same network, will see eachother.
  
 Hidden Gates:
  - Hidden gates are like normal gates, but only show on the destination list of other gates under certain conditions.
  - A hidden gate is only visible to the creator of the gate, or somebody with the stargate.hidden permission.
- - Set the 4th line of the stargate sign to "H" to make it a hidden gate.
+ - Set the 4th line of the stargate sign to 'H' to make it a hidden gate.
  
 ==============
 Configuration
@@ -85,10 +85,17 @@ createcost - The cost to create a stargate
 destroycost - The cost to destroy a stargate (Can be negative for a "refund"
 usecost - The cost to use a stargate
 not-enough-money-message - The message displayed if a player lacks money to do something
+networkfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.network.{networkname}' permission.
+worldfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.world.{worldname}' permission.
 
 =============
   Changes
 =============
+[Version 0.3.5]
+ - Added 'stargate.world.*' permissions
+ - Added 'stargate.network.*' permissions
+ - Added 'networkfilter' config option
+ - Added 'worldfilter' config option
 [Version 0.3.4]
  - Added 'stargate.free' permission
  - Added iConomy cost into .gate files
