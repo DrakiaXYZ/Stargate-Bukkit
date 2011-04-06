@@ -67,6 +67,34 @@ Hidden Gates:
  - A hidden gate is only visible to the creator of the gate, or somebody with the stargate.hidden permission.
  - Set the 4th line of the stargate sign to 'H' to make it a hidden gate.
  
+iConomy Support:
+ The latest version of Stargate has support for iConomy. Gate creation, destruction and use can all have different costs associated with them. You can also define per-gate layout costs. The default cost is assigned in the config.yml file, while the per-gate costs re defined in the .gate files. To define a certain cost to a gate just add these lines to your .gate file:
+usecost=5
+destroycost=5
+createcost=5
+
+==============
+Custom Gate Layout
+==============
+You can create as many gate formats as you want, the gate layouts are stored in plugins/Stargate/gates/
+The .gate file must be laid out a specific way, the first lines will be config information, and after a blank line you will lay out the gate format. Here is the default nether.gate file:
+
+portal-open=90
+portal-closed=0
+X=49
+-=49
+
+ XX 
+X..X
+-..-
+X*.X
+ XX 
+
+portal-open/closed are used to define the material in the gate when it is open or closed. 
+"X" and "-" are used to define block "types" for the layout (Any single-character can be used, such as "#").
+In the gate format, you can see we use "X" to show where obsidian must be, "-" where the controls (Button/sign) are.
+You will also notice a "*" in the gate layout, this is the "exit point" of the gate, the block at which the player will teleport in front of.
+ 
 ==============
 Configuration
 ==============
