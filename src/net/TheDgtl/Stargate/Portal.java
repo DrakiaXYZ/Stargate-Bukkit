@@ -254,7 +254,7 @@ public class Portal {
 					mc.setPassenger(passenger);
 					mc.setVelocity(newVelocity);
 				}
-			});
+			}, 1);
 		} else {
 			mc.setVelocity(newVelocity);
 		}

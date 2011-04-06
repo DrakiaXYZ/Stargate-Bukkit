@@ -24,6 +24,7 @@ Known Issues
  - stargate.destroy.owner - Allow this player/group to destroy any stargate that they are the owner of.
  - stargate.hidden - Allow this player/group to see all hidden stargates.
  - stargate.private - Allow this player/group to use all private stargates.
+ - stargate.free - This player/group is not charged to use gates even if the gate has a cost.
 
 =============
 Instructions
