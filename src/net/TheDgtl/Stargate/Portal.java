@@ -24,6 +24,8 @@ import org.bukkit.material.Button;
 import org.bukkit.material.MaterialData;
 import org.bukkit.util.Vector;
 
+import com.nijiko.coelho.iConomy.iConomy;
+
 /**
  * Portal.java - Plug-in for hey0's minecraft mod.
  * @author Shaun (sturmeh)
@@ -244,10 +246,10 @@ public class Portal {
 		newVelocity.multiply(velocity);
 		
 		final Entity passenger = vehicle.getPassenger();
-		vehicle.eject();
-		vehicle.remove();
-		final Minecart mc = exit.getWorld().spawnMinecart(exit);
 		if (passenger != null) {
+			vehicle.eject();
+			vehicle.remove();
+			final Minecart mc = exit.getWorld().spawnMinecart(exit);
 			passenger.teleport(exit);
 			Stargate.server.getScheduler().scheduleSyncDelayedTask(Stargate.stargate, new Runnable() {
 				public void run() {
@@ -256,7 +258,8 @@ public class Portal {
 				}
 			}, 1);
 		} else {
-			mc.setVelocity(newVelocity);
+			vehicle.teleport(exit);
+			vehicle.setVelocity(newVelocity);
 		}
 	}
 
@@ -641,11 +644,15 @@ public class Portal {
 			return null;
 		}
 		
-		if (iConomyHandler.useiConomy() && !Stargate.hasPerm(player, "stargate.free", player.isOp()) && !iConomyHandler.chargePlayer(player.getName(), null, gate.getCreateCost())) {
-			if (!iConomyHandler.inFundMsg.isEmpty()) {
-				player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+		if (iConomyHandler.useiConomy() && !Stargate.hasPerm(player, "stargate.free.create", player.isOp())) {
+			if (!iConomyHandler.chargePlayer(player.getName(), null, gate.getCreateCost())) {
+				if (!iConomyHandler.inFundMsg.isEmpty()) {
+					player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+				}
+				return null;
 			}
-			return null;
+			if (gate.getCreateCost() > 0)
+				player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(gate.getCreateCost()));
 		}
 
 		Portal portal = null;

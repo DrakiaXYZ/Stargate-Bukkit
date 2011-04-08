@@ -119,9 +119,6 @@ public class Stargate extends JavaPlugin {
 		
 		pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
 		
-		//pm.registerEvent(Event.Type.BLOCK_RIGHTCLICKED, blockListener, Priority.Normal, this);
-		//pm.registerEvent(Event.Type.BLOCK_PLACED, blockListener, Priority.Normal, this);
-		//pm.registerEvent(Event.Type.BLOCK_DAMAGED, blockListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
@@ -131,7 +128,7 @@ public class Stargate extends JavaPlugin {
 		
 		pm.registerEvent(Event.Type.ENTITY_EXPLODE, entityListener, Priority.Normal, this);
 		
-		// iConomy Loading
+		// Dependency Loading
 		pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Monitor, this);
 		pm.registerEvent(Event.Type.PLUGIN_DISABLE, serverListener, Priority.Monitor, this);
 		
@@ -158,6 +155,7 @@ public class Stargate extends JavaPlugin {
 		iConomyHandler.destroyCost = config.getInt("destroycost", iConomyHandler.destroyCost);
 		iConomyHandler.useCost = config.getInt("usecost", iConomyHandler.useCost);
 		iConomyHandler.inFundMsg = config.getString("not-enough-money-message", iConomyHandler.inFundMsg);
+		iConomyHandler.toOwner = config.getBoolean("toowner", iConomyHandler.toOwner);
 		
 		saveConfig();
 	}
@@ -181,6 +179,7 @@ public class Stargate extends JavaPlugin {
 		config.setProperty("destroycost", iConomyHandler.destroyCost);
 		config.setProperty("usecost", iConomyHandler.useCost);
 		config.setProperty("not-enough-money-message", iConomyHandler.inFundMsg);
+		config.setProperty("toowner", iConomyHandler.toOwner);
 		
 		config.save();
 	}
@@ -238,7 +237,7 @@ public class Stargate extends JavaPlugin {
 		Portal destination = gate.getDestination();
 
 		if (!gate.isOpen()) {
-			if (!gate.isFree() && !hasPerm(player, "stargate.free", player.isOp()) && 
+			if (!gate.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()) && 
 					iConomyHandler.useiConomy() && iConomyHandler.getBalance(player.getName()) < gate.getGate().getUseCost()) {
 				player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
 			} else if ((!gate.isFixed()) && gate.isActive() &&  (gate.getActivePlayer() != player)) {
@@ -311,10 +310,15 @@ public class Stargate extends JavaPlugin {
 				Portal dest = portal.getDestination();
 				if (dest == null) return;
 				
-				if (portal.isFree() || !iConomyHandler.useiConomy() || hasPerm(player, "stargate.free", player.isOp()) || 
-						iConomyHandler.chargePlayer(player.getName(), null, portal.getGate().getUseCost())) {
-					if (!portal.isFree() && iConomyHandler.useiConomy()) {
+				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
+				
+				if (!iConCharge || iConomyHandler.chargePlayer(player.getName(), portal.getOwner(), portal.getGate().getUseCost())) {
+					if (iConCharge && portal.getGate().getUseCost() > 0) {
 						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getUseCost()));
+						
+						Player p = server.getPlayer(portal.getOwner());
+						if (iConomyHandler.toOwner && p != null && !portal.getOwner().equals(player.getName()))
+							p.sendMessage(ChatColor.GREEN + "Obtained " + iConomy.getBank().format(portal.getGate().getUseCost()) + " from Stargate " + portal.getName());
 					}
 					if (!teleMsg.isEmpty()) {
 						player.sendMessage(ChatColor.BLUE + teleMsg);
@@ -326,6 +330,10 @@ public class Stargate extends JavaPlugin {
 					}
 				}
 				portal.close(false);
+			} else {
+				Portal dest = portal.getDestination();
+				if (dest == null) return;
+				dest.teleport(vehicle, portal);
 			}
 		}
 	}
@@ -337,32 +345,38 @@ public class Stargate extends JavaPlugin {
 			Portal portal = Portal.getByEntrance(event.getTo());
 
 			if ((portal != null) && (portal.isOpen())) {
-				if (portal.isOpenFor(player)) {
-					Portal destination = portal.getDestination();
-
-					if (destination != null) {
-						if (portal.isFree() || !iConomyHandler.useiConomy() || hasPerm(player, "stargate.free", player.isOp()) || 
-								iConomyHandler.chargePlayer(player.getName(), null, portal.getGate().getUseCost())) {
-							if (!portal.isFree() && iConomyHandler.useiConomy()) {
-								player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getUseCost()));
-							}
-							if (!teleMsg.isEmpty()) {
-								player.sendMessage(ChatColor.BLUE + teleMsg);
-							}
-	
-							destination.teleport(player, portal, event);
-						} else {
-							if (!iConomyHandler.inFundMsg.isEmpty()) {
-								player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
-							}
-						}
-						portal.close(false);
-					}
-				} else {
+				if (!portal.isOpenFor(player)) {
 					if (!denyMsg.isEmpty()) {
 						player.sendMessage(ChatColor.RED + denyMsg);
 					}
+					return;
 				}
+				
+				Portal destination = portal.getDestination();
+				if (destination == null) return;
+				
+				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
+				
+				if (!iConCharge || iConomyHandler.chargePlayer(player.getName(), portal.getOwner(), portal.getGate().getUseCost())) {
+					if (iConCharge && portal.getGate().getUseCost() > 0) {
+						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getUseCost()));
+						
+						Player p = server.getPlayer(portal.getOwner());
+						if (iConomyHandler.toOwner && p != null && !portal.getOwner().equals(player.getName())) {
+							p.sendMessage(ChatColor.GREEN + "Obtained " + iConomy.getBank().format(portal.getGate().getUseCost()) + " from Stargate " + portal.getName());
+						}
+					}
+					if (!teleMsg.isEmpty()) {
+						player.sendMessage(ChatColor.BLUE + teleMsg);
+					}
+
+					destination.teleport(player, portal, event);
+				} else {
+					if (!iConomyHandler.inFundMsg.isEmpty()) {
+						player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
+					}
+				}
+				portal.close(false);
 			}
 		}
 		
@@ -445,10 +459,7 @@ public class Stargate extends JavaPlugin {
 				sign.setText(3, event.getLine(3));
 				Portal portal = Portal.createPortal(sign, player);
 				if (portal == null) return;
-				
-				if (iConomyHandler.useiConomy()) {
-					player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getCreateCost()));
-				}
+
 				if (!regMsg.isEmpty()) {
 					player.sendMessage(ChatColor.GREEN + regMsg);
 				}
@@ -476,15 +487,15 @@ public class Stargate extends JavaPlugin {
 			if (hasPerm(player, "stargate.destroy", player.isOp()) || hasPerm(player, "stargate.destroy.all", player.isOp()) ||
 			   ( portal.getOwner().equalsIgnoreCase(player.getName()) && hasPerm(player, "stargate.destroy.owner", false) )) {
 				// Can't afford
-				if (iConomyHandler.useiConomy()) {
-					if(iConomyHandler.getBalance(player.getName()) < portal.getGate().getDestroyCost()) {
+				if (iConomyHandler.useiConomy() && !hasPerm(player, "stargate.free.destroy", player.isOp())) {
+					if (!iConomyHandler.chargePlayer(player.getName(), null, portal.getGate().getDestroyCost())) {
 						if (!iConomyHandler.inFundMsg.isEmpty()) {
 							player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
-							event.setCancelled(true);
-							return;
 						}
+						event.setCancelled(true);
+						return;
 					}
-					iConomyHandler.chargePlayer(player.getName(), null, portal.getGate().getDestroyCost());
+					
 					if (portal.getGate().getDestroyCost() > 0) {
 						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getDestroyCost()));
 					} else if (portal.getGate().getDestroyCost() < 0) {

@@ -9,20 +9,21 @@ iConomy support added back in, only costs are create, destroy and use.
 =============
 Known Issues
 =============
- - There are many bugs with portal material not showing properly. This is a bug I can not track down, and have no fix for at the moment.
- 
+Hmm.. None?
+
 =============
  Permissions
 =============
  - stargate.use - Allow this player/group to use stargates.
  - stargate.create - Allow this player/group to create new stargates.
  - stargate.create.personal - Allow this player/group to create new stargates on a network defined as their name.
- - stargate.destroy - Allow this player/group to destroy existing stargates. (Deprecated)
  - stargate.destroy.all - Allow this player/group to destroy any existing stargate (Replaces stargate.destroy)
  - stargate.destroy.owner - Allow this player/group to destroy any stargate that they are the owner of.
  - stargate.hidden - Allow this player/group to see all hidden stargates.
  - stargate.private - Allow this player/group to use all private stargates.
- - stargate.free - This player/group is not charged to use gates even if the gate has a cost.
+ - stargate.free.use - This player/group is not charged to use gates even if the gate has a cost.
+ - stargate.free.create - This player/group is not charged to create gates even if the gate has a cost.
+ - stargate.free.destroy - This player/group is not charged to destroy gates even if the gate has a cost.
  - stargate.world.{worldname} - Allow this user/group access to gates on the world {worldname}
  - stargate.network.{networkname} - Allow this user/group access to the network {networkname}
 
@@ -115,10 +116,17 @@ usecost - The cost to use a stargate
 not-enough-money-message - The message displayed if a player lacks money to do something
 networkfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.network.{networkname}' permission.
 worldfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.world.{worldname}' permission.
+toowner - Whether the money from gate-use goes to the owner or nobody
 
 =============
   Changes
 =============
+[Version 0.4.0]
+ - Carts with no player can now go through gates.
+ - You can set gates to send their cost to their owner.
+ - Per-gate layout option for "toOwner".
+ - Cleaned up the iConomy code a bit, messages should only be shown on actual deduction now.
+ - Created separate 'stargate.free.{use/create/destroy}' permissions.
 [Version 0.3.5]
  - Added 'stargate.world.*' permissions
  - Added 'stargate.network.*' permissions

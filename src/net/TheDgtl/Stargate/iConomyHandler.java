@@ -11,6 +11,7 @@ public class iConomyHandler {
 	public static int createCost = 0;
 	public static int destroyCost = 0;
 	public static String inFundMsg = "Insufficient Funds.";
+	public static boolean toOwner = false;
 	
 	public static double getBalance(String player) {
 		if (useiConomy && iconomy != null) {
@@ -36,7 +37,7 @@ public class iConomyHandler {
 			if (balance < amount) return false;
 			acc.setBalance(balance - amount);
 			
-			if (target != null) {
+			if (toOwner && target != null && !player.equals(target)) {
 				Account tAcc = iConomy.getBank().getAccount(target);
 				if (tAcc != null) {
 					balance = tAcc.getBalance();
