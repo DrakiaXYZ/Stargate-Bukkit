@@ -1,6 +1,10 @@
 name: Stargate
 main: net.TheDgtl.Stargate.Stargate
-version: 0.4.0
+version: 0.4.1
 description: Stargate mod for Bukkit
 author: Drakia
 website: http://www.thedgtl.net
+commands:
+  sg:
+    description: Used to reload the plugin. Console use only.
+    usage: /<command> reload - Used to reload the plugin. Console use only.

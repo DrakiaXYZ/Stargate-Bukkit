@@ -10,17 +10,19 @@ import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
+import org.bukkit.event.Event.Result;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPhysicsEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityListener;
@@ -85,7 +87,6 @@ public class Stargate extends JavaPlugin {
 	
 	public static ConcurrentLinkedQueue<Portal> openList = new ConcurrentLinkedQueue<Portal>();
 	public static ConcurrentLinkedQueue<Portal> activeList = new ConcurrentLinkedQueue<Portal>();
-	//private HashMap<Integer, Location> vehicles = new HashMap<Integer, Location>();
 	
 	public void onDisable() {
 		Portal.closeAllGates();
@@ -311,8 +312,9 @@ public class Stargate extends JavaPlugin {
 				if (dest == null) return;
 				
 				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
+				String target = (portal.getGate().getToOwner() ? portal.getOwner() : null);
 				
-				if (!iConCharge || iConomyHandler.chargePlayer(player.getName(), portal.getOwner(), portal.getGate().getUseCost())) {
+				if (!iConCharge || iConomyHandler.chargePlayer(player.getName(), target, portal.getGate().getUseCost())) {
 					if (iConCharge && portal.getGate().getUseCost() > 0) {
 						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getUseCost()));
 						
@@ -391,6 +393,7 @@ public class Stargate extends JavaPlugin {
 					Portal portal = Portal.getByBlock(block);
 					// Cycle through a stargates locations
 					if (portal != null) {
+						event.setUseItemInHand(Result.DENY);
 						if (!hasPerm(player, "stargate.use", true) ||
 							(networkFilter && !hasPerm(player, "stargate.network." + portal.getNetwork(), player.isOp()))) {
 							if (!denyMsg.isEmpty()) {
@@ -433,16 +436,6 @@ public class Stargate extends JavaPlugin {
 
 	private class bListener extends BlockListener {
 		@Override
-		public void onBlockPlace(BlockPlaceEvent event) {
-			// Stop player from placing a block touching a portals controls
-			if (event.getBlockAgainst().getType() == Material.STONE_BUTTON || 
-				event.getBlockAgainst().getType() == Material.WALL_SIGN) {
-				Portal portal = Portal.getByBlock(event.getBlockAgainst());
-				if (portal != null) event.setCancelled(true);
-			}
-		}
-		
-		@Override
 		public void onSignChange(SignChangeEvent event) {
 			Player player = event.getPlayer();
 			Block block = event.getBlock();
@@ -475,9 +468,10 @@ public class Stargate extends JavaPlugin {
 		
 		@Override
 		public void onBlockBreak(BlockBreakEvent event) {
+			if (event.isCancelled()) return;
 			Block block = event.getBlock();
 			Player player = event.getPlayer();
-			if (block.getType() != Material.WALL_SIGN && block.getType() != Material.STONE_BUTTON && Gate.getGatesByControlBlock(block).length == 0) {
+			if (block.getType() != Material.WALL_SIGN && block.getType() != Material.STONE_BUTTON && !Gate.isGateBlock(block.getTypeId())) {
 				return;
 			}
 
@@ -547,7 +541,7 @@ public class Stargate extends JavaPlugin {
 		public void onEntityExplode(EntityExplodeEvent event) {
 			if (event.isCancelled()) return;
 			for (Block b : event.blockList()) {
-				if (b.getTypeId() != Material.WALL_SIGN.getId() && b.getTypeId() != Material.STONE_BUTTON.getId()) continue;
+				if (b.getType() != Material.WALL_SIGN && b.getType() != Material.STONE_BUTTON && !Gate.isGateBlock(b.getTypeId())) continue;
 				Portal portal = Portal.getByBlock(b);
 				if (portal == null) continue;
 				if (destroyExplosion) {
@@ -608,5 +602,31 @@ public class Stargate extends JavaPlugin {
 				}
 			}
 		}
+	}
+	
+	@Override
+	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+		if (sender instanceof Player) {
+			sender.sendMessage("Permission Denied");
+			return true;
+		}
+		String cmd = command.getName();
+		if (cmd.equalsIgnoreCase("sg")) {
+			if (args.length != 1) return false;
+			if (args[0].equalsIgnoreCase("reload")) {
+				// Clear all lists
+				activeList.clear();
+				openList.clear();
+				Portal.clearGates();
+				Gate.clearGates();
+				
+				// Reload data
+				reloadConfig();
+				reloadGates();
+				return true;
+			}
+			return false;
+		}
+		return false;
 	}
 }

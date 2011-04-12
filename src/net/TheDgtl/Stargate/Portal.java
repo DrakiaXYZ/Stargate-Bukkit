@@ -568,6 +568,12 @@ public class Portal {
 		boolean priv = (options.indexOf('p') != -1 || options.indexOf('P') != -1);
 		boolean free = (options.indexOf('f') != - 1|| options.indexOf('F') != -1);
 		
+		// Check permissions for options.
+		if (!Stargate.hasPerm(player, "stargate.option.hidden", player.isOp())) hidden = false;
+		if (!Stargate.hasPerm(player, "stargate.option.alwayson", player.isOp())) alwaysOn = false;
+		if (!Stargate.hasPerm(player, "stargate.option.private", player.isOp())) priv = false;
+		if (!Stargate.hasPerm(player, "stargate.option.free", player.isOp())) free = false;
+		
 		// Check if the user can only create personal gates, set network if so
 		if (Stargate.hasPerm(player, "stargate.create.personal", false) && 
 			!Stargate.hasPerm(player, "stargate.create", player.isOp()) ) {

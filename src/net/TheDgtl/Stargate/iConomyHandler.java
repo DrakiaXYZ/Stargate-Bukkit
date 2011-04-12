@@ -37,7 +37,7 @@ public class iConomyHandler {
 			if (balance < amount) return false;
 			acc.setBalance(balance - amount);
 			
-			if (toOwner && target != null && !player.equals(target)) {
+			if (target != null && !player.equals(target)) {
 				Account tAcc = iConomy.getBank().getAccount(target);
 				if (tAcc != null) {
 					balance = tAcc.getBalance();

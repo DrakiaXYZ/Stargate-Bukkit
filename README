@@ -26,6 +26,10 @@ Hmm.. None?
  - stargate.free.destroy - This player/group is not charged to destroy gates even if the gate has a cost.
  - stargate.world.{worldname} - Allow this user/group access to gates on the world {worldname}
  - stargate.network.{networkname} - Allow this user/group access to the network {networkname}
+ - stargate.option.hidden - Allow this user/group to create hidden gates.
+ - stargate.option.alwayson - Allow this user/group to create always-on gates.
+ - stargate.option.private - Allow this user/group to create private gates.
+ - stargate.option.free - Allow this user/group to create free gates.
 
 =============
 Instructions
@@ -73,6 +77,7 @@ iConomy Support:
 usecost=5
 destroycost=5
 createcost=5
+toowner=true
 
 ==============
 Custom Gate Layout

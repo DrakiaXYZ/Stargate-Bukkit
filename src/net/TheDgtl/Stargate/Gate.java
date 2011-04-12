@@ -7,6 +7,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
 import java.util.logging.Level;
 
@@ -25,6 +26,7 @@ public class Gate {
 	public static final int EXIT = -4;
 	private static HashMap<String, Gate> gates = new HashMap<String, Gate>();
 	private static HashMap<Integer, ArrayList<Gate>> controlBlocks = new HashMap<Integer, ArrayList<Gate>>();
+	private static HashSet<Integer> frameBlocks = new HashSet<Integer>();
 
 	private String filename;
 	private Integer[][] layout;
@@ -41,6 +43,7 @@ public class Gate {
 	private int useCost = 0;
 	private int createCost = 0;
 	private int destroyCost = 0;
+	private boolean toOwner = false;
 
 	private Gate(String filename, Integer[][] layout, HashMap<Character, Integer> types) {
 		this.filename = filename;
@@ -101,7 +104,7 @@ public class Gate {
 
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(gateFolder + filename));
-
+			
 			writeConfig(bw, "portal-open", portalBlockOpen);
 			writeConfig(bw, "portal-closed", portalBlockClosed);
 			if (useCost != iConomyHandler.useCost)
@@ -110,6 +113,7 @@ public class Gate {
 				writeConfig(bw, "createcost", createCost);
 			if (destroyCost != iConomyHandler.destroyCost)
 				writeConfig(bw, "destroycost", destroyCost);
+			writeConfig(bw, "toowner", toOwner);
 
 			for (Character type : types.keySet()) {
 				Integer value = types.get(type);
@@ -158,6 +162,11 @@ public class Gate {
 
 	private void writeConfig(BufferedWriter bw, String key, int value) throws IOException {
 		bw.append(String.format("%s=%d", key, value));
+		bw.newLine();
+	}
+	
+	private void writeConfig(BufferedWriter bw, String key, boolean value) throws IOException {
+		bw.append(String.format("%s=%b", key, value));
 		bw.newLine();
 	}
 
@@ -210,6 +219,10 @@ public class Gate {
 	
 	public Integer getDestroyCost() {
 		return destroyCost;
+	}
+	
+	public Boolean getToOwner() {
+		return toOwner;
 	}
 
 	public boolean matches(Block topleft, int modX, int modZ) {
@@ -308,6 +321,7 @@ public class Gate {
 							Integer id = Integer.parseInt(value);
 
 							types.put(symbol, id);
+							frameBlocks.add(id);
 						} else {
 							config.put(key, value);
 						}
@@ -345,6 +359,7 @@ public class Gate {
 		gate.useCost = readConfig(config, gate, file, "usecost", iConomyHandler.useCost);
 		gate.destroyCost = readConfig(config, gate, file, "destroycost", iConomyHandler.destroyCost);
 		gate.createCost = readConfig(config, gate, file, "createcost", iConomyHandler.createCost);
+		gate.toOwner = (config.containsKey("toowner") ? Boolean.valueOf(config.get("toowner")) : iConomyHandler.toOwner);
 
 		if (gate.getControls().length != 2) {
 			Stargate.log.log(Level.SEVERE, "Could not load Gate " + file.getName() + " - Gates must have exactly 2 control points.");
@@ -427,9 +442,19 @@ public class Gate {
 		return gates.size();
 	}
 	
+	public static boolean isGateBlock(int type) {
+		return frameBlocks.contains(type);
+	}
+	
 	static class StargateFilenameFilter implements FilenameFilter {
 		public boolean accept(File dir, String name) {
 			return name.endsWith(".gate");
 		}
+	}
+	
+	public static void clearGates() {
+    	gates.clear();
+    	controlBlocks.clear();
+    	frameBlocks.clear();
 	}
 }
