@@ -556,6 +556,7 @@ public class Portal {
 		Block idParent = id.getParent();
 		if (idParent == null) return null;
 		if (Gate.getGatesByControlBlock(idParent).length == 0) return null;
+		if (Portal.getByBlock(idParent) != null) return null;
 
 		Blox parent = new Blox(player.getWorld(), idParent.getX(), idParent.getY(), idParent.getZ());
 		Blox topleft = null;
@@ -648,6 +649,12 @@ public class Portal {
 
 		if ((gate == null) || (buttonVector == null)) {
 			return null;
+		}
+		
+		// Bleh, gotta check to make sure none of this gate belongs to another gate. Boo slow.
+		for (RelativeBlockVector v : gate.getBorder()) {
+			Blox b = topleft.modRelative(v.getRight(), v.getDepth(), v.getDistance(), modX, 1, modZ);
+			if (Portal.getByBlock(b.getBlock()) != null) return null;
 		}
 		
 		if (iConomyHandler.useiConomy() && !Stargate.hasPerm(player, "stargate.free.create", player.isOp())) {

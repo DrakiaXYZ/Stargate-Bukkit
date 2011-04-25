@@ -126,6 +126,13 @@ toowner - Whether the money from gate-use goes to the owner or nobody
 =============
   Changes
 =============
+[Version 0.4.2]
+ - Gates can't be created on existing gate blocks
+[Version 0.4.1]
+ - Sign option permissions
+ - Per-gate iconomy target
+ - /sg reload command
+ - Other misc fixes
 [Version 0.4.0]
  - Carts with no player can now go through gates.
  - You can set gates to send their cost to their owner.
