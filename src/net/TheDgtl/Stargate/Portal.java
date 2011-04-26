@@ -803,7 +803,7 @@ public class Portal {
 					String name = split[0];
 					Blox s = new Blox(world, split[1]);
 					if (!(s.getBlock().getState() instanceof Sign)) {
-						Stargate.log.info("[Stargate] Invalid sign on line " + l + " [" + s.getBlock() + "]");
+						Stargate.log.info("[Stargate] Sign on line " + l + " doesn't exist. BlockType = " + s.getBlock().getType());
 						continue;
 					}
 					SignPost sign = new SignPost(s);
@@ -814,7 +814,7 @@ public class Portal {
 					Blox topLeft = new Blox(world, split[6]);
 					Gate gate = (split[7].contains(";")) ? Gate.getGateByName("nethergate.gate") : Gate.getGateByName(split[7]);
 					if (gate == null) {
-						Stargate.log.info("[Stargate] Invalid gate layout on line " + l + " [" + split[7] + "]");
+						Stargate.log.info("[Stargate] Gate layout on line " + l + " does not exist [" + split[7] + "]");
 						continue;
 					}
 

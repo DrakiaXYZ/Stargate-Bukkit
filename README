@@ -126,6 +126,9 @@ toowner - Whether the money from gate-use goes to the owner or nobody
 =============
   Changes
 =============
+[Version 0.4.3]
+ - Made some errors more user-friendly
+ - Properly take into account portal-closed material
 [Version 0.4.2]
  - Gates can't be created on existing gate blocks
 [Version 0.4.1]
