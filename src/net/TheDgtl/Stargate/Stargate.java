@@ -394,6 +394,7 @@ public class Stargate extends JavaPlugin {
 					// Cycle through a stargates locations
 					if (portal != null) {
 						event.setUseItemInHand(Result.DENY);
+						event.setUseInteractedBlock(Result.DENY);
 						if (!hasPerm(player, "stargate.use", true) ||
 							(networkFilter && !hasPerm(player, "stargate.network." + portal.getNetwork(), player.isOp()))) {
 							if (!denyMsg.isEmpty()) {
