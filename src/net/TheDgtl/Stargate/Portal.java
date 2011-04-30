@@ -132,7 +132,7 @@ public class Portal {
 	public boolean open(Player openFor, boolean force) {
 		if (isOpen() && !force) return false;
 
-		world.loadChunk(world.getChunkAt(topLeft.getBlock()));
+		getWorld().loadChunk(getWorld().getChunkAt(topLeft.getBlock()));
 
 		for (Blox inside : getEntrances()) {
 			inside.setType(gate.getPortalBlockOpen());
@@ -208,7 +208,7 @@ public class Portal {
 
 	public void teleport(Player player, Portal origin, PlayerMoveEvent event) {
 		Location traveller = player.getLocation();
-		Location exit = getExit(traveller, origin);
+		Location exit = getExit(traveller);
 
 		exit.setYaw(origin.getRotation() - traveller.getYaw() + this.getRotation() + 180);
 
@@ -218,9 +218,9 @@ public class Portal {
 		event.setCancelled(true);
 	}
 
-	public void teleport(final Vehicle vehicle, Portal origin) {
+	public void teleport(final Vehicle vehicle) {
 		Location traveller = new Location(this.world, vehicle.getLocation().getX(), vehicle.getLocation().getY(), vehicle.getLocation().getZ());
-		Location exit = getExit(traveller, origin);
+		Location exit = getExit(traveller);
 		
 		double velocity = vehicle.getVelocity().length();
 		
@@ -263,7 +263,7 @@ public class Portal {
 		}
 	}
 
-	public Location getExit(Location traveller, Portal origin) {
+	public Location getExit(Location traveller) {
 		Location loc = null;
 		// Check if the gate has an exit block
 		if (gate.getExit() != null) {
@@ -273,7 +273,7 @@ public class Portal {
 			Stargate.log.log(Level.WARNING, "[Stargate] Missing destination point in .gate file " + gate.getFilename());
 		}
 		if (loc != null) {
-			Block block = world.getBlockAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+			Block block = getWorld().getBlockAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
 			if (block.getType() == Material.STEP) {
 				loc.setY(loc.getY() + 0.5);
@@ -316,11 +316,11 @@ public class Portal {
 	}
 	
 	public boolean isChunkLoaded() {
-		return topLeft.getWorld().isChunkLoaded(topLeft.getBlock().getChunk());
+		return getWorld().isChunkLoaded(topLeft.getBlock().getChunk());
 	}
 	
 	public void loadChunk() {
-		topLeft.getWorld().loadChunk(topLeft.getBlock().getChunk());
+		getWorld().loadChunk(topLeft.getBlock().getChunk());
 	}
 
 	public boolean isVerified() {
@@ -354,7 +354,7 @@ public class Portal {
 		for (String dest : allPortalsNet.get(getNetwork().toLowerCase())) {
 			Portal portal = getByName(dest, getNetwork());
 			// Check if this player can access the dest world
-			if (Stargate.worldFilter && !Stargate.hasPerm(player, "stargate.world." + portal.topLeft.getWorld().getName(), player.isOp())) continue;
+			if (Stargate.worldFilter && !Stargate.hasPerm(player, "stargate.world." + portal.getWorld().getName(), player.isOp())) continue;
 			// Check if dest is this portal
 			if (dest.equalsIgnoreCase(getName())) continue;
 			// Check if dest is a fixed gate
@@ -481,6 +481,10 @@ public class Portal {
 
 		return frame;
 	}
+	
+	public World getWorld() {
+		return world;
+	}
 
 	public void unregister(boolean removeAll) {
 		Stargate.log.info("[Stargate] Unregistering gate " + getName());
@@ -520,7 +524,7 @@ public class Portal {
 			}
 		}
 
-		saveAllGates(world);
+		saveAllGates(getWorld());
 	}
 
 	private Blox getBlockAt(RelativeBlockVector vector) {
@@ -575,13 +579,6 @@ public class Portal {
 		if (!Stargate.hasPerm(player, "stargate.option.private", player.isOp())) priv = false;
 		if (!Stargate.hasPerm(player, "stargate.option.free", player.isOp())) free = false;
 		
-		// Check if the user can only create personal gates, set network if so
-		if (Stargate.hasPerm(player, "stargate.create.personal", false) && 
-			!Stargate.hasPerm(player, "stargate.create", player.isOp()) ) {
-			network = player.getName();
-			if (network.length() > 11) network = network.substring(0, 11);
-		}
-		
 		// Can not create a non-fixed always-on gate.
 		if (alwaysOn && destName.length() == 0) {
 			alwaysOn = false;
@@ -590,8 +587,33 @@ public class Portal {
 		if ((network.length() < 1) || (network.length() > 11)) {
 			network = Stargate.getDefaultNetwork();
 		}
+		
 		if ((name.length() < 1) || (name.length() > 11) || (getByName(name, network) != null)) {
 			return null;
+		}
+		
+		// Check if the user can only create personal gates, set network if so
+		boolean createPersonal = false;
+		if (Stargate.hasPerm(player, "stargate.create.personal", false) && 
+			!Stargate.hasPerm(player, "stargate.create", player.isOp()) ) {
+			network = player.getName();
+			if (network.length() > 11) network = network.substring(0, 11);
+			createPersonal = true;
+		}
+		
+		// Check if the user can create gates on this network.
+		if (!createPersonal && !Stargate.hasPerm(player, "stargate.network." + network, player.isOp())) {
+			player.sendMessage(ChatColor.RED + "[Stargate]" + ChatColor.WHITE + " You don't have access to that network");
+			return null;
+		}
+		
+		// Check if the user can create gates to this world.
+		if (destName.length() != 0) {
+			Portal d = Portal.getByName(destName, network);
+			if (d != null && !Stargate.hasPerm(player, "stargate.world." + d.getWorld().getName(), player.isOp())) {
+				player.sendMessage(ChatColor.RED + "[Stargate]" + ChatColor.WHITE + " You don't have access to that world");
+				return null;
+			}
 		}
 
 		int modX = 0;
@@ -693,7 +715,7 @@ public class Portal {
 				origin.open(true);
 		}
 
-		saveAllGates(topleft.getWorld());
+		saveAllGates(portal.getWorld());
 
 		return portal;
 	}

@@ -325,7 +325,7 @@ public class Stargate extends JavaPlugin {
 					if (!teleMsg.isEmpty()) {
 						player.sendMessage(ChatColor.BLUE + teleMsg);
 					}
-					dest.teleport(vehicle, portal);
+					dest.teleport(vehicle);
 				} else {
 					if (!iConomyHandler.inFundMsg.isEmpty()) {
 						player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
@@ -335,7 +335,7 @@ public class Stargate extends JavaPlugin {
 			} else {
 				Portal dest = portal.getDestination();
 				if (dest == null) return;
-				dest.teleport(vehicle, portal);
+				dest.teleport(vehicle);
 			}
 		}
 	}
@@ -351,11 +351,24 @@ public class Stargate extends JavaPlugin {
 					if (!denyMsg.isEmpty()) {
 						player.sendMessage(ChatColor.RED + denyMsg);
 					}
+					portal.teleport(player, portal, event);
+					event.setCancelled(true);
 					return;
 				}
 				
 				Portal destination = portal.getDestination();
 				if (destination == null) return;
+				
+				if ((networkFilter && !hasPerm(player, "stargate.network." + portal.getNetwork(), player.isOp())) ||
+					(worldFilter && !hasPerm(player, "stargate.world." + portal.getDestination().getWorld().getName(), player.isOp()))) {
+					if (!denyMsg.isEmpty()) {
+						player.sendMessage(ChatColor.RED + denyMsg);
+					}
+					portal.teleport(player, portal, event);
+					event.setCancelled(true);
+					portal.close(false);
+					return;
+				}
 				
 				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
 				
