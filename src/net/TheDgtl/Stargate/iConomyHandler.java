@@ -5,6 +5,7 @@ import com.iConomy.system.Account;
 import com.iConomy.system.Holdings;
 
 public class iConomyHandler {
+	public static String pName = "Stargate";
 	public static boolean useiConomy = false;
 	public static iConomy iconomy = null;
 	
@@ -18,7 +19,7 @@ public class iConomyHandler {
 		if (useiConomy && iconomy != null) {
 			Account acc = iConomy.getAccount(player);
 			if (acc == null) {
-				Stargate.log.info("[Stargate::ich::getBalance] Error fetching iConomy account for " + player);
+				Stargate.log.info("[" + pName + "::ich::getBalance] Error fetching iConomy account for " + player);
 				return 0;
 			}
 			return acc.getHoldings().balance();
@@ -33,7 +34,7 @@ public class iConomyHandler {
 			
 			Account acc = iConomy.getAccount(player);
 			if (acc == null) {
-				Stargate.log.info("[Stargate::ich::chargePlayer] Error fetching iConomy account for " + player);
+				Stargate.log.info("[" + pName + "::ich::chargePlayer] Error fetching iConomy account for " + player);
 				return false;
 			}
 			Holdings hold = acc.getHoldings();
