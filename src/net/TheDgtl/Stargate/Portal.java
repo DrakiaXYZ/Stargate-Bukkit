@@ -24,8 +24,6 @@ import org.bukkit.material.Button;
 import org.bukkit.material.MaterialData;
 import org.bukkit.util.Vector;
 
-import com.nijiko.coelho.iConomy.iConomy;
-
 /**
  * Portal.java - Plug-in for hey0's minecraft mod.
  * @author Shaun (sturmeh)
@@ -687,7 +685,7 @@ public class Portal {
 				return null;
 			}
 			if (gate.getCreateCost() > 0)
-				player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(gate.getCreateCost()));
+				player.sendMessage(ChatColor.GREEN + "Deducted " + iConomyHandler.format(gate.getCreateCost()));
 		}
 
 		Portal portal = null;

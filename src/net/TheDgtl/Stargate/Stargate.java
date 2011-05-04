@@ -45,7 +45,7 @@ import org.bukkit.util.config.Configuration;
 // Permissions
 import com.nijikokun.bukkit.Permissions.Permissions;
 // iConomy
-import com.nijiko.coelho.iConomy.iConomy;
+import com.iConomy.*;
 
 /**
  * Stargate.java - A customizeable portal plugin for Bukkit
@@ -313,14 +313,14 @@ public class Stargate extends JavaPlugin {
 				
 				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
 				String target = (portal.getGate().getToOwner() ? portal.getOwner() : null);
-				
+				iConCharge = iConCharge && !target.equals(player.getName());
 				if (!iConCharge || iConomyHandler.chargePlayer(player.getName(), target, portal.getGate().getUseCost())) {
 					if (iConCharge && portal.getGate().getUseCost() > 0) {
-						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getUseCost()));
+						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomyHandler.format(portal.getGate().getUseCost()));
 						
 						Player p = server.getPlayer(portal.getOwner());
-						if (iConomyHandler.toOwner && p != null && !portal.getOwner().equals(player.getName()))
-							p.sendMessage(ChatColor.GREEN + "Obtained " + iConomy.getBank().format(portal.getGate().getUseCost()) + " from Stargate " + portal.getName());
+						if (portal.getGate().getToOwner() && p != null)
+							p.sendMessage(ChatColor.GREEN + "Obtained " + iConomyHandler.format(portal.getGate().getUseCost()) + " from Stargate " + portal.getName());
 					}
 					if (!teleMsg.isEmpty()) {
 						player.sendMessage(ChatColor.BLUE + teleMsg);
@@ -371,14 +371,16 @@ public class Stargate extends JavaPlugin {
 				}
 				
 				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
+				String target = (portal.getGate().getToOwner() ? portal.getOwner() : null);
+				iConCharge = iConCharge && !target.equals(player.getName());
 				
-				if (!iConCharge || iConomyHandler.chargePlayer(player.getName(), portal.getOwner(), portal.getGate().getUseCost())) {
+				if (!iConCharge || iConomyHandler.chargePlayer(player.getName(), target, portal.getGate().getUseCost())) {
 					if (iConCharge && portal.getGate().getUseCost() > 0) {
-						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getUseCost()));
+						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomyHandler.format(portal.getGate().getUseCost()));
 						
 						Player p = server.getPlayer(portal.getOwner());
-						if (iConomyHandler.toOwner && p != null && !portal.getOwner().equals(player.getName())) {
-							p.sendMessage(ChatColor.GREEN + "Obtained " + iConomy.getBank().format(portal.getGate().getUseCost()) + " from Stargate " + portal.getName());
+						if (portal.getGate().getToOwner() && p != null) {
+							p.sendMessage(ChatColor.GREEN + "Obtained " + iConomyHandler.format(portal.getGate().getUseCost()) + " from Stargate " + portal.getName());
 						}
 					}
 					if (!teleMsg.isEmpty()) {
@@ -505,9 +507,9 @@ public class Stargate extends JavaPlugin {
 					}
 					
 					if (portal.getGate().getDestroyCost() > 0) {
-						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomy.getBank().format(portal.getGate().getDestroyCost()));
+						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomyHandler.format(portal.getGate().getDestroyCost()));
 					} else if (portal.getGate().getDestroyCost() < 0) {
-						player.sendMessage(ChatColor.GREEN + "Refunded " + iConomy.getBank().format(-portal.getGate().getDestroyCost()));
+						player.sendMessage(ChatColor.GREEN + "Refunded " + iConomyHandler.format(-portal.getGate().getDestroyCost()));
 					}
 				}
 				

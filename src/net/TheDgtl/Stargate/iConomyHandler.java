@@ -1,7 +1,8 @@
 package net.TheDgtl.Stargate;
 
-import com.nijiko.coelho.iConomy.iConomy;
-import com.nijiko.coelho.iConomy.system.Account;
+import com.iConomy.*;
+import com.iConomy.system.Account;
+import com.iConomy.system.Holdings;
 
 public class iConomyHandler {
 	public static boolean useiConomy = false;
@@ -15,33 +16,36 @@ public class iConomyHandler {
 	
 	public static double getBalance(String player) {
 		if (useiConomy && iconomy != null) {
-			Account acc = iConomy.getBank().getAccount(player);
+			Account acc = iConomy.getAccount(player);
 			if (acc == null) {
 				Stargate.log.info("[Stargate::ich::getBalance] Error fetching iConomy account for " + player);
 				return 0;
 			}
-			return acc.getBalance();
+			return acc.getHoldings().balance();
 		}
 		return 0;
 	}
 	
 	public static boolean chargePlayer(String player, String target, double amount) {
 		if (useiConomy && iconomy != null) {
-			Account acc = iConomy.getBank().getAccount(player);
+			// No point going from a player to themself
+			if (player.equals(target)) return true;
+			
+			Account acc = iConomy.getAccount(player);
 			if (acc == null) {
 				Stargate.log.info("[Stargate::ich::chargePlayer] Error fetching iConomy account for " + player);
 				return false;
 			}
-			double balance = acc.getBalance();
+			Holdings hold = acc.getHoldings();
 			
-			if (balance < amount) return false;
-			acc.setBalance(balance - amount);
+			if (!hold.hasEnough(amount)) return false;
+			hold.subtract(amount);
 			
-			if (target != null && !player.equals(target)) {
-				Account tAcc = iConomy.getBank().getAccount(target);
+			if (target != null) {
+				Account tAcc = iConomy.getAccount(target);
 				if (tAcc != null) {
-					balance = tAcc.getBalance();
-					tAcc.setBalance(balance + amount);
+					Holdings tHold = tAcc.getHoldings();
+					tHold.add(amount);
 				}
 			}
 			return true;
@@ -51,5 +55,9 @@ public class iConomyHandler {
 	
 	public static boolean useiConomy() {
 		return (useiConomy && iconomy != null);
+	}
+	
+	public static String format(int amt) {
+		return iConomy.format(amt);
 	}
 }

@@ -126,8 +126,14 @@ toowner - Whether the money from gate-use goes to the owner or nobody
 =============
   Changes
 =============
+[Version 0.4.5]
+ - Owner of gate now isn't charged for use if target is owner
+ - Updated for iConomy 5.x
+ - Fixed random iConomy bugs
 [Version 0.4.4]
  - Added a check for stargate.network.*/stargate.world.* on gate creation
+ - Check for stargate.world.*/stargate.network.* on gate entrance
+ - Warp player outside of gate on access denied
 [Version 0.4.3]
  - Made some errors more user-friendly
  - Properly take into account portal-closed material
