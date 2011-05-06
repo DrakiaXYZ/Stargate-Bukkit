@@ -313,7 +313,9 @@ public class Stargate extends JavaPlugin {
 				
 				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
 				String target = (portal.getGate().getToOwner() ? portal.getOwner() : null);
-				iConCharge = iConCharge && !target.equals(player.getName());
+				if (target != null)
+					iConCharge = iConCharge && !target.equals(player.getName());
+				
 				if (!iConCharge || iConomyHandler.chargePlayer(player.getName(), target, portal.getGate().getUseCost())) {
 					if (iConCharge && portal.getGate().getUseCost() > 0) {
 						player.sendMessage(ChatColor.GREEN + "Deducted " + iConomyHandler.format(portal.getGate().getUseCost()));
@@ -372,7 +374,8 @@ public class Stargate extends JavaPlugin {
 				
 				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
 				String target = (portal.getGate().getToOwner() ? portal.getOwner() : null);
-				iConCharge = iConCharge && !target.equals(player.getName());
+				if (target != null)
+					iConCharge = iConCharge && !target.equals(player.getName());
 				
 				if (!iConCharge || iConomyHandler.chargePlayer(player.getName(), target, portal.getGate().getUseCost())) {
 					if (iConCharge && portal.getGate().getUseCost() > 0) {

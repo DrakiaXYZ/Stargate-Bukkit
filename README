@@ -126,6 +126,8 @@ toowner - Whether the money from gate-use goes to the owner or nobody
 =============
   Changes
 =============
+[Version 0.4.6]
+ - Fixed a bug in iConomy handling.
 [Version 0.4.5]
  - Owner of gate now isn't charged for use if target is owner
  - Updated for iConomy 5.x
