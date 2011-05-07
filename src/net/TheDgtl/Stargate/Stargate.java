@@ -164,6 +164,8 @@ public class Stargate extends JavaPlugin {
 		iConomyHandler.useCost = config.getInt("usecost", iConomyHandler.useCost);
 		iConomyHandler.inFundMsg = config.getString("not-enough-money-message", iConomyHandler.inFundMsg);
 		iConomyHandler.toOwner = config.getBoolean("toowner", iConomyHandler.toOwner);
+		iConomyHandler.chargeFreeDestination = config.getBoolean("chargefreedestination", iConomyHandler.chargeFreeDestination);
+		iConomyHandler.freeGatesGreen = config.getBoolean("freegatesgreen", iConomyHandler.freeGatesGreen);
 		
 		saveConfig();
 	}
@@ -188,6 +190,8 @@ public class Stargate extends JavaPlugin {
 		config.setProperty("usecost", iConomyHandler.useCost);
 		config.setProperty("not-enough-money-message", iConomyHandler.inFundMsg);
 		config.setProperty("toowner", iConomyHandler.toOwner);
+		config.setProperty("chargefreedestination", iConomyHandler.chargeFreeDestination);
+		config.setProperty("freegatesgreen", iConomyHandler.freeGatesGreen);
 		
 		config.save();
 	}
@@ -253,10 +257,7 @@ public class Stargate extends JavaPlugin {
 		Portal destination = gate.getDestination();
 
 		if (!gate.isOpen()) {
-			if (!gate.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()) && 
-					iConomyHandler.useiConomy() && iConomyHandler.getBalance(player.getName()) < gate.getGate().getUseCost()) {
-				player.sendMessage(ChatColor.RED + iConomyHandler.inFundMsg);
-			} else if ((!gate.isFixed()) && gate.isActive() &&  (gate.getActivePlayer() != player)) {
+			if ((!gate.isFixed()) && gate.isActive() &&  (gate.getActivePlayer() != player)) {
 				gate.deactivate();
 				if (!denyMsg.isEmpty()) {
 					player.sendMessage(ChatColor.RED + denyMsg);
@@ -327,6 +328,9 @@ public class Stargate extends JavaPlugin {
 				if (dest == null) return;
 				
 				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
+				if (!iConomyHandler.chargeFreeDestination)
+					iConCharge = iConCharge && !dest.isFree();
+				
 				String target = (portal.getGate().getToOwner() ? portal.getOwner() : null);
 				if (target != null)
 					iConCharge = iConCharge && !target.equals(player.getName());
@@ -388,6 +392,9 @@ public class Stargate extends JavaPlugin {
 				}
 				
 				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
+				if (!iConomyHandler.chargeFreeDestination)
+					iConCharge = iConCharge && !destination.isFree();
+				
 				String target = (portal.getGate().getToOwner() ? portal.getOwner() : null);
 				if (target != null)
 					iConCharge = iConCharge && !target.equals(player.getName());

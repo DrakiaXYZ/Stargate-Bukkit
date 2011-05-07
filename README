@@ -118,6 +118,8 @@ useiconomy - Whether or not to use iConomy
 createcost - The cost to create a stargate
 destroycost - The cost to destroy a stargate (Can be negative for a "refund"
 usecost - The cost to use a stargate
+chargefreedestination - Enable to allow free travel from any gate to a free gate
+freegatesgreen - Enable to make gates that won't cost the player money show up as green
 not-enough-money-message - The message displayed if a player lacks money to do something
 networkfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.network.{networkname}' permission.
 worldfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.world.{worldname}' permission.
@@ -127,9 +129,13 @@ debug - Whether to show massive debug output for gate creation
 =============
   Changes
 =============
+[Version 0.4.8]
+ - Added chargefreedestination option
+ - Added freegatesgreen option
 [Version 0.4.7]
  - Added debug option
  - Fixed gates will now show in the list of gates they link to.
+ - iConomy no longer touched if not enabled in config
 [Version 0.4.6]
  - Fixed a bug in iConomy handling.
 [Version 0.4.5]

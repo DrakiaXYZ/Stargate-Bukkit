@@ -122,6 +122,13 @@ public class Portal {
 	public boolean isFree() {
 		return free;
 	}
+	
+	public boolean isFree(Player player, Portal dest) {
+		// This gate is free, the player gets all gates free, or we don't charge for free dest and dest is free
+		boolean isFree = isFree() || Stargate.hasPerm(player, "stargate.free.use", player.isOp()) ||
+						 (!iConomyHandler.chargeFreeDestination && dest.isFree());
+		return isFree;
+	}
 
 	public boolean open(boolean force) {
 		return open(null, force);
@@ -424,19 +431,49 @@ public class Portal {
 				int index = destinations.indexOf(destination);
 
 				if ((index == max) && (max > 1) && (++done <= 3)) {
-					id.setText(done, destinations.get(index - 2));
+					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
+						Portal dest = Portal.getByName(destinations.get(index - 2), network);
+						boolean green = isFree(activePlayer, dest);
+						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 2));
+					} else {
+						id.setText(done, destinations.get(index - 2));
+					}
 				}
 				if ((index > 0) && (++done <= 3)) {
-					id.setText(done, destinations.get(index - 1));
+					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
+						Portal dest = Portal.getByName(destinations.get(index - 1), network);
+						boolean green = isFree(activePlayer, dest);
+						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 1));
+					} else {
+						id.setText(done, destinations.get(index - 1));
+					}
 				}
 				if (++done <= 3) {
-					id.setText(done, " >" + destination + "< ");
+					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
+						Portal dest = Portal.getByName(destination, network);
+						boolean green = isFree(activePlayer, dest);
+						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + " >" + destination + "< ");
+					} else {
+						id.setText(done, " >" + destination + "< ");
+					}
 				}
 				if ((max >= index + 1) && (++done <= 3)) {
-					id.setText(done, destinations.get(index + 1));
+					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
+						Portal dest = Portal.getByName(destinations.get(index + 1), network);
+						boolean green = isFree(activePlayer, dest);
+						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 1));
+					} else {
+						id.setText(done, destinations.get(index + 1));
+					}
 				}
 				if ((max >= index + 2) && (++done <= 3)) {
-					id.setText(done, destinations.get(index + 2));
+					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
+						Portal dest = Portal.getByName(destinations.get(index + 2), network);
+						boolean green = isFree(activePlayer, dest);
+						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 2));
+					} else {
+						id.setText(done, destinations.get(index + 2));
+					}
 				}
 			}
 		}
