@@ -3,6 +3,7 @@ package net.TheDgtl.Stargate;
 import java.io.File;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
@@ -85,6 +86,9 @@ public class Stargate extends JavaPlugin {
 	private static int activeLimit = 10;
 	private static int openLimit = 10;
 	
+	// Used for debug
+	private static boolean debug = false;
+	
 	public static ConcurrentLinkedQueue<Portal> openList = new ConcurrentLinkedQueue<Portal>();
 	public static ConcurrentLinkedQueue<Portal> activeList = new ConcurrentLinkedQueue<Portal>();
 	
@@ -116,7 +120,8 @@ public class Stargate extends JavaPlugin {
 		
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
-		iConomyHandler.iconomy = (iConomy)checkPlugin("iConomy");
+		if (iConomyHandler.useiConomy)
+			iConomyHandler.iconomy = (iConomy)checkPlugin("iConomy");
 		
 		pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
 		
@@ -150,6 +155,8 @@ public class Stargate extends JavaPlugin {
 		destroyExplosion = config.getBoolean("destroyexplosion", destroyExplosion);
 		networkFilter = config.getBoolean("networkfilter", networkFilter);
 		worldFilter = config.getBoolean("worldfilter", worldFilter);
+		// Debug
+		debug = config.getBoolean("debug", debug);
 		// iConomy
 		iConomyHandler.useiConomy = config.getBoolean("useiconomy", iConomyHandler.useiConomy);
 		iConomyHandler.createCost = config.getInt("createcost", iConomyHandler.createCost);
@@ -223,6 +230,14 @@ public class Stargate extends JavaPlugin {
 				Stargate.log.info("[Stargate] Migrating existing gate " + file.getName());
 				file.renameTo(new File(gateFolder, file.getName()));
 			}
+		}
+	}
+	
+	public static void debug(String rout, String msg) {
+		if (Stargate.debug) {
+			log.info("[Stargate::" + rout + "] " + msg);
+		} else {
+			log.log(Level.FINEST, "[Stargate::" + rout + "] " + msg);
 		}
 	}
 
@@ -470,7 +485,10 @@ public class Stargate extends JavaPlugin {
 				sign.setText(2, event.getLine(2));
 				sign.setText(3, event.getLine(3));
 				Portal portal = Portal.createPortal(sign, player);
-				if (portal == null) return;
+				if (portal == null) {
+					Stargate.debug("SignChange", "createPortal returned null");
+					return;
+				}
 
 				if (!regMsg.isEmpty()) {
 					player.sendMessage(ChatColor.GREEN + regMsg);
@@ -482,6 +500,8 @@ public class Stargate extends JavaPlugin {
 				event.setLine(1, sign.getText(1));
 				event.setLine(2, sign.getText(2));
 				event.setLine(3, sign.getText(3));
+			} else {
+				Stargate.debug("SignChange", player.getName() + " tried to create gate without permissions");
 			}
 		}
 		
@@ -576,7 +596,7 @@ public class Stargate extends JavaPlugin {
 	private class sListener extends ServerListener {
 		@Override
 		public void onPluginEnable(PluginEnableEvent event) {
-			if (iConomyHandler.iconomy == null) {
+			if (iConomyHandler.useiConomy && iConomyHandler.iconomy == null) {
 				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("iConomy")) {
 					iConomyHandler.iconomy = (iConomy)checkPlugin(event.getPlugin());
 				}
@@ -590,7 +610,7 @@ public class Stargate extends JavaPlugin {
 		
 		@Override
 		public void onPluginDisable(PluginDisableEvent event) {
-			if (event.getPlugin() == iConomyHandler.iconomy) {
+			if (iConomyHandler.useiConomy && event.getPlugin() == iConomyHandler.iconomy) {
 				log.info("[Stargate] iConomy plugin lost.");
 				iConomyHandler.iconomy = null;
 			}

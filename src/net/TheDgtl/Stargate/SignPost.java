@@ -94,11 +94,11 @@ public class SignPost {
 			offsetY = -1;
 		}
 		if (sign == null) {
-			Stargate.log.info("Sign is null");
+			Stargate.debug("findParent", "sign == null");
 			return;
 		}
 		if (world == null) {
-			Stargate.log.info("World is null");
+			Stargate.debug("findParent", "world == null");
 			return;
 		}
 		parent = new Blox(world, sign.getX() + offsetX, sign.getY() + offsetY, sign.getZ() + offsetZ);

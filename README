@@ -122,10 +122,14 @@ not-enough-money-message - The message displayed if a player lacks money to do s
 networkfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.network.{networkname}' permission.
 worldfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.world.{worldname}' permission.
 toowner - Whether the money from gate-use goes to the owner or nobody
+debug - Whether to show massive debug output for gate creation
 
 =============
   Changes
 =============
+[Version 0.4.7]
+ - Added debug option
+ - Fixed gates will now show in the list of gates they link to.
 [Version 0.4.6]
  - Fixed a bug in iConomy handling.
 [Version 0.4.5]

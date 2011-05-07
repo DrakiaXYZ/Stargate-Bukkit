@@ -355,8 +355,8 @@ public class Portal {
 			if (Stargate.worldFilter && !Stargate.hasPerm(player, "stargate.world." + portal.getWorld().getName(), player.isOp())) continue;
 			// Check if dest is this portal
 			if (dest.equalsIgnoreCase(getName())) continue;
-			// Check if dest is a fixed gate
-			if (portal.isFixed()) continue;
+			// Check if dest is a fixed gate not pointing to this gate
+			if (portal.isFixed() && !portal.getDestinationName().equalsIgnoreCase(getName())) continue;
 			// Visible to this player.
 			if (!portal.isHidden() || Stargate.hasPerm(player, "stargate.hidden", player.isOp()) || portal.getOwner().equals(player.getName())) {
 				destinations.add(portal.getName());
@@ -556,9 +556,15 @@ public class Portal {
 
 	public static Portal createPortal(SignPost id, Player player) {
 		Block idParent = id.getParent();
-		if (idParent == null) return null;
+		if (idParent == null) {
+			Stargate.debug("createPortal", "idParent == null");
+			return null;
+		}
 		if (Gate.getGatesByControlBlock(idParent).length == 0) return null;
-		if (Portal.getByBlock(idParent) != null) return null;
+		if (Portal.getByBlock(idParent) != null) {
+			Stargate.debug("createPortal", "idParent belongs to existing gate");
+			return null;
+		}
 
 		Blox parent = new Blox(player.getWorld(), idParent.getX(), idParent.getY(), idParent.getZ());
 		Blox topleft = null;
@@ -581,12 +587,16 @@ public class Portal {
 		if (alwaysOn && destName.length() == 0) {
 			alwaysOn = false;
 		}
+		
+		// Debug
+		Stargate.debug("createPortal", "h = " + hidden + " a = " + alwaysOn + " p = " + priv + " f = " + free);
 
 		if ((network.length() < 1) || (network.length() > 11)) {
 			network = Stargate.getDefaultNetwork();
 		}
 		
 		if ((name.length() < 1) || (name.length() > 11) || (getByName(name, network) != null)) {
+			Stargate.debug("createPortal", "Name Error");
 			return null;
 		}
 		
@@ -668,13 +678,17 @@ public class Portal {
 		}
 
 		if ((gate == null) || (buttonVector == null)) {
+			Stargate.debug("createPortal", "Could not find matching gate layout");
 			return null;
 		}
 		
 		// Bleh, gotta check to make sure none of this gate belongs to another gate. Boo slow.
 		for (RelativeBlockVector v : gate.getBorder()) {
 			Blox b = topleft.modRelative(v.getRight(), v.getDepth(), v.getDistance(), modX, 1, modZ);
-			if (Portal.getByBlock(b.getBlock()) != null) return null;
+			if (Portal.getByBlock(b.getBlock()) != null) {
+				Stargate.debug("createPortal", "Gate conflicts with existing gate");
+				return null;
+			}
 		}
 		
 		if (iConomyHandler.useiConomy() && !Stargate.hasPerm(player, "stargate.free.create", player.isOp())) {
