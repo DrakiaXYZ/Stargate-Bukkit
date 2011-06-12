@@ -62,10 +62,7 @@ public class SignPost {
 	
 	public void update() {
 		final Sign sign = findSign();
-		if (sign == null) {
-			Stargate.log.info("[Stargate::SignPost::update] Sign null");
-			return;
-		}
+		if (sign == null) return;
 		
 		Stargate.server.getScheduler().scheduleSyncDelayedTask(Stargate.stargate, new Runnable() {
 			public void run() {

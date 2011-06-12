@@ -399,15 +399,20 @@ public class Portal {
 	}
 
 	public void cycleDestination(Player player) {
+		cycleDestination(player, 1);
+	}
+	public void cycleDestination(Player player, int dir) {
 		if (!isActive() || getActivePlayer() != player) {
 			activate(player);
 		}
 
 		if (destinations.size() > 0) {
 			int index = destinations.indexOf(destination);
-			if (++index >= destinations.size()) {
+			index += dir;
+			if (index >= destinations.size()) 
 				index = 0;
-			}
+			else if (index < 0) 
+				index = destinations.size() - 1;
 			destination = destinations.get(index);
 		}
 		openTime = System.currentTimeMillis() / 1000;
@@ -427,6 +432,10 @@ public class Portal {
 			if (isFixed()) {
 				id.setText(++done, "To: " + destination);
 				id.setText(++done, " (" + network + ") ");
+				Portal dest = Portal.getByName(destination, network);
+				if (dest == null) {
+					id.setText(++done, "(Not Connected)");
+				}
 			} else {
 				int index = destinations.indexOf(destination);
 
@@ -554,9 +563,11 @@ public class Portal {
 
 		for (String originName : allPortalsNet.get(getNetwork().toLowerCase())) {
 			Portal origin = Portal.getByName(originName, getNetwork());
-			if ((origin != null) && (origin.isAlwaysOn()) && (origin.getDestinationName().equalsIgnoreCase(getName())) && (origin.isVerified())) {
-				origin.close(true);
-			}
+			if (origin == null) continue;
+			if (!origin.getDestinationName().equalsIgnoreCase(getName())) continue;
+			if (!origin.isVerified()) continue;
+			if (origin.isFixed()) origin.drawSign();
+			if (origin.isAlwaysOn()) origin.close(true);
 		}
 
 		saveAllGates(getWorld());
@@ -644,6 +655,13 @@ public class Portal {
 			network = player.getName();
 			if (network.length() > 11) network = network.substring(0, 11);
 			createPersonal = true;
+		}
+		
+		// Check if there are too many gates in this network
+		ArrayList<String> netList = allPortalsNet.get(network);
+		if (Stargate.maxGates > 0 && netList != null && netList.size() >= Stargate.maxGates) {
+			player.sendMessage(ChatColor.RED + "[Stargate]" + ChatColor.WHITE + " This network is full.");
+			return null;
 		}
 		
 		// Check if the user can create gates on this network.
@@ -753,15 +771,20 @@ public class Portal {
 		// Open always on gate
 		if (portal.isAlwaysOn()) {
 			Portal dest = Portal.getByName(destName, portal.getNetwork());
-			if (dest != null)
+			if (dest != null) {
 				portal.open(true);
+				dest.drawSign();
+			}
 		}
 		
 		// Open any always on gate pointing at this gate
 		for (String originName : allPortalsNet.get(portal.getNetwork().toLowerCase())) {
 			Portal origin = Portal.getByName(originName, portal.getNetwork());
-			if (origin != null && origin.isAlwaysOn() && origin.getDestinationName().equalsIgnoreCase(portal.getName()) && origin.isVerified()) 
-				origin.open(true);
+			if (origin == null) continue;
+			if (!origin.getDestinationName().equalsIgnoreCase(portal.getName())) continue;
+			if (!origin.isVerified()) continue;
+			if (origin.isFixed()) origin.drawSign();
+			if (origin.isAlwaysOn()) origin.open(true);
 		}
 
 		saveAllGates(portal.getWorld());
@@ -905,7 +928,6 @@ public class Portal {
 				
 				// Open any always-on gates. Do this here as it should be more efficient than in the loop.
 				int OpenCount = 0;
-				//for (Portal portal : allPortals) {
 				for (Iterator<Portal> iter = allPortals.iterator(); iter.hasNext(); ) {
 					Portal portal = iter.next();
 					if (portal == null) continue;
@@ -928,6 +950,7 @@ public class Portal {
 					Portal dest = portal.getDestination();
 					if (dest != null) {
 						portal.open(true);
+						dest.drawSign();
 						OpenCount++;
 					}
 				}

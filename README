@@ -125,10 +125,17 @@ networkfilter - Whether or not to disallow users access to a network if they don
 worldfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.world.{worldname}' permission.
 toowner - Whether the money from gate-use goes to the owner or nobody
 debug - Whether to show massive debug output for gate creation
+maxgates - If non-zero, will define the maximum amount of gates allowed on a network.
 
 =============
   Changes
 =============
+[Version 0.4.9]
+ - Left-click to scroll signs up
+ - Show "(Not Connected)" on fixed-gates with a non-existant destination
+ - Added "maxgates" option
+ - Removed debug message
+ - Started work on disabling damage for lava gates, too much work to finish with the current implementation of EntityDamageByBlock
 [Version 0.4.8]
  - Added chargefreedestination option
  - Added freegatesgreen option

@@ -25,6 +25,9 @@ import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.entity.EntityCombustEvent;
+import org.bukkit.event.entity.EntityDamageByBlockEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -83,6 +86,7 @@ public class Stargate extends JavaPlugin {
 	private static boolean destroyExplosion = false;
 	public static boolean networkFilter = false;
 	public static boolean worldFilter = false;
+	public static int maxGates = 0;
 	private static int activeLimit = 10;
 	private static int openLimit = 10;
 	
@@ -124,15 +128,18 @@ public class Stargate extends JavaPlugin {
 			iConomyHandler.iconomy = (iConomy)checkPlugin("iConomy");
 		
 		pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
-		
 		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
+		
 		pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Normal, this);
-		pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
+		
+		pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
 		
 		pm.registerEvent(Event.Type.WORLD_LOAD, worldListener, Priority.Normal, this);
 		
 		pm.registerEvent(Event.Type.ENTITY_EXPLODE, entityListener, Priority.Normal, this);
+		//pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Priority.Normal, this);
+		//pm.registerEvent(Event.Type.ENTITY_COMBUST, entityListener, Priority.Normal, this);
 		
 		// Dependency Loading
 		pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Monitor, this);
@@ -155,6 +162,7 @@ public class Stargate extends JavaPlugin {
 		destroyExplosion = config.getBoolean("destroyexplosion", destroyExplosion);
 		networkFilter = config.getBoolean("networkfilter", networkFilter);
 		worldFilter = config.getBoolean("worldfilter", worldFilter);
+		maxGates = config.getInt("maxgates", maxGates);
 		// Debug
 		debug = config.getBoolean("debug", debug);
 		// iConomy
@@ -183,6 +191,7 @@ public class Stargate extends JavaPlugin {
 		config.setProperty("destroyexplosion", destroyExplosion);
 		config.setProperty("networkfilter", networkFilter);
 		config.setProperty("worldfilter", worldFilter);
+		config.setProperty("maxgates", maxGates);
 		// iConomy
 		config.setProperty("useiconomy", iConomyHandler.useiConomy);
 		config.setProperty("createcost", iConomyHandler.createCost);
@@ -462,6 +471,24 @@ public class Stargate extends JavaPlugin {
 			
 			// Left click
 			if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+				// Check if we're scrolling a sign
+				if (block.getType() == Material.WALL_SIGN) {
+					Portal portal = Portal.getByBlock(block);
+					// Cycle through a stargates locations
+					if (portal != null) {
+						if (!hasPerm(player, "stargate.use", true) ||
+							(networkFilter && !hasPerm(player, "stargate.network." + portal.getNetwork(), player.isOp()))) {
+							if (!denyMsg.isEmpty()) {
+								player.sendMessage(denyMsg);
+							}
+							return;
+						}
+						
+						if ((!portal.isOpen()) && (!portal.isFixed())) {
+							portal.cycleDestination(player, -1);
+						}
+					}
+				}
 				// Check if we're pushing a button.
 				if (block.getType() == Material.STONE_BUTTON) {
 					if (hasPerm(player, "stargate.use", true)) {
@@ -598,6 +625,88 @@ public class Stargate extends JavaPlugin {
 				}
 			}
 		}
+		// Going to leave this commented out until they fix EntityDamagebyBlock
+		/*
+		@Override
+		public void onEntityDamage(EntityDamageEvent event) {
+			if (!(event.getEntity() instanceof Player)) return;
+			if (!(event instanceof EntityDamageByBlockEvent)) return;
+			EntityDamageByBlockEvent bEvent = (EntityDamageByBlockEvent)event;
+			Player player = (Player)bEvent.getEntity();
+			Block block = bEvent.getDamager();
+			// Fucking null blocks, we'll do it live! This happens for lava only, as far as I know.
+			// So we're "borrowing" the code from World.java used to determine if we're intersecting a lava block
+			if (block == null) {
+				CraftEntity ce = (CraftEntity)event.getEntity();
+				net.minecraft.server.Entity entity = ce.getHandle();
+				AxisAlignedBB axisalignedbb = entity.boundingBox.b(-0.10000000149011612D, -0.4000000059604645D, -0.10000000149011612D); 
+		        int minx = MathHelper.floor(axisalignedbb.a);
+		        int maxx = MathHelper.floor(axisalignedbb.d + 1.0D);
+		        int miny = MathHelper.floor(axisalignedbb.b);
+		        int maxy = MathHelper.floor(axisalignedbb.e + 1.0D);
+		        int minz = MathHelper.floor(axisalignedbb.c);
+		        int maxz = MathHelper.floor(axisalignedbb.f + 1.0D);
+
+		        for (int x = minx; x < maxx; ++x) {
+		            for (int y = miny; y < maxy; ++y) {
+		                for (int z = minz; z < maxz; ++z) {
+		                	int blockType = player.getWorld().getBlockTypeIdAt(x, y, z);
+		                    if (blockType == Material.LAVA.getId() || blockType == Material.STATIONARY_LAVA.getId()) {
+		                        block = player.getWorld().getBlockAt(x, y, z);
+		                        log.info("Found block! " + block);
+		                        break;
+		                    }
+		                }
+		                if (block != null) break;
+		            }
+		            if (block != null) break;
+		        }
+			}
+			if (block == null) return;
+			Portal portal = Portal.getByEntrance(block);
+			if (portal == null) return;
+			log.info("Found portal");
+			bEvent.setDamage(0);
+			bEvent.setCancelled(true);
+		}
+		
+		@Override
+		public void onEntityCombust(EntityCombustEvent event) {
+			if (!(event.getEntity() instanceof Player)) return;
+			Player player = (Player)event.getEntity();
+			// WHY DOESN'T THIS CANCEL IF YOU CANCEL LAVA DAMAGE?!
+			Block block = null;
+			CraftEntity ce = (CraftEntity)event.getEntity();
+			net.minecraft.server.Entity entity = ce.getHandle();
+			AxisAlignedBB axisalignedbb = entity.boundingBox.b(-0.10000000149011612D, -0.4000000059604645D, -0.10000000149011612D); 
+	        int minx = MathHelper.floor(axisalignedbb.a);
+	        int maxx = MathHelper.floor(axisalignedbb.d + 1.0D);
+	        int miny = MathHelper.floor(axisalignedbb.b);
+	        int maxy = MathHelper.floor(axisalignedbb.e + 1.0D);
+	        int minz = MathHelper.floor(axisalignedbb.c);
+	        int maxz = MathHelper.floor(axisalignedbb.f + 1.0D);
+
+	        for (int x = minx; x < maxx; ++x) {
+	            for (int y = miny; y < maxy; ++y) {
+	                for (int z = minz; z < maxz; ++z) {
+	                	int blockType = player.getWorld().getBlockTypeIdAt(x, y, z);
+	                    if (blockType == Material.LAVA.getId() || blockType == Material.STATIONARY_LAVA.getId()) {
+	                        block = player.getWorld().getBlockAt(x, y, z);
+	                        log.info("Found block! " + block);
+	                        break;
+	                    }
+	                }
+	                if (block != null) break;
+	            }
+	            if (block != null) break;
+	        }
+			if (block == null) return;
+			log.info("What? " + block);
+			Portal portal = Portal.getByEntrance(block);
+			if (portal == null) return;
+			log.info("What2?");
+			event.setCancelled(true);
+		}*/
 	}
 	
 	private class sListener extends ServerListener {
