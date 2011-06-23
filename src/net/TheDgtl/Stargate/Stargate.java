@@ -25,9 +25,6 @@ import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.entity.EntityCombustEvent;
-import org.bukkit.event.entity.EntityDamageByBlockEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -382,7 +379,6 @@ public class Stargate extends JavaPlugin {
 						player.sendMessage(ChatColor.RED + denyMsg);
 					}
 					portal.teleport(player, portal, event);
-					event.setCancelled(true);
 					return;
 				}
 				
@@ -395,7 +391,6 @@ public class Stargate extends JavaPlugin {
 						player.sendMessage(ChatColor.RED + denyMsg);
 					}
 					portal.teleport(player, portal, event);
-					event.setCancelled(true);
 					portal.close(false);
 					return;
 				}

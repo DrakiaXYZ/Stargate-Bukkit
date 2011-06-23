@@ -217,10 +217,8 @@ public class Portal {
 
 		exit.setYaw(origin.getRotation() - traveller.getYaw() + this.getRotation() + 180);
 
-		// Change "from" so we don't get hack warnings. Cancel player move event.
-		event.setFrom(exit);
-		player.teleport(exit);
-		event.setCancelled(true);
+		// The new method to teleport in a move event is set the "to" field.
+		event.setTo(exit);
 	}
 
 	public void teleport(final Vehicle vehicle) {
@@ -254,7 +252,7 @@ public class Portal {
 		if (passenger != null) {
 			vehicle.eject();
 			vehicle.remove();
-			final Minecart mc = exit.getWorld().spawnMinecart(exit);
+			final Minecart mc = exit.getWorld().spawn(exit, Minecart.class);
 			passenger.teleport(exit);
 			Stargate.server.getScheduler().scheduleSyncDelayedTask(Stargate.stargate, new Runnable() {
 				public void run() {
