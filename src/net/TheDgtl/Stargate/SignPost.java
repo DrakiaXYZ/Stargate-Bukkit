@@ -7,6 +7,13 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 
+/**
+ * SignPost.java
+ * @author Shaun (sturmeh)
+ * @author Dinnerbone
+ * @author Steven "Drakia" Scott
+ */
+
 public class SignPost {
 	private Blox parent;
 	private Blox block;

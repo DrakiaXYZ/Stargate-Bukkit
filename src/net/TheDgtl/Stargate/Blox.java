@@ -4,6 +4,13 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
+/**
+ * Blox.java
+ * @author Shaun (sturmeh)
+ * @author Dinnerbone
+ * @author Steven "Drakia" Scott
+ */
+
 public class Blox {
 	private int x;
 	private int y;

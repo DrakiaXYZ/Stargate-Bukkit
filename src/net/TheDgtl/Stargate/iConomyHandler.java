@@ -4,6 +4,11 @@ import com.iConomy.*;
 import com.iConomy.system.Account;
 import com.iConomy.system.Holdings;
 
+/**
+ * iConomyHandler.java
+ * @author Steven "Drakia" Scott
+ */
+
 public class iConomyHandler {
 	public static String pName = "Stargate";
 	public static boolean useiConomy = false;

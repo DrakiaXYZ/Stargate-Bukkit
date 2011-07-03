@@ -1,9 +1,10 @@
 package net.TheDgtl.Stargate;
 
 /**
- * RelativeBlockVector.java - Plug-in for hey0's minecraft mod.
+ * RelativeBlockVector.java
  * @author Shaun (sturmeh)
  * @author Dinnerbone
+ * @author Steven "Drakia" Scott
  */
 public class RelativeBlockVector {
 	private int right = 0;

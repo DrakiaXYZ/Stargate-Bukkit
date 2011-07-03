@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -30,6 +31,7 @@ import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.server.ServerListener;
@@ -137,6 +139,9 @@ public class Stargate extends JavaPlugin {
 		pm.registerEvent(Event.Type.ENTITY_EXPLODE, entityListener, Priority.Normal, this);
 		//pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Priority.Normal, this);
 		//pm.registerEvent(Event.Type.ENTITY_COMBUST, entityListener, Priority.Normal, this);
+		
+		// Used to disable built-in portal for Stargates
+		pm.registerEvent(Event.Type.PLAYER_PORTAL, playerListener, Priority.Normal, this);
 		
 		// Dependency Loading
 		pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Monitor, this);
@@ -368,6 +373,28 @@ public class Stargate extends JavaPlugin {
 	}
 	
 	private class pListener extends PlayerListener {
+		@Override
+		public void onPlayerPortal(PlayerPortalEvent event) {
+			// Do a quick check for a stargate
+			Location from = event.getFrom();
+			World world = from.getWorld();
+			int cX = from.getBlockX();
+			int cY = from.getBlockY();
+			int cZ = from.getBlockZ();
+			for (int i = 0; i < 3; i++) {
+				for (int j = 0; j < 3; j++) {
+					for (int k = 0; k < 3; k++) {
+						Block b = world.getBlockAt(cX + i, cY + j, cZ + k);
+						if (b.getType() != Material.PORTAL) continue;
+						Portal portal = Portal.getByEntrance(b);
+						if (portal != null) {
+							event.setCancelled(true);
+							return;
+						}
+					}
+				}
+			}
+		}
 		@Override
 		public void onPlayerMove(PlayerMoveEvent event) {
 			Player player = event.getPlayer();

@@ -25,10 +25,12 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.util.Vector;
 
 /**
- * Portal.java - Plug-in for hey0's minecraft mod.
+ * Portal.java
  * @author Shaun (sturmeh)
  * @author Dinnerbone
+ * @author Steven "Drakia" Scott
  */
+ 
 public class Portal {
 	// Variables used to store portal lists
 	private static final HashMap<Blox, Portal> lookupBlocks = new HashMap<Blox, Portal>();
@@ -356,6 +358,8 @@ public class Portal {
 		activePlayer = player;
 		for (String dest : allPortalsNet.get(getNetwork().toLowerCase())) {
 			Portal portal = getByName(dest, getNetwork());
+			// Check if dest is always open (Don't show if so)
+			if (portal.isAlwaysOn()) continue;
 			// Check if this player can access the dest world
 			if (Stargate.worldFilter && !Stargate.hasPerm(player, "stargate.world." + portal.getWorld().getName(), player.isOp())) continue;
 			// Check if dest is this portal

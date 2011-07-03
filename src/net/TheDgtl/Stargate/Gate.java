@@ -15,10 +15,12 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 
 /**
- * Gate.java - Plug-in for hey0's minecraft mod.
+ * Gate.java
  * @author Shaun (sturmeh)
  * @author Dinnerbone
+ * @author Steven "Drakia" Scott
  */
+ 
 public class Gate {
 	public static final int ANYTHING = -1;
 	public static final int ENTRANCE = -2;
