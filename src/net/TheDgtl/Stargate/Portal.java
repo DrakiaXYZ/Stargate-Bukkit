@@ -18,6 +18,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.StorageMinecart;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.material.Button;
@@ -252,19 +253,23 @@ public class Portal {
 		
 		final Entity passenger = vehicle.getPassenger();
 		if (passenger != null) {
+			final Vehicle v = exit.getWorld().spawn(exit, vehicle.getClass());
 			vehicle.eject();
 			vehicle.remove();
-			final Minecart mc = exit.getWorld().spawn(exit, Minecart.class);
 			passenger.teleport(exit);
 			Stargate.server.getScheduler().scheduleSyncDelayedTask(Stargate.stargate, new Runnable() {
 				public void run() {
-					mc.setPassenger(passenger);
-					mc.setVelocity(newVelocity);
+					v.setPassenger(passenger);
+					v.setVelocity(newVelocity);
 				}
 			}, 1);
 		} else {
-			vehicle.teleport(exit);
-			vehicle.setVelocity(newVelocity);
+			Vehicle mc = exit.getWorld().spawn(exit, vehicle.getClass());
+			if (mc instanceof StorageMinecart) {
+				StorageMinecart smc = (StorageMinecart)mc;
+				smc.getInventory().setContents(((StorageMinecart)vehicle).getInventory().getContents());
+			}
+			vehicle.remove();
 		}
 	}
 

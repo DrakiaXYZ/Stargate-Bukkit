@@ -130,6 +130,11 @@ maxgates - If non-zero, will define the maximum amount of gates allowed on a net
 =============
   Changes
 =============
+[Version 0.5.1]
+ - Take into account world/network restrictions for Vehicles
+ - Properly teleport empty vehicles between worlds
+ - Properly teleport StoreageMinecarts between worlds
+ - Take into account vehicle type when teleporting
 [Version 0.5.0]
  - Updated the teleport method
  - Remove always-open gates from lists

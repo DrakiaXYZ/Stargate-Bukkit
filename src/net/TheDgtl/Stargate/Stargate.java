@@ -338,6 +338,15 @@ public class Stargate extends JavaPlugin {
 				Portal dest = portal.getDestination();
 				if (dest == null) return;
 				
+				if ((networkFilter && !hasPerm(player, "stargate.network." + portal.getNetwork(), player.isOp())) ||
+					(worldFilter && !hasPerm(player, "stargate.world." + portal.getDestination().getWorld().getName(), player.isOp()))) {
+					if (!denyMsg.isEmpty()) {
+						player.sendMessage(ChatColor.RED + denyMsg);
+					}
+					portal.close(false);
+					return;
+				}
+				
 				boolean iConCharge = (iConomyHandler.useiConomy() && !portal.isFree() && !hasPerm(player, "stargate.free.use", player.isOp()));
 				if (!iConomyHandler.chargeFreeDestination)
 					iConCharge = iConCharge && !dest.isFree();
@@ -385,7 +394,6 @@ public class Stargate extends JavaPlugin {
 				for (int j = 0; j < 3; j++) {
 					for (int k = 0; k < 3; k++) {
 						Block b = world.getBlockAt(cX + i, cY + j, cZ + k);
-						if (b.getType() != Material.PORTAL) continue;
 						Portal portal = Portal.getByEntrance(b);
 						if (portal != null) {
 							event.setCancelled(true);
