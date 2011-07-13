@@ -16,7 +16,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.StorageMinecart;
 import org.bukkit.entity.Vehicle;
@@ -56,10 +55,13 @@ public class Portal {
 	private String network;
 	private Gate gate;
 	private String owner = "";
+	// Options
 	private boolean hidden = false;
 	private boolean alwaysOn = false;
 	private boolean priv = false;
 	private boolean free = false;
+	private boolean backwards = false;
+	
 	private World world;
 	// Gate options
 	private boolean verified;
@@ -74,8 +76,8 @@ public class Portal {
 	private Portal(Blox topLeft, int modX, int modZ,
 			float rotX, SignPost id, Blox button,
 			String dest, String name,
-			boolean verified, String network, Gate gate,
-			String owner, boolean hidden, boolean alwaysOn, boolean priv, boolean free) {
+			boolean verified, String network, Gate gate, String owner, 
+			boolean hidden, boolean alwaysOn, boolean priv, boolean free, boolean backwards) {
 		this.topLeft = topLeft;
 		this.modX = modX;
 		this.modZ = modZ;
@@ -93,6 +95,7 @@ public class Portal {
 		this.alwaysOn = alwaysOn;
 		this.priv = priv;
 		this.free = free;
+		this.backwards = backwards;
 		this.world = topLeft.getWorld();
 		
 		if (this.alwaysOn && !this.fixed) {
@@ -126,6 +129,10 @@ public class Portal {
 		return free;
 	}
 	
+	public boolean isBackwards() {
+		return backwards;
+	}
+	
 	public boolean isFree(Player player, Portal dest) {
 		// This gate is free, the player gets all gates free, or we don't charge for free dest and dest is free
 		boolean isFree = isFree() || Stargate.hasPerm(player, "stargate.free.use", player.isOp()) ||
@@ -155,7 +162,7 @@ public class Portal {
 			player = openFor;
 
 			Portal end = getDestination();
-			if (end != null && !end.isFixed() && !end.isOpen()) {
+			if (end != null && !end.isAlwaysOn() && !end.isOpen()) {
 				end.open(openFor, false);
 				end.setDestination(this);
 				if (end.isVerified()) end.drawSign();
@@ -218,7 +225,9 @@ public class Portal {
 		Location traveller = player.getLocation();
 		Location exit = getExit(traveller);
 
-		exit.setYaw(origin.getRotation() - traveller.getYaw() + this.getRotation() + 180);
+		// Handle backwards gates
+		int adjust = isBackwards() ? 0 :180;
+		exit.setYaw(origin.getRotation() - traveller.getYaw() + this.getRotation() + adjust);
 
 		// The new method to teleport in a move event is set the "to" field.
 		event.setTo(exit);
@@ -278,14 +287,14 @@ public class Portal {
 		// Check if the gate has an exit block
 		if (gate.getExit() != null) {
 			Blox exit = getBlockAt(gate.getExit());
-			loc = exit.modRelativeLoc(0D, 0D, 1D, traveller.getYaw(), traveller.getPitch(), modX, 1, modZ);
+			int back = (isBackwards()) ? -1 : 1;
+			loc = exit.modRelativeLoc(0D, 0D, 1D, traveller.getYaw(), traveller.getPitch(), modX * back, 1, modZ * back);
 		} else {
 			Stargate.log.log(Level.WARNING, "[Stargate] Missing destination point in .gate file " + gate.getFilename());
 		}
 		if (loc != null) {
-			Block block = getWorld().getBlockAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
-			if (block.getType() == Material.STEP) {
+			if (getWorld().getBlockTypeIdAt(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()) == Material.STEP.getId()) {
 				loc.setY(loc.getY() + 0.5);
 			}
 
@@ -517,15 +526,10 @@ public class Portal {
 	public Blox[] getFrame() {
 		if (frame == null) {
 			RelativeBlockVector[] border = gate.getBorder();
-			RelativeBlockVector[] controls = gate.getControls();
-			frame = new Blox[border.length + controls.length];
+			frame = new Blox[border.length];
 			int i = 0;
 
 			for (RelativeBlockVector vector : border) {
-				frame[i++] = getBlockAt(vector);
-			}
-
-			for (RelativeBlockVector vector : controls) {
 				frame[i++] = getBlockAt(vector);
 			}
 		}
@@ -631,12 +635,14 @@ public class Portal {
 		boolean alwaysOn = (options.indexOf('a') != -1 || options.indexOf('A') != -1);
 		boolean priv = (options.indexOf('p') != -1 || options.indexOf('P') != -1);
 		boolean free = (options.indexOf('f') != - 1|| options.indexOf('F') != -1);
+		boolean backwards = (options.indexOf('b') != -1 || options.indexOf('B') != -1);
 		
 		// Check permissions for options.
 		if (!Stargate.hasPerm(player, "stargate.option.hidden", player.isOp())) hidden = false;
 		if (!Stargate.hasPerm(player, "stargate.option.alwayson", player.isOp())) alwaysOn = false;
 		if (!Stargate.hasPerm(player, "stargate.option.private", player.isOp())) priv = false;
 		if (!Stargate.hasPerm(player, "stargate.option.free", player.isOp())) free = false;
+		if (!Stargate.hasPerm(player, "stargate.option.backwards", player.isOp())) backwards = false;
 		
 		// Can not create a non-fixed always-on gate.
 		if (alwaysOn && destName.length() == 0) {
@@ -644,7 +650,7 @@ public class Portal {
 		}
 		
 		// Debug
-		Stargate.debug("createPortal", "h = " + hidden + " a = " + alwaysOn + " p = " + priv + " f = " + free);
+		Stargate.debug("createPortal", "h = " + hidden + " a = " + alwaysOn + " p = " + priv + " f = " + free + " b = " + backwards);
 
 		if ((network.length() < 1) || (network.length() > 11)) {
 			network = Stargate.getDefaultNetwork();
@@ -773,7 +779,7 @@ public class Portal {
 			button.setType(Material.STONE_BUTTON.getId());
 			button.setData(facing);
 		}
-		portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv, free);
+		portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv, free, backwards);
 
 		// Open always on gate
 		if (portal.isAlwaysOn()) {
@@ -861,6 +867,8 @@ public class Portal {
 				builder.append(portal.world.getName());
 				builder.append(':');
 				builder.append(portal.isFree());
+				builder.append(':');
+				builder.append(portal.isBackwards());
 				
 				bw.append(builder.toString());
 				bw.newLine();
@@ -927,8 +935,9 @@ public class Portal {
 					boolean alwaysOn = (split.length > 12) ? split[12].equalsIgnoreCase("true") : false;
 					boolean priv = (split.length > 13) ? split[13].equalsIgnoreCase("true") : false;
 					boolean free = (split.length > 15) ? split[15].equalsIgnoreCase("true") : false;
+					boolean backwards = (split.length > 16) ? split[16].equalsIgnoreCase("true") : false;
 
-					Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv, free);
+					Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv, free, backwards);
 					portal.close(true);
 				}
 				scanner.close();

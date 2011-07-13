@@ -31,8 +31,9 @@ public class Gate {
 	private static HashSet<Integer> frameBlocks = new HashSet<Integer>();
 
 	private String filename;
-	private Integer[][] layout;
+	private Character[][] layout;
 	private HashMap<Character, Integer> types;
+	private HashMap<Character, Integer> metadata;
 	private RelativeBlockVector[] entrances = new RelativeBlockVector[0];
 	private RelativeBlockVector[] border = new RelativeBlockVector[0];
 	private RelativeBlockVector[] controls = new RelativeBlockVector[0];
@@ -47,9 +48,10 @@ public class Gate {
 	private int destroyCost = 0;
 	private boolean toOwner = false;
 
-	private Gate(String filename, Integer[][] layout, HashMap<Character, Integer> types) {
+	private Gate(String filename, Character[][] layout, HashMap<Character, Integer> types, HashMap<Character, Integer> metadata) {
 		this.filename = filename;
 		this.layout = layout;
+		this.metadata = metadata;
 		this.types = types;
 
 		populateCoordinates();
@@ -61,21 +63,20 @@ public class Gate {
 		ArrayList<RelativeBlockVector> controlList = new ArrayList<RelativeBlockVector>();
 		RelativeBlockVector[] relativeExits = new RelativeBlockVector[layout[0].length];
 		int[] exitDepths = new int[layout[0].length];
-		//int bottom = 0;
 		RelativeBlockVector lastExit = null;
 
 		for (int y = 0; y < layout.length; y++) {
 			for (int x = 0; x < layout[y].length; x++) {
-				Integer id = layout[y][x];
+				Integer id = types.get(layout[y][x]);
+				if (layout[y][x] == '-') {
+					controlList.add(new RelativeBlockVector(x, y, 0));
+				}
 
 				if (id == ENTRANCE || id == EXIT) {
 					entranceList.add(new RelativeBlockVector(x, y, 0));
 					exitDepths[x] = y;
 					if (id == EXIT)
 						this.exitBlock = new RelativeBlockVector(x, y, 0);
-					//bottom = y;
-				} else if (id == CONTROL) {
-					controlList.add(new RelativeBlockVector(x, y, 0));
 				} else if (id != ANYTHING) {
 					borderList.add(new RelativeBlockVector(x, y, 0));
 				}
@@ -102,8 +103,6 @@ public class Gate {
 	}
 	
 	public void save(String gateFolder) {
-		HashMap<Integer, Character> reverse = new HashMap<Integer, Character>();
-
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(gateFolder + filename));
 			
@@ -119,14 +118,18 @@ public class Gate {
 
 			for (Character type : types.keySet()) {
 				Integer value = types.get(type);
-
-				if (!type.equals('-')) {
-					reverse.put(value, type);
-				}
+				// Skip control values
+				if (value < 0) continue;
 
 				bw.append(type);
 				bw.append('=');
 				bw.append(value.toString());
+				Integer mData = metadata.get(type);
+				// Append metadata
+				if (mData != null) {
+					bw.append(':');
+					bw.append(mData.toString());
+				}
 				bw.newLine();
 			}
 
@@ -134,23 +137,7 @@ public class Gate {
 
 			for (int y = 0; y < layout.length; y++) {
 				for (int x = 0; x < layout[y].length; x++) {
-					Integer id = layout[y][x];
-					Character symbol;
-
-					if (id == ENTRANCE) {
-						symbol = '.';
-					} else if (id == ANYTHING) {
-						symbol = ' ';
-					} else if (id == CONTROL) {
-						symbol = '-';
-					} else if (id == EXIT) {
-						symbol = '*';
-					} else if (reverse.containsKey(id)) {
-						symbol = reverse.get(id);
-					} else {
-						symbol = '?';
-					}
-
+					Character symbol = layout[y][x];
 					bw.append(symbol);
 				}
 				bw.newLine();
@@ -158,7 +145,7 @@ public class Gate {
 
 			bw.close();
 		} catch (IOException ex) {
-			Stargate.log.log(Level.SEVERE, "Could not load Gate " + filename + " - " + ex.getMessage());
+			Stargate.log.log(Level.SEVERE, "Could not save Gate " + filename + " - " + ex.getMessage());
 		}
 	}
 
@@ -172,7 +159,7 @@ public class Gate {
 		bw.newLine();
 	}
 
-	public Integer[][] getLayout() {
+	public Character[][] getLayout() {
 		return layout;
 	}
 
@@ -234,18 +221,18 @@ public class Gate {
 	public boolean matches(Blox topleft, int modX, int modZ) {
 		for (int y = 0; y < layout.length; y++) {
 			for (int x = 0; x < layout[y].length; x++) {
-				int id = layout[y][x];
+				int id = types.get(layout[y][x]);
 
 				if (id == ENTRANCE || id == EXIT) {
 					if (topleft.modRelative(x, y, 0, modX, 1, modZ).getType() != portalBlockClosed) {
 						return false;
 					}
-				} else if (id == CONTROL) {
-					if (topleft.modRelative(x, y, 0, modX, 1, modZ).getType() != getControlBlock()) {
-						return false;
-					}
 				} else if (id != ANYTHING) {
 					 if (topleft.modRelative(x, y, 0, modX, 1, modZ).getType() != id) {
+						 return false;
+					 }
+					 Integer mData = metadata.get(layout[y][x]);
+					 if (mData != null && topleft.modRelative(x, y, 0, modX, 1, modZ).getData() != mData) {
 						 return false;
 					 }
 				}
@@ -270,10 +257,16 @@ public class Gate {
 	private static Gate loadGate(File file) {
 		Scanner scanner = null;
 		boolean designing = false;
-		ArrayList<ArrayList<Integer>> design = new ArrayList<ArrayList<Integer>>();
+		ArrayList<ArrayList<Character>> design = new ArrayList<ArrayList<Character>>();
 		HashMap<Character, Integer> types = new HashMap<Character, Integer>();
+		HashMap<Character, Integer> metadata = new HashMap<Character, Integer>();
 		HashMap<String, String> config = new HashMap<String, String>();
 		int cols = 0;
+		
+		// Init types map
+		types.put('.', ENTRANCE);
+		types.put('*', EXIT);
+		types.put(' ', ANYTHING);
 
 		try {
 			scanner = new Scanner(file);
@@ -282,31 +275,18 @@ public class Gate {
 				String line = scanner.nextLine();
 
 				if (designing) {
-					ArrayList<Integer> row = new ArrayList<Integer>();
+					ArrayList<Character> row = new ArrayList<Character>();
 
 					if (line.length() > cols) {
 						cols = line.length();
 					}
 
 					for (Character symbol : line.toCharArray()) {
-						Integer id = ANYTHING;
-
-						if (symbol.equals('.')) {
-							id = ENTRANCE;
-						} else if (symbol.equals('*')) {
-							id = EXIT;
-						} else if (symbol.equals(' ')) {
-							id = ANYTHING;
-						} else if (symbol.equals('-')) {
-							id = CONTROL;
-						} else if ((symbol.equals('?')) || (!types.containsKey(symbol))) {
+						if ((symbol.equals('?')) || (!types.containsKey(symbol))) {
 							Stargate.log.log(Level.SEVERE, "Could not load Gate " + file.getName() + " - Unknown symbol '" + symbol + "' in diagram");
 							return null;
-						} else {
-							id = types.get(symbol);
 						}
-
-						row.add(id);
+						row.add(symbol);
 					}
 
 					design.add(row);
@@ -320,6 +300,13 @@ public class Gate {
 
 						if (key.length() == 1) {
 							Character symbol = key.charAt(0);
+							// Check for metadata
+							if (value.contains(":")) {
+								split = value.split(":");
+								value = split[0].trim();
+								String mData = split[1].trim();
+								metadata.put(symbol, Integer.parseInt(mData));
+							}
 							Integer id = Integer.parseInt(value);
 
 							types.put(symbol, id);
@@ -337,24 +324,24 @@ public class Gate {
 			if (scanner != null) scanner.close();
 		}
 
-		Integer[][] layout = new Integer[design.size()][cols];
+		Character[][] layout = new Character[design.size()][cols];
 
 		for (int y = 0; y < design.size(); y++) {
-			ArrayList<Integer> row = design.get(y);
-			Integer[] result = new Integer[cols];
+			ArrayList<Character> row = design.get(y);
+			Character[] result = new Character[cols];
 
 			for (int x = 0; x < cols; x++) {
 				if (x < row.size()) {
 					result[x] = row.get(x);
 				} else {
-					result[x] = ANYTHING;
+					result[x] = ' ';
 				}
 			}
 
 			layout[y] = result;
 		}
 
-		Gate gate = new Gate(file.getName(), layout, types);
+		Gate gate = new Gate(file.getName(), layout, types, metadata);
 
 		gate.portalBlockOpen = readConfig(config, gate, file, "portal-open", gate.portalBlockOpen);
 		gate.portalBlockClosed = readConfig(config, gate, file, "portal-closed", gate.portalBlockClosed);
@@ -407,18 +394,22 @@ public class Gate {
 	
 	public static void populateDefaults(String gateFolder) {
 		int Obsidian = Material.OBSIDIAN.getId();
-		Integer[][] layout = new Integer[][] {
-			{ANYTHING, Obsidian,Obsidian, ANYTHING},
-			{Obsidian, ENTRANCE, ENTRANCE, Obsidian},
-			{CONTROL, ENTRANCE, ENTRANCE, CONTROL},
-			{Obsidian, EXIT, ENTRANCE, Obsidian},
-			{ANYTHING, Obsidian, Obsidian, ANYTHING},
+		Character[][] layout = new Character[][] {
+			{' ', 'X','X', ' '},
+			{'X', '.', '.', 'X'},
+			{'-', '.', '.', '-'},
+			{'X', '*', '.', 'X'},
+			{' ', 'X', 'X', ' '},
 		};
 		HashMap<Character, Integer> types = new HashMap<Character, Integer>();
+		types.put('.', ENTRANCE);
+		types.put('*', EXIT);
+		types.put(' ', ANYTHING);
 		types.put('X', Obsidian);
 		types.put('-', Obsidian);
+		HashMap<Character, Integer> metadata = new HashMap<Character, Integer>();
 
-		Gate gate = new Gate("nethergate.gate", layout, types);
+		Gate gate = new Gate("nethergate.gate", layout, types, metadata);
 		gate.save(gateFolder);
 		registerGate(gate);
 	}
