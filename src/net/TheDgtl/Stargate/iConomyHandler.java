@@ -26,7 +26,7 @@ public class iConomyHandler {
 		if (useiConomy && iconomy != null) {
 			Account acc = iConomy.getAccount(player);
 			if (acc == null) {
-				Stargate.log.info("[" + pName + "::ich::getBalance] Error fetching iConomy account for " + player);
+				Stargate.debug("ich::getBalance", "Error fetching iConomy account for " + player);
 				return 0;
 			}
 			return acc.getHoldings().balance();
@@ -41,7 +41,7 @@ public class iConomyHandler {
 			
 			Account acc = iConomy.getAccount(player);
 			if (acc == null) {
-				Stargate.log.info("[" + pName + "::ich::chargePlayer] Error fetching iConomy account for " + player);
+				Stargate.debug("ich::chargePlayer", "Error fetching iConomy account for " + player);
 				return false;
 			}
 			Holdings hold = acc.getHoldings();

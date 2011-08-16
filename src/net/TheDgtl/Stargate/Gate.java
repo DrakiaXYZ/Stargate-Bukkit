@@ -43,9 +43,9 @@ public class Gate {
 	private int portalBlockClosed = Material.AIR.getId();
 	
 	// iConomy information
-	private int useCost = 0;
-	private int createCost = 0;
-	private int destroyCost = 0;
+	private int useCost = -1;
+	private int createCost = -1;
+	private int destroyCost = -1;
 	private boolean toOwner = false;
 
 	private Gate(String filename, Character[][] layout, HashMap<Character, Integer> types, HashMap<Character, Integer> metadata) {
@@ -108,11 +108,11 @@ public class Gate {
 			
 			writeConfig(bw, "portal-open", portalBlockOpen);
 			writeConfig(bw, "portal-closed", portalBlockClosed);
-			if (useCost != iConomyHandler.useCost)
+			if (useCost != -1)
 				writeConfig(bw, "usecost", useCost);
-			if (createCost != iConomyHandler.createCost)
+			if (createCost != -1)
 				writeConfig(bw, "createcost", createCost);
-			if (destroyCost != iConomyHandler.destroyCost)
+			if (destroyCost != -1)
 				writeConfig(bw, "destroycost", destroyCost);
 			writeConfig(bw, "toowner", toOwner);
 
@@ -199,14 +199,17 @@ public class Gate {
 	}
 	
 	public int getUseCost() {
+		if (useCost < 0) return iConomyHandler.useCost;
 		return useCost;
 	}
 	
 	public Integer getCreateCost() {
+		if (createCost < 0) return iConomyHandler.createCost;
 		return createCost;
 	}
 	
 	public Integer getDestroyCost() {
+		if (destroyCost < 0) return iConomyHandler.destroyCost;
 		return destroyCost;
 	}
 	
@@ -345,9 +348,9 @@ public class Gate {
 
 		gate.portalBlockOpen = readConfig(config, gate, file, "portal-open", gate.portalBlockOpen);
 		gate.portalBlockClosed = readConfig(config, gate, file, "portal-closed", gate.portalBlockClosed);
-		gate.useCost = readConfig(config, gate, file, "usecost", iConomyHandler.useCost);
-		gate.destroyCost = readConfig(config, gate, file, "destroycost", iConomyHandler.destroyCost);
-		gate.createCost = readConfig(config, gate, file, "createcost", iConomyHandler.createCost);
+		gate.useCost = readConfig(config, gate, file, "usecost", -1);
+		gate.destroyCost = readConfig(config, gate, file, "destroycost", -1);
+		gate.createCost = readConfig(config, gate, file, "createcost", -1);
 		gate.toOwner = (config.containsKey("toowner") ? Boolean.valueOf(config.get("toowner")) : iConomyHandler.toOwner);
 
 		if (gate.getControls().length != 2) {
