@@ -146,6 +146,8 @@ maxgates - If non-zero, will define the maximum amount of gates allowed on any n
 =============
   Changes
 =============
+[Version 0.6.1]
+ - Stop destruction of open gates on startup
 [Version 0.6.0]
  - Completely re-wrote Permission handling (REREAD/REDO YOUR PERMISSIONS!!!!!!!!)
  - Added custom Stargate events (See Stargate-DHD code for use)

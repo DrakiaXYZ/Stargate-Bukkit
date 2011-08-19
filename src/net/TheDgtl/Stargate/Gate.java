@@ -227,7 +227,8 @@ public class Gate {
 				int id = types.get(layout[y][x]);
 
 				if (id == ENTRANCE || id == EXIT) {
-					if (topleft.modRelative(x, y, 0, modX, 1, modZ).getType() != portalBlockClosed) {
+					int type = topleft.modRelative(x, y, 0, modX, 1, modZ).getType();
+					if (type != portalBlockClosed && type != portalBlockOpen) {
 						return false;
 					}
 				} else if (id != ANYTHING) {
