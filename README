@@ -42,6 +42,16 @@ stargate.admin -- Allow all admin features (Hidden/Private only so far)
   stargate.admin.hidden -- Allow access to Hidden gates not ownerd by user
 
 =============
+Default Permissions
+=============
+stargate.use -- Everyone
+stargate.create -- Op
+stargate.destroy -- Op
+stargate.option -- Op
+stargate.free -- Op
+stargate.admin -- Op
+
+=============
 Instructions
 =============
 Building a gate:
@@ -146,6 +156,9 @@ maxgates - If non-zero, will define the maximum amount of gates allowed on any n
 =============
   Changes
 =============
+[Version 0.6.2]
+ - Fixed an issue with private gates
+ - Added default permissions
 [Version 0.6.1]
  - Stop destruction of open gates on startup
 [Version 0.6.0]

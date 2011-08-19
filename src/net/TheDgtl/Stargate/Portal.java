@@ -754,7 +754,10 @@ public class Portal {
 		// Check if the player can create gates on this network
 		if (!Stargate.canCreate(player, network)) {
 			Stargate.debug("createPortal", "Player doesn't have create permissions on network. Trying personal");
-			network = player.getName().substring(0, 11);
+			network = player.getName();
+			if (network.length() > 11) {
+				network = network.substring(0, 11);
+			}
 			
 			// Check if we can create a gate on our own network
 			if (!Stargate.canCreate(player,  network)) {
