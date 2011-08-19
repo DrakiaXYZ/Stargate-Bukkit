@@ -1,36 +1,45 @@
 =============
  Description
 =============
-This is a port of the Stargate plugin from hMod.
+This is a port of the Stargate plugin from hMod by Dinnerbone.
 Create gates that allow for instant-teleportation between large distances. Gates can be always-open, or triggered, they can be hidden, or accessible to everybody, they can share a network, or they can be split into clusters.
 This port will import your existing locations.dat file from the hMod Stargate plugin!
 iConomy support added back in, only costs are create, destroy and use.
 
 =============
-Known Issues
-=============
-Hmm.. None?
-
-=============
  Permissions
 =============
- - stargate.use - Allow this player/group to use stargates.
- - stargate.create - Allow this player/group to create new stargates.
- - stargate.create.personal - Allow this player/group to create new stargates on a network defined as their name.
- - stargate.destroy.all - Allow this player/group to destroy any existing stargate (Replaces stargate.destroy)
- - stargate.destroy.owner - Allow this player/group to destroy any stargate that they are the owner of.
- - stargate.hidden - Allow this player/group to see all hidden stargates.
- - stargate.private - Allow this player/group to use all private stargates.
- - stargate.free.use - This player/group is not charged to use gates even if the gate has a cost.
- - stargate.free.create - This player/group is not charged to create gates even if the gate has a cost.
- - stargate.free.destroy - This player/group is not charged to destroy gates even if the gate has a cost.
- - stargate.world.{worldname} - Allow this user/group access to gates on the world {worldname}
- - stargate.network.{networkname} - Allow this user/group access to the network {networkname}
- - stargate.option.hidden - Allow this user/group to create hidden gates.
- - stargate.option.alwayson - Allow this user/group to create always-on gates.
- - stargate.option.private - Allow this user/group to create private gates.
- - stargate.option.free - Allow this user/group to create free gates.
- - stargate.option.backwards - Allow this user/group to create backwards gates.
+stargate.use -- Allow use of all gates linking to any world in any network
+  stargate.world -- Allow use of gates linking to any world
+    stargate.world.{world} -- Allow use of gates with a destination in {world}
+  stargate.network -- Allow use of gates on all networks
+    stargate.network.{network} -- Allow use of all gates in {network}
+
+stargate.option -- Allow use of all options
+  stargate.option.hidden -- Allow use of 'H'idden
+  stargate.option.alwayson -- Allow use of 'A'lways-On
+  stargate.option.private -- Allow use of 'P'rivate
+  stargate.option.free -- Allow use of 'F'ree
+  stargate.option.backwards -- Allow use of 'B'ackwards
+  
+stargate.create -- Allow creating gates on any network
+  stargate.create.personal -- Allow creating gates on network {playername}
+  stargate.create.network -- Allow creating gates on any network
+    stargate.create.network.{networkname} -- Allow creating gates on network {networkname}
+
+stargate.destroy -- Allow destruction gates on any network
+  stargate.destroy.personal -- Allow destruction of gates owned by user only
+  stargate.destroy.network -- Allow destruction of gates on any network
+    stargate.destroy.network.{networkname} -- Allow destruction of gates on network {networkname}
+
+stargate.free -- Allow free use/creation/destruction of gates
+  stargate.free.use -- Allow free use of Stargates
+  stargate.free.create -- Allow free creation of Stargates
+  stargate.free.destroy -- Allow free destruction of Stargates
+  
+stargate.admin -- Allow all admin features (Hidden/Private only so far)
+  stargate.admin.private -- Allow use of Private gates not owned by user
+  stargate.admin.hidden -- Allow access to Hidden gates not ownerd by user
 
 =============
 Instructions
@@ -130,17 +139,18 @@ usecost - The cost to use a stargate
 chargefreedestination - Enable to allow free travel from any gate to a free gate
 freegatesgreen - Enable to make gates that won't cost the player money show up as green
 not-enough-money-message - The message displayed if a player lacks money to do something
-networkfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.network.{networkname}' permission.
-worldfilter - Whether or not to disallow users access to a network if they don't have the 'stargate.world.{worldname}' permission.
 toowner - Whether the money from gate-use goes to the owner or nobody
-debug - Whether to show massive debug output for gate creation
-maxgates - If non-zero, will define the maximum amount of gates allowed on a network.
+debug - Whether to show massive debug output
+maxgates - If non-zero, will define the maximum amount of gates allowed on any network.
 
 =============
   Changes
 =============
 [Version 0.6.0]
- - Oh god the changes, hopefully I didn't fuck anything up, README updates coming later
+ - Completely re-wrote Permission handling (REREAD/REDO YOUR PERMISSIONS!!!!!!!!)
+ - Added custom Stargate events (See Stargate-DHD code for use)
+ - Fixed portal event cancellation
+ - Umm... Lots of other small things.
 [Version 0.5.5]
  - Added 'B'ackwards option
  - Fixed opening of gates with a fixed gate as a destination
