@@ -348,6 +348,7 @@ public class Stargate extends JavaPlugin {
 		// Can access all networks
 		if (hasPerm(player, "stargate.network")) return true;
 		// Can access this network
+		Stargate.debug("canAccessNetwork", "stargate.network." + network);
 		if (hasPerm(player, "stargate.network." + network)) return true;
 		return false;
 	}
@@ -615,7 +616,7 @@ public class Stargate extends JavaPlugin {
 				}
 			}
 			
-			Stargate.sendMessage(player,  teleMsg);
+			Stargate.sendMessage(player,  teleMsg, false);
 			destination.teleport(player, portal, event);
 			portal.close(false);
 		}
@@ -634,7 +635,7 @@ public class Stargate extends JavaPlugin {
 					event.setUseItemInHand(Result.DENY);
 					event.setUseInteractedBlock(Result.DENY);
 					
-					if (!Stargate.canAccessNetwork(player,  portal.getNetwork())) {
+					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
 						Stargate.sendMessage(player, denyMsg);
 						return;
 					}
@@ -664,9 +665,6 @@ public class Stargate extends JavaPlugin {
 				if (block.getType() == Material.WALL_SIGN) {
 					Portal portal = Portal.getByBlock(block);
 					if (portal == null) return;
-					// Cancel item use
-					event.setUseItemInHand(Result.DENY);
-					event.setUseInteractedBlock(Result.DENY);
 					
 					if (!Stargate.canAccessNetwork(player,  portal.getNetwork())) {
 						Stargate.sendMessage(player, denyMsg);
@@ -735,6 +733,7 @@ public class Stargate extends JavaPlugin {
 			
 			if (!Stargate.canDestroy(player, portal)) {
 				Stargate.sendMessage(player, "Permission Denied");
+				Stargate.log.info("[Stargate] " + player.getName() + " tried to destroy gate");
 				event.setCancelled(true);
 				return;
 			}
@@ -921,6 +920,7 @@ public class Stargate extends JavaPlugin {
 				Portal p = iter.next();
 				// Skip always open gates
 				if (p.isAlwaysOn()) continue;
+				if (!p.isOpen()) continue;
 				if (time > p.getOpenTime() + Stargate.openTime) {
 					p.close(false);
 					iter.remove();
@@ -929,6 +929,7 @@ public class Stargate extends JavaPlugin {
 			// Deactivate active portals
 			for (Iterator<Portal> iter = Stargate.activeList.iterator(); iter.hasNext();) {
 				Portal p = iter.next();
+				if (!p.isActive()) continue;
 				if (time > p.getOpenTime() + Stargate.activeTime) {
 					p.deactivate();
 					iter.remove();

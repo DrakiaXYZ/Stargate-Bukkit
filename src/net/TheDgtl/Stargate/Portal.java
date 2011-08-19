@@ -9,6 +9,9 @@ import java.util.Iterator;
 import java.util.Scanner;
 import java.util.logging.Level;
 
+import net.TheDgtl.Stargate.event.StargateCloseEvent;
+import net.TheDgtl.Stargate.event.StargateOpenEvent;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -215,6 +218,12 @@ public class Portal {
 	}
 
 	public boolean open(Player openFor, boolean force) {
+		// Call the StargateOpenEvent
+		StargateOpenEvent event = new StargateOpenEvent(openFor, this, force);
+		Stargate.server.getPluginManager().callEvent(event);
+		if (event.isCancelled()) return false;
+		force = event.getForce();
+		
 		if (isOpen() && !force) return false;
 
 		getWorld().loadChunk(getWorld().getChunkAt(topLeft.getBlock()));
@@ -245,7 +254,14 @@ public class Portal {
 	}
 
 	public void close(boolean force) {
-		if (isAlwaysOn() && !force) return; // Never close an always open gate
+		if (!isOpen) return;
+		// Call the StargateCloseEvent
+		StargateCloseEvent event = new StargateCloseEvent(this, force);
+		Stargate.server.getPluginManager().callEvent(event);
+		if (event.isCancelled()) return;
+		force = event.getForce();
+		
+		if (isAlwaysOn() && !force) return; // Only close always-open if forced
 		
 		// Close this gate, then the dest gate.
 		for (Blox inside : getEntrances()) {
@@ -722,7 +738,6 @@ public class Portal {
 		Stargate.debug("createPortal", "h = " + hidden + " a = " + alwaysOn + " p = " + priv + " f = " + free + " b = " + backwards);
 
 		if ((network.length() < 1) || (network.length() > 11)) {
-			Stargate.debug("createPortal", "Network name too long. Shortening");
 			network = Stargate.getDefaultNetwork();
 		}
 		
