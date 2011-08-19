@@ -9,7 +9,9 @@ import java.util.Iterator;
 import java.util.Scanner;
 import java.util.logging.Level;
 
+import net.TheDgtl.Stargate.event.StargateActivateEvent;
 import net.TheDgtl.Stargate.event.StargateCloseEvent;
+import net.TheDgtl.Stargate.event.StargateDeactivateEvent;
 import net.TheDgtl.Stargate.event.StargateOpenEvent;
 
 import org.bukkit.ChatColor;
@@ -415,6 +417,10 @@ public class Portal {
 	}
 
 	public void activate(Player player) {
+		StargateActivateEvent event = new StargateActivateEvent(this);
+		Stargate.server.getPluginManager().callEvent(event);
+		if (event.isCancelled()) return;
+		
 		destinations.clear();
 		destination = "";
 		drawSign();
@@ -439,6 +445,10 @@ public class Portal {
 	}
 
 	public void deactivate() {
+		StargateDeactivateEvent event = new StargateDeactivateEvent(this);
+		Stargate.server.getPluginManager().callEvent(event);
+		if (event.isCancelled()) return;
+		
 		Stargate.activeList.remove(this);
 		if (isFixed()) {
 			return;
@@ -1032,23 +1042,32 @@ public class Portal {
 	
 	@Override
 	public int hashCode() {
-		return getName().hashCode();
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((network == null) ? 0 : network.hashCode());
+		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
+		if (this == obj)
 			return true;
-		}
-		if (obj == null) {
+		if (obj == null)
 			return false;
-		}
-		if (getClass() != obj.getClass()) {
+		if (getClass() != obj.getClass())
 			return false;
-		}
-
-		Portal portal = (Portal) obj;
-		return (this.getNetwork().equalsIgnoreCase(portal.getNetwork()) && 
-				this.getName().equalsIgnoreCase(portal.getName()));
+		Portal other = (Portal) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equalsIgnoreCase(other.name))
+			return false;
+		if (network == null) {
+			if (other.network != null)
+				return false;
+		} else if (!network.equalsIgnoreCase(other.network))
+			return false;
+		return true;
 	}
 }

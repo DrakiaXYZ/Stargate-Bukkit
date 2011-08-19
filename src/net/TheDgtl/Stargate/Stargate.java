@@ -269,6 +269,25 @@ public class Stargate extends JavaPlugin {
 	public static String getDefaultNetwork() {
 		return defNetwork;
 	}
+	
+	public static String getTeleMsg() {
+		return teleMsg;
+	}
+	public static String getRegMsg() {
+		return regMsg;
+	}
+	public static String getDmgMsg() {
+		return dmgMsg;
+	}
+	public static String getDenyMsg() {
+		return denyMsg;
+	}
+	public static String getInvMsg() {
+		return invMsg;
+	} 
+	public static String getBlockMsg() {
+		return blockMsg;
+	}
 
 	private void onButtonPressed(Player player, Portal portal) {
 		Portal destination = portal.getDestination();

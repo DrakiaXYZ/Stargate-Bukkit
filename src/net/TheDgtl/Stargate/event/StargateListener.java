@@ -17,12 +17,24 @@ public class StargateListener extends CustomEventListener implements Listener {
 		
 	}
 	
+	public void onStargateActivate(StargateActivateEvent event) {
+		
+	}
+	
+	public void onStargateDeactivate(StargateDeactivateEvent event) {
+		
+	}
+	
 	@Override
 	public void onCustomEvent(Event event) {
 		if (event instanceof StargateOpenEvent) {
 			onStargateOpen((StargateOpenEvent)event);
 		} else if (event instanceof StargateCloseEvent) {
 			onStargateClose((StargateCloseEvent)event);
+		} else if (event instanceof StargateActivateEvent) {
+			onStargateActivate((StargateActivateEvent)event);
+		} else if (event instanceof StargateDeactivateEvent) {
+			onStargateDeactivate((StargateDeactivateEvent)event);
 		}
 	}
 }

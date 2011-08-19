@@ -6,13 +6,14 @@ import org.bukkit.entity.Player;
 
 public class StargateOpenEvent extends StargateEvent {
 	private static final long serialVersionUID = -2804865767733660648L;
-	Player player;
+	private Player player;
+	private boolean force;
 	
 	public StargateOpenEvent(Player player, Portal portal, boolean force) {
-		super ("StargateOpenEvent", portal, force);
+		super ("StargateOpenEvent", portal);
 		
 		this.player = player;
-		this.portal = portal;
+		this.force = force;
 	}
 	
 	/**
@@ -21,5 +22,13 @@ public class StargateOpenEvent extends StargateEvent {
 	 */
 	public Player getPlayer() {
 		return player;
+	}
+	
+	public boolean getForce() {
+		return force;
+	}
+	
+	public void setForce(boolean force) {
+		this.force = force;
 	}
 }
