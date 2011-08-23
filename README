@@ -9,11 +9,11 @@ iConomy support added back in, only costs are create, destroy and use.
 =============
  Permissions
 =============
-stargate.use -- Allow use of all gates linking to any world in any network
+stargate.use -- Allow use of all gates linking to any world in any network (Override ALL network/world permissions. Set to false to use network/world specific permissions)
   stargate.world -- Allow use of gates linking to any world
-    stargate.world.{world} -- Allow use of gates with a destination in {world}
+    stargate.world.{world} -- Allow use of gates with a destination in {world}. Set to false to disallow use.
   stargate.network -- Allow use of gates on all networks
-    stargate.network.{network} -- Allow use of all gates in {network}
+    stargate.network.{network} -- Allow use of all gates in {network}. Set to false to disallow use.
 
 stargate.option -- Allow use of all options
   stargate.option.hidden -- Allow use of 'H'idden
@@ -22,15 +22,15 @@ stargate.option -- Allow use of all options
   stargate.option.free -- Allow use of 'F'ree
   stargate.option.backwards -- Allow use of 'B'ackwards
   
-stargate.create -- Allow creating gates on any network
+stargate.create -- Allow creating gates on any network (Override all create permissions)
   stargate.create.personal -- Allow creating gates on network {playername}
   stargate.create.network -- Allow creating gates on any network
-    stargate.create.network.{networkname} -- Allow creating gates on network {networkname}
+    stargate.create.network.{networkname} -- Allow creating gates on network {networkname}. Set to false to disallow creation on {networkname}
 
-stargate.destroy -- Allow destruction gates on any network
+stargate.destroy -- Allow destruction gates on any network (Orderride all destroy permissions)
   stargate.destroy.personal -- Allow destruction of gates owned by user only
   stargate.destroy.network -- Allow destruction of gates on any network
-    stargate.destroy.network.{networkname} -- Allow destruction of gates on network {networkname}
+    stargate.destroy.network.{networkname} -- Allow destruction of gates on network {networkname}. Set to false to disallow destruction of {networkname}
 
 stargate.free -- Allow free use/creation/destruction of gates
   stargate.free.use -- Allow free use of Stargates
@@ -156,6 +156,11 @@ maxgates - If non-zero, will define the maximum amount of gates allowed on any n
 =============
   Changes
 =============
+[Version 0.6.3]
+ - Fixed (Not Connected) showing on inter-world gate loading
+ - Added the ability to negate Network/World permissions (Use, Create and Destroy)
+ - Fixed Lockette compatibility
+ - More stringent verification checks
 [Version 0.6.2]
  - Fixed an issue with private gates
  - Added default permissions

@@ -346,13 +346,32 @@ public class Stargate extends JavaPlugin {
 	}
 	
 	/*
+	 * Check a deep permission, this will check to see if the permissions is defined for this use
+	 * If using Permissions it will return the same as hasPerm
+	 * If using SuperPerms will return true if the node isn't defined
+	 * Or the value of the node if it is
+	 */
+	public static boolean hasPermDeep(Player player, String perm) {
+		if (permissions != null) {
+			return permissions.getHandler().has(player,  perm);
+		} else {
+			if (!player.isPermissionSet(perm)) return true;
+			return player.hasPermission(perm);
+		}
+	}
+	
+	/*
 	 * Check whether player can teleport to dest world
 	 */
 	public static boolean canAccessWorld(Player player, String world) {
 		// Can use all Stargate player features
 		if (hasPerm(player, "stargate.use")) return true;
 		// Can access all worlds
-		if (hasPerm(player, "stargate.world")) return true;
+		if (hasPerm(player, "stargate.world")) {
+			// Do a deep check to see if the player lacks this specific world node
+			if (!hasPermDeep(player, "stargate.world." + world)) return false;
+			return true;
+		}
 		// Can access dest world
 		if (hasPerm(player, "stargate.world." + world)) return true;
 		return false;
@@ -365,9 +384,12 @@ public class Stargate extends JavaPlugin {
 		// Can use all Stargate player features
 		if (hasPerm(player, "stargate.use")) return true;
 		// Can access all networks
-		if (hasPerm(player, "stargate.network")) return true;
+		if (hasPerm(player, "stargate.network")) {
+			// Do a deep check to see if the player lacks this specific network node
+			if (!hasPermDeep(player, "stargate.network." + network)) return false;
+			return true;
+		}
 		// Can access this network
-		Stargate.debug("canAccessNetwork", "stargate.network." + network);
 		if (hasPerm(player, "stargate.network." + network)) return true;
 		return false;
 	}
@@ -427,7 +449,11 @@ public class Stargate extends JavaPlugin {
 		// Check for general create
 		if (hasPerm(player, "stargate.create")) return true;
 		// Check for all network create permission
-		if (hasPerm(player, "stargate.create.network")) return true;
+		if (hasPerm(player, "stargate.create.network")) {
+			// Do a deep check to see if the player lacks this specific network node
+			if (!hasPermDeep(player, "stargate.create.network." + network)) return false;
+			return true;
+		}
 		// Check for this specific network
 		if (hasPerm(player, "stargate.create.network." + network)) return true;
 		
@@ -445,7 +471,11 @@ public class Stargate extends JavaPlugin {
 		// Check for general destroy
 		if (hasPerm(player, "stargate.destroy")) return true;
 		// Check for all network destroy permission
-		if (hasPerm(player, "stargate.destroy.network")) return true;
+		if (hasPerm(player, "stargate.destroy.network")) {
+			// Do a deep check to see if the player lacks permission for this network node
+			if (!hasPermDeep(player, "stargate.destroy.network." + portal.getNetwork())) return false;
+			return true;
+		}
 		// Check for this specific network
 		if (hasPerm(player, "stargate.destroy.network." + portal.getNetwork())) return true;
 		// Check for personal gate
@@ -721,25 +751,17 @@ public class Stargate extends JavaPlugin {
 			Block block = event.getBlock();
 			if (block.getType() != Material.WALL_SIGN) return;
 			
-			// Initialize a stargate -- Permission check is done in createPortal
-			SignPost sign = new SignPost(new Blox(block));
-			// Set sign text so we can create a gate with it.
-			sign.setText(0, event.getLine(0));
-			sign.setText(1, event.getLine(1));
-			sign.setText(2, event.getLine(2));
-			sign.setText(3, event.getLine(3));
-			Portal portal = Portal.createPortal(sign, player);
+			final Portal portal = Portal.createPortal(event, player);
 			// Not creating a gate, just placing a sign
 			if (portal == null)	return;
 
 			Stargate.sendMessage(player, regMsg, false);
 			Stargate.debug("onSignChange", "Initialized stargate: " + portal.getName());
-			portal.drawSign();
-			// Set event text so our new sign is instantly initialized
-			event.setLine(0, sign.getText(0));
-			event.setLine(1, sign.getText(1));
-			event.setLine(2, sign.getText(2));
-			event.setLine(3, sign.getText(3));
+			Stargate.server.getScheduler().scheduleSyncDelayedTask(stargate, new Runnable() {
+				public void run() {
+					portal.drawSign();
+				}
+			}, 1);
 		}
 		
 		@Override

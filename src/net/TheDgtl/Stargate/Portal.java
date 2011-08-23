@@ -24,6 +24,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.StorageMinecart;
 import org.bukkit.entity.Vehicle;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.material.Button;
 import org.bukkit.material.MaterialData;
@@ -403,8 +404,9 @@ public class Portal {
 	}
 
 	public boolean isVerified() {
+		verified = true;
 		for (RelativeBlockVector control : gate.getControls())
-			verified = verified || getBlockAt(control).getBlock().getTypeId() == gate.getControlBlock();
+			verified = verified && getBlockAt(control).getBlock().getTypeId() == gate.getControlBlock();
 		return verified;
 	}
 
@@ -513,6 +515,8 @@ public class Portal {
 				Portal dest = Portal.getByName(destination, network);
 				if (dest == null) {
 					id.setText(++done, "(Not Connected)");
+				} else {
+					id.setText(++done, "");
 				}
 			} else {
 				int index = destinations.indexOf(destination);
@@ -648,7 +652,8 @@ public class Portal {
 		allPortalsNet.get(getNetwork().toLowerCase()).add(getName().toLowerCase());
 	}
 
-	public static Portal createPortal(SignPost id, Player player) {
+	public static Portal createPortal(SignChangeEvent event, Player player) {
+		SignPost id = new SignPost(new Blox(event.getBlock()));
 		Block idParent = id.getParent();
 		if (idParent == null) {
 			return null;
@@ -663,10 +668,10 @@ public class Portal {
 
 		Blox parent = new Blox(player.getWorld(), idParent.getX(), idParent.getY(), idParent.getZ());
 		Blox topleft = null;
-		String name = filterName(id.getText(0));
-		String destName = filterName(id.getText(1));
-		String network = filterName(id.getText(2));
-		String options = filterName(id.getText(3));
+		String name = filterName(event.getLine(0));
+		String destName = filterName(event.getLine(1));
+		String network = filterName(event.getLine(2));
+		String options = filterName(event.getLine(3));
 		boolean hidden = (options.indexOf('h') != -1 || options.indexOf('H') != -1);
 		boolean alwaysOn = (options.indexOf('a') != -1 || options.indexOf('A') != -1);
 		boolean priv = (options.indexOf('p') != -1 || options.indexOf('P') != -1);
@@ -1007,13 +1012,15 @@ public class Portal {
 						}
 					}
 
-					if (!portal.isAlwaysOn()) continue;
-					
+					if (!portal.isFixed()) continue;
 					Portal dest = portal.getDestination();
 					if (dest != null) {
-						portal.open(true);
+						if (portal.isAlwaysOn()) {
+							portal.open(true);
+							OpenCount++;
+						}
+						portal.drawSign();
 						dest.drawSign();
-						OpenCount++;
 					}
 				}
 				Stargate.log.info("[Stargate] {" + world.getName() + "} Loaded " + portalCount + " stargates with " + OpenCount + " set as always-on");
