@@ -486,13 +486,11 @@ public class Stargate extends JavaPlugin {
 	/*
 	 * Charge player for {action} if required, true on success, false if can't afford
 	 */
-	public static boolean chargePlayer(Player player, String target, String action, int cost) {
+	public static boolean chargePlayer(Player player, String target, int cost) {
 		// If cost is 0
-		if (cost <= 0) return true;
+		if (cost == 0) return true;
 		// iConomy is disabled
 		if (!iConomyHandler.useiConomy()) return true;
-		// Player gets free {action}
-		if (hasPerm(player, "stargate.free") || hasPerm(player, "stargate.free." + action)) return true;
 		// Charge player
 		return iConomyHandler.chargePlayer(player.getName(), target, cost);
 	}
@@ -509,8 +507,34 @@ public class Stargate extends JavaPlugin {
 		if (!iConomyHandler.chargeFreeDestination && dest.isFree()) return 0;
 		// Cost is 0 if the player owns this gate and funds go to the owner
 		if (src.getGate().getToOwner() && src.getOwner().equalsIgnoreCase(player.getName())) return 0;
+		// Player gets free gate use
+		if (hasPerm(player, "stargate.free") || hasPerm(player, "stargate.free.use")) return 0;
 		
 		return src.getGate().getUseCost();
+	}
+	
+	/*
+	 * Determine the cost to create the gate
+	 */
+	public static int getCreateCost(Player player, Gate gate) {
+		// Not using iConomy
+		if (!iConomyHandler.useiConomy()) return 0;
+		// Player gets free gate destruction
+		if (hasPerm(player, "stargate.free") || hasPerm(player, "stargate.free.create")) return 0;
+		
+		return gate.getDestroyCost();
+	}
+	
+	/*
+	 * Determine the cost to destroy the gate
+	 */
+	public static int getDestroyCost(Player player, Gate gate) {
+		// Not using iConomy
+		if (!iConomyHandler.useiConomy()) return 0;
+		// Player gets free gate destruction
+		if (hasPerm(player, "stargate.free") || hasPerm(player, "stargate.free.destroy")) return 0;
+		
+		return gate.getDestroyCost();
 	}
 	
 	/*
@@ -564,7 +588,7 @@ public class Stargate extends JavaPlugin {
 				int cost = Stargate.getUseCost(player, portal, dest);
 				if (cost > 0) {
 					String target = portal.getGate().getToOwner() ? portal.getOwner() : null;
-					if (!Stargate.chargePlayer(player, target, "use", cost)) {
+					if (!Stargate.chargePlayer(player, target, cost)) {
 						// Insufficient Funds
 						Stargate.sendMessage(player, "Insufficient Funds");
 						portal.close(false);
@@ -654,7 +678,7 @@ public class Stargate extends JavaPlugin {
 			int cost = Stargate.getUseCost(player, portal, destination);
 			if (cost > 0) {
 				String target = portal.getGate().getToOwner() ? portal.getOwner() : null;
-				if (!Stargate.chargePlayer(player, target, "use", cost)) {
+				if (!Stargate.chargePlayer(player, target, cost)) {
 					// Insufficient Funds
 					Stargate.sendMessage(player, "Insufficient Funds");
 					portal.close(false);
@@ -783,17 +807,21 @@ public class Stargate extends JavaPlugin {
 				return;
 			}
 			
-			if (!Stargate.chargePlayer(player, null,  "destroy", portal.getGate().getDestroyCost())) {
-				Stargate.debug("onBlockBreak", "Insufficient Funds");
-				Stargate.sendMessage(player,  iConomyHandler.inFundMsg);
-				event.setCancelled(true);
-				return;
-			}
+			int cost = Stargate.getDestroyCost(player,  portal.getGate());
 			
-			if (portal.getGate().getDestroyCost() > 0) {
-				Stargate.sendMessage(player, "Deducted " + iConomyHandler.format(portal.getGate().getDestroyCost()), false);
-			} else if (portal.getGate().getDestroyCost() < 0) {
-				Stargate.sendMessage(player, "Refunded " + iConomyHandler.format(-portal.getGate().getDestroyCost()), false);
+			if (cost != 0) {
+				if (!Stargate.chargePlayer(player, null, cost)) {
+					Stargate.debug("onBlockBreak", "Insufficient Funds");
+					Stargate.sendMessage(player, iConomyHandler.inFundMsg);
+					event.setCancelled(true);
+					return;
+				}
+				
+				if (cost > 0) {
+					Stargate.sendMessage(player, "Deducted " + iConomyHandler.format(cost), false);
+				} else if (cost < 0) {
+					Stargate.sendMessage(player, "Refunded " + iConomyHandler.format(-cost), false);
+				}
 			}
 			
 			portal.unregister(true);

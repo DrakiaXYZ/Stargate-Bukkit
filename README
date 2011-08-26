@@ -156,6 +156,8 @@ maxgates - If non-zero, will define the maximum amount of gates allowed on any n
 =============
   Changes
 =============
+[Version 0.6.4]
+ - Fixed iConomy handling
 [Version 0.6.3]
  - Fixed (Not Connected) showing on inter-world gate loading
  - Added the ability to negate Network/World permissions (Use, Create and Destroy)

@@ -816,9 +816,13 @@ public class Portal {
 			}
 		}
 		
-		if (!Stargate.chargePlayer(player, null,  "create", gate.getCreateCost())) {
-			Stargate.debug("createPortal", "Insufficient Funds");
-			return null;
+		int cost = Stargate.getCreateCost(player,  gate); 
+		if (cost > 0) {
+			if (!Stargate.chargePlayer(player, null, gate.getCreateCost())) {
+				Stargate.sendMessage(player, "Insufficient Funds");
+				Stargate.debug("createPortal", "Insufficient Funds");
+				return null;
+			}
 		}
 
 		Portal portal = null;
