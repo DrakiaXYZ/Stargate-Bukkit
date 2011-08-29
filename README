@@ -21,6 +21,7 @@ stargate.option -- Allow use of all options
   stargate.option.private -- Allow use of 'P'rivate
   stargate.option.free -- Allow use of 'F'ree
   stargate.option.backwards -- Allow use of 'B'ackwards
+  stargate.option.show -- Allow use of 'S'how
   
 stargate.create -- Allow creating gates on any network (Override all create permissions)
   stargate.create.personal -- Allow creating gates on network {playername}
@@ -71,6 +72,7 @@ Sign Layout:
  			'P' for a private gate
  			'F' for a free gate
  			'B' is for a backwards facing gate (You will exit the back)
+ 			'S' is for showing an always-on gate in the network list
 
 Options:
 The options are the single letter, not the word. So to make a private hidden gate, your 4th line would be 'PH'.
@@ -191,6 +193,7 @@ createConflict=Gate conflicts with existing gate
  - Added permdebug option
  - Hopefully fix path issues some people were having
  - Fixed iConomy creation cost
+ - Added 'S'how option for Always-On gates
 [Version 0.6.4]
  - Fixed iConomy handling
 [Version 0.6.3]

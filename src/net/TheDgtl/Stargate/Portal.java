@@ -73,6 +73,7 @@ public class Portal {
 	private boolean priv = false;
 	private boolean free = false;
 	private boolean backwards = false;
+	private boolean show = false;
 	
 	// In-use information
 	private Player player;
@@ -85,7 +86,7 @@ public class Portal {
 			float rotX, SignPost id, Blox button,
 			String dest, String name,
 			boolean verified, String network, Gate gate, String owner, 
-			boolean hidden, boolean alwaysOn, boolean priv, boolean free, boolean backwards) {
+			boolean hidden, boolean alwaysOn, boolean priv, boolean free, boolean backwards, boolean show) {
 		this.topLeft = topLeft;
 		this.modX = modX;
 		this.modZ = modZ;
@@ -103,6 +104,7 @@ public class Portal {
 		this.priv = priv;
 		this.free = free;
 		this.backwards = backwards;
+		this.show = show;
 		this.world = topLeft.getWorld();
 		this.fixed = dest.length() > 0;
 		
@@ -142,6 +144,10 @@ public class Portal {
 	
 	public boolean isBackwards() {
 		return backwards;
+	}
+	
+	public boolean isShown() {
+		return show;
 	}
 	
 	/**
@@ -432,7 +438,7 @@ public class Portal {
 		for (String dest : allPortalsNet.get(network.toLowerCase())) {
 			Portal portal = getByName(dest, network);
 			// Check if dest is always open (Don't show if so)
-			if (portal.isAlwaysOn()) continue;
+			if (portal.isAlwaysOn() && !portal.isShown()) continue;
 			// Check if this player can access the dest world
 			if (!Stargate.canAccessWorld(player, portal.getWorld().getName())) continue;
 			// Check if dest is this portal
@@ -684,17 +690,24 @@ public class Portal {
 		boolean priv = (options.indexOf('p') != -1 || options.indexOf('P') != -1);
 		boolean free = (options.indexOf('f') != - 1|| options.indexOf('F') != -1);
 		boolean backwards = (options.indexOf('b') != -1 || options.indexOf('B') != -1);
+		boolean show = (options.indexOf('s') != -1 || options.indexOf('S') != -1);
 		
 		// Check permissions for options.
-		if (!Stargate.canOption(player, "hidden")) hidden = false;
-		if (!Stargate.canOption(player, "alwayson")) alwaysOn = false;
-		if (!Stargate.canOption(player, "private")) priv = false;
-		if (!Stargate.canOption(player, "free")) free = false;
-		if (!Stargate.canOption(player, "backwards")) backwards = false;
+		if (hidden && !Stargate.canOption(player, "hidden")) hidden = false;
+		if (alwaysOn && !Stargate.canOption(player, "alwayson")) alwaysOn = false;
+		if (priv && !Stargate.canOption(player, "private")) priv = false;
+		if (free && !Stargate.canOption(player, "free")) free = false;
+		if (backwards && !Stargate.canOption(player, "backwards")) backwards = false;
+		if (show && !Stargate.canOption(player,  "show")) show = false;
 		
 		// Can not create a non-fixed always-on gate.
 		if (alwaysOn && destName.length() == 0) {
 			alwaysOn = false;
+		}
+		
+		// Show isn't useful if A is false
+		if (show && !alwaysOn) {
+			show = false;
 		}
 		
 		// Moved the layout check so as to avoid invalid messages when not making a gate
@@ -757,7 +770,7 @@ public class Portal {
 		}
 		
 		// Debug
-		Stargate.debug("createPortal", "h = " + hidden + " a = " + alwaysOn + " p = " + priv + " f = " + free + " b = " + backwards);
+		Stargate.debug("createPortal", "h = " + hidden + " a = " + alwaysOn + " p = " + priv + " f = " + free + " b = " + backwards + " s = " + show);
 
 		if ((network.length() < 1) || (network.length() > 11)) {
 			network = Stargate.getDefaultNetwork();
@@ -845,7 +858,7 @@ public class Portal {
 			button.setType(Material.STONE_BUTTON.getId());
 			button.setData(facing);
 		}
-		portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv, free, backwards);
+		portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, true, network, gate, player.getName(), hidden, alwaysOn, priv, free, backwards, show);
 
 		// Open always on gate
 		if (portal.isAlwaysOn()) {
@@ -935,6 +948,8 @@ public class Portal {
 				builder.append(portal.isFree());
 				builder.append(':');
 				builder.append(portal.isBackwards());
+				builder.append(':');
+				builder.append(portal.isShown());
 				
 				bw.append(builder.toString());
 				bw.newLine();
@@ -1002,8 +1017,9 @@ public class Portal {
 					boolean priv = (split.length > 13) ? split[13].equalsIgnoreCase("true") : false;
 					boolean free = (split.length > 15) ? split[15].equalsIgnoreCase("true") : false;
 					boolean backwards = (split.length > 16) ? split[16].equalsIgnoreCase("true") : false;
+					boolean show = (split.length > 17) ? split[17].equalsIgnoreCase("true") : false;
 
-					Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv, free, backwards);
+					Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv, free, backwards, show);
 					portal.close(true);
 				}
 				scanner.close();
