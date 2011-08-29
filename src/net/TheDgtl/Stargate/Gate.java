@@ -229,14 +229,17 @@ public class Gate {
 				if (id == ENTRANCE || id == EXIT) {
 					int type = topleft.modRelative(x, y, 0, modX, 1, modZ).getType();
 					if (type != portalBlockClosed && type != portalBlockOpen) {
+						Stargate.debug("Gate::Matches", "Entrance/Exit Material Mismatch: " + type);
 						return false;
 					}
 				} else if (id != ANYTHING) {
 					 if (topleft.modRelative(x, y, 0, modX, 1, modZ).getType() != id) {
+						 Stargate.debug("Gate::Matches", "Block Type Mismatch: " + topleft.modRelative(x, y, 0, modX, 1, modZ).getType() + " != " + id);
 						 return false;
 					 }
 					 Integer mData = metadata.get(layout[y][x]);
 					 if (mData != null && topleft.modRelative(x, y, 0, modX, 1, modZ).getData() != mData) {
+						 Stargate.debug("Gate::Matches", "Block Data Mismatch: " + topleft.modRelative(x, y, 0, modX, 1, modZ).getData() + " != " + mData);
 						 return false;
 					 }
 				}

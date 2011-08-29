@@ -72,15 +72,11 @@ public class Stargate extends JavaPlugin {
 	private PluginManager pm;
 	public static Server server;
 	public static Stargate stargate;
+	private static LangLoader lang;
 	
 	private static String portalFolder;
 	private static String gateFolder;
-	private static String teleMsg = "Teleported";
-	private static String regMsg = "Gate Created";
-	private static String dmgMsg = "Gate Destroyed";
-	private static String denyMsg = "Access Denied";
-	private static String invMsg = "Invalid Destination"; 
-	private static String blockMsg = "Destination Blocked";
+	private static String langFolder;
 	private static String defNetwork = "central";
 	private static boolean destroyExplosion = false;
 	public static int maxGates = 0;
@@ -88,7 +84,8 @@ public class Stargate extends JavaPlugin {
 	private static int openTime = 10;
 	
 	// Used for debug
-	private static boolean debug = false;
+	public static boolean debug = false;
+	public static boolean permDebug = false;
 	
 	public static ConcurrentLinkedQueue<Portal> openList = new ConcurrentLinkedQueue<Portal>();
 	public static ConcurrentLinkedQueue<Portal> activeList = new ConcurrentLinkedQueue<Portal>();
@@ -107,8 +104,9 @@ public class Stargate extends JavaPlugin {
 		Stargate.stargate = this;
 		
 		// Set portalFile and gateFolder to the plugin folder as defaults.
-		portalFolder = getDataFolder() + "/portals";
-		gateFolder = getDataFolder() + "/gates/";
+		portalFolder = getDataFolder().getPath().replaceAll("\\\\", "/") + "/portals/";
+		gateFolder = getDataFolder().getPath().replaceAll("\\\\", "/") + "/gates/";
+		langFolder = getDataFolder().getPath().replaceAll("\\\\", "/") + "/lang/";
 		
 		log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
 		
@@ -118,6 +116,8 @@ public class Stargate extends JavaPlugin {
 		this.reloadConfig();
 		this.migrate();
 		this.reloadGates();
+		lang = new LangLoader(langFolder, "en");
+		lang.debug();
 		
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
@@ -152,17 +152,12 @@ public class Stargate extends JavaPlugin {
 		config.load();
 		portalFolder = config.getString("portal-folder", portalFolder);
 		gateFolder = config.getString("gate-folder", gateFolder);
-		teleMsg = config.getString("teleport-message", teleMsg);
-		regMsg = config.getString("portal-create-message", regMsg);
-		dmgMsg = config.getString("portal-destroy-message", dmgMsg);
-		denyMsg = config.getString("not-owner-message", denyMsg);
-		invMsg = config.getString("not-selected-message", invMsg);
-		blockMsg = config.getString("other-side-blocked-message", blockMsg);
 		defNetwork = config.getString("default-gate-network", defNetwork).trim();
 		destroyExplosion = config.getBoolean("destroyexplosion", destroyExplosion);
 		maxGates = config.getInt("maxgates", maxGates);
 		// Debug
 		debug = config.getBoolean("debug", debug);
+		permDebug = config.getBoolean("permdebug", permDebug);
 		// iConomy
 		iConomyHandler.useiConomy = config.getBoolean("useiconomy", iConomyHandler.useiConomy);
 		iConomyHandler.createCost = config.getInt("createcost", iConomyHandler.createCost);
@@ -177,14 +172,12 @@ public class Stargate extends JavaPlugin {
 	}
 	
 	public void saveConfig() {
+		if (!debug)
+			config.removeProperty("debug");
+		if (!permDebug)
+			config.removeProperty("permdebug");
 		config.setProperty("portal-folder", portalFolder);
 		config.setProperty("gate-folder", gateFolder);
-		config.setProperty("teleport-message", teleMsg);
-		config.setProperty("portal-create-message", regMsg);
-		config.setProperty("portal-destroy-message", dmgMsg);
-		config.setProperty("not-owner-message", denyMsg);
-		config.setProperty("not-selected-message", invMsg);
-		config.setProperty("other-side-blocked-message", blockMsg);
 		config.setProperty("default-gate-network", defNetwork);
 		config.setProperty("destroyexplosion", destroyExplosion);
 		config.setProperty("maxgates", maxGates);
@@ -256,10 +249,11 @@ public class Stargate extends JavaPlugin {
 	
 	public static void sendMessage(Player player, String message, boolean error) {
 		if (message.isEmpty()) return;
+		message = message.replaceAll("(&([a-f0-9]))", "\u00A7$2");
 		if (error)
-			player.sendMessage(ChatColor.RED + "[Stargate] " + ChatColor.WHITE + message);
+			player.sendMessage(ChatColor.RED + Stargate.getString("prefix") + ChatColor.WHITE + message);
 		else
-			player.sendMessage(ChatColor.GREEN + "[Stargate] " + ChatColor.WHITE + message);
+			player.sendMessage(ChatColor.GREEN + Stargate.getString("prefix") + ChatColor.WHITE + message);
 	}
 
 	public static String getSaveLocation() {
@@ -270,23 +264,8 @@ public class Stargate extends JavaPlugin {
 		return defNetwork;
 	}
 	
-	public static String getTeleMsg() {
-		return teleMsg;
-	}
-	public static String getRegMsg() {
-		return regMsg;
-	}
-	public static String getDmgMsg() {
-		return dmgMsg;
-	}
-	public static String getDenyMsg() {
-		return denyMsg;
-	}
-	public static String getInvMsg() {
-		return invMsg;
-	} 
-	public static String getBlockMsg() {
-		return blockMsg;
+	public static String getString(String name) {
+		return lang.getString(name);
 	}
 
 	private void onButtonPressed(Player player, Portal portal) {
@@ -299,7 +278,7 @@ public class Stargate extends JavaPlugin {
 		
 		// Invalid destination
 		if ((destination == null) || (destination == portal)) {
-			Stargate.sendMessage(player, invMsg);
+			Stargate.sendMessage(player, Stargate.getString("invalidMsg"));
 			return;
 		}
 		
@@ -314,19 +293,19 @@ public class Stargate extends JavaPlugin {
 		
 		// Gate that someone else is using -- Deny access
 		if ((!portal.isFixed()) && portal.isActive() &&  (portal.getActivePlayer() != player)) {
-			Stargate.sendMessage(player, denyMsg);
+			Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 			return;
 		}
 		
 		// Check if the player can use the private gate
 		if (portal.isPrivate() && !Stargate.canPrivate(player, portal)) {
-			Stargate.sendMessage(player, denyMsg);
+			Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 			return;
 		}
 		
 		// Destination blocked
 		if ((destination.isOpen()) && (!destination.isAlwaysOn())) {
-			Stargate.sendMessage(player, blockMsg);
+			Stargate.sendMessage(player, Stargate.getString("blockMsg"));
 			return;
 		}
 		
@@ -339,8 +318,12 @@ public class Stargate extends JavaPlugin {
 	 */
 	public static boolean hasPerm(Player player, String perm) {
 		if (permissions != null) {
+			if (permDebug)
+				Stargate.debug("hasPerm::Permissions", perm + " => " + permissions.getHandler().has(player, perm));
 			return permissions.getHandler().has(player, perm);
 		} else {
+			if (permDebug)
+				Stargate.debug("hasPerm::SuperPerm", perm + " => " + player.hasPermission(perm));
 			return player.hasPermission(perm);
 		}
 	}
@@ -353,9 +336,17 @@ public class Stargate extends JavaPlugin {
 	 */
 	public static boolean hasPermDeep(Player player, String perm) {
 		if (permissions != null) {
+			if (permDebug)
+				Stargate.debug("hasPermDeep::Permissions", perm + " => " + permissions.getHandler().has(player, perm));
 			return permissions.getHandler().has(player,  perm);
 		} else {
-			if (!player.isPermissionSet(perm)) return true;
+			if (!player.isPermissionSet(perm)) {
+				if (permDebug)
+					Stargate.debug("hasPermDeep::SuperPerm", perm + " => true");
+				return true;
+			}
+			if (permDebug)
+				Stargate.debug("hasPermDeep::Permissions", perm + " => " + permissions.getHandler().has(player, perm));
 			return player.hasPermission(perm);
 		}
 	}
@@ -468,16 +459,17 @@ public class Stargate extends JavaPlugin {
 	 * Check if the player can destroy this gate
 	 */
 	public static boolean canDestroy(Player player, Portal portal) {
+		String network = portal.getNetwork();
 		// Check for general destroy
 		if (hasPerm(player, "stargate.destroy")) return true;
 		// Check for all network destroy permission
 		if (hasPerm(player, "stargate.destroy.network")) {
 			// Do a deep check to see if the player lacks permission for this network node
-			if (!hasPermDeep(player, "stargate.destroy.network." + portal.getNetwork())) return false;
+			if (!hasPermDeep(player, "stargate.destroy.network." + network)) return false;
 			return true;
 		}
 		// Check for this specific network
-		if (hasPerm(player, "stargate.destroy.network." + portal.getNetwork())) return true;
+		if (hasPerm(player, "stargate.destroy.network." + network)) return true;
 		// Check for personal gate
 		if (player.getName().equalsIgnoreCase(portal.getOwner()) && hasPerm(player, "stargate.destroy.personal")) return true;
 		return false;
@@ -522,7 +514,7 @@ public class Stargate extends JavaPlugin {
 		// Player gets free gate destruction
 		if (hasPerm(player, "stargate.free") || hasPerm(player, "stargate.free.create")) return 0;
 		
-		return gate.getDestroyCost();
+		return gate.getCreateCost();
 	}
 	
 	/*
@@ -553,6 +545,17 @@ public class Stargate extends JavaPlugin {
 		return null;
 	}
 	
+	/*
+	 * Parse a given text string and replace the variables
+	 */
+	public static String replaceVars(String format, String[] search, String[] replace) {
+		if (search.length != replace.length) return "";
+		for (int i = 0; i < search.length; i++) {
+			format = format.replaceAll(search[i], replace[i]);
+		}
+		return format;
+	}
+	
 	private class vListener extends VehicleListener {
 		@Override
 		public void onVehicleMove(VehicleMoveEvent event) {
@@ -565,7 +568,7 @@ public class Stargate extends JavaPlugin {
 			if (passenger instanceof Player) {
 				Player player = (Player)passenger;
 				if (!portal.isOpenFor(player)) {
-					Stargate.sendMessage(player, denyMsg);
+					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 					return;
 				}
 				
@@ -573,14 +576,14 @@ public class Stargate extends JavaPlugin {
 				if (dest == null) return;
 				// Check if player has access to this network
 				if (!canAccessNetwork(player, portal.getNetwork())) {
-					Stargate.sendMessage(player, denyMsg);
+					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 					portal.close(false);
 					return;
 				}
 				
 				// Check if player has access to destination world
 				if (!canAccessWorld(player, dest.getWorld().getName())) {
-					Stargate.sendMessage(player, denyMsg);
+					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 					portal.close(false);
 					return;
 				}
@@ -590,20 +593,24 @@ public class Stargate extends JavaPlugin {
 					String target = portal.getGate().getToOwner() ? portal.getOwner() : null;
 					if (!Stargate.chargePlayer(player, target, cost)) {
 						// Insufficient Funds
-						Stargate.sendMessage(player, "Insufficient Funds");
+						Stargate.sendMessage(player, Stargate.getString("inFunds"));
 						portal.close(false);
 						return;
 					}
-					sendMessage(player, "Deducted " + iConomyHandler.format(cost), false);
+					String deductMsg = Stargate.getString("ecoDeduct");
+					deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(cost)});
+					sendMessage(player, deductMsg, false);
 					if (target != null) {
 						Player p = server.getPlayer(target);
 						if (p != null) {
-							Stargate.sendMessage(p, "Obtained " + iConomyHandler.format(cost) + " from Stargate " + portal.getName(), false);
+							String obtainedMsg = Stargate.getString("ecoObtain");
+							obtainedMsg = Stargate.replaceVars(obtainedMsg, new String[] {"%cost%", "%portal%"}, new String[] {iConomyHandler.format(cost), portal.getName()});
+							Stargate.sendMessage(p, obtainedMsg, false);
 						}
 					}
 				}
 				
-				Stargate.sendMessage(player, teleMsg, false);
+				Stargate.sendMessage(player, Stargate.getString("teleportMsg"), false);
 				dest.teleport(vehicle);
 				portal.close(false);
 			} else {
@@ -649,9 +656,7 @@ public class Stargate extends JavaPlugin {
 
 			// Not open for this player
 			if (!portal.isOpenFor(player)) {
-				if (!denyMsg.isEmpty()) {
-					Stargate.sendMessage(player, denyMsg);
-				}
+				Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 				portal.teleport(player, portal, event);
 				return;
 			}
@@ -661,7 +666,7 @@ public class Stargate extends JavaPlugin {
 			
 			// Check if player has access to this network
 			if (!canAccessNetwork(player, portal.getNetwork())) {
-				Stargate.sendMessage(player, denyMsg);
+				Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 				portal.teleport(player, portal, event);
 				portal.close(false);
 				return;
@@ -669,7 +674,7 @@ public class Stargate extends JavaPlugin {
 			
 			// Check if player has access to destination world
 			if (!canAccessWorld(player, destination.getWorld().getName())) {
-				Stargate.sendMessage(player, denyMsg);
+				Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 				portal.teleport(player, portal, event);
 				portal.close(false);
 				return;
@@ -684,16 +689,20 @@ public class Stargate extends JavaPlugin {
 					portal.close(false);
 					return;
 				}
-				sendMessage(player, "Deducted " + iConomyHandler.format(cost), false);
+				String deductMsg = Stargate.getString("ecoDeduct");
+				deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(cost)});
+				sendMessage(player, deductMsg, false);
 				if (target != null) {
 					Player p = server.getPlayer(target);
 					if (p != null) {
-						Stargate.sendMessage(p, "Obtained " + iConomyHandler.format(cost) + " from Stargate " + portal.getName(), false);
+						String obtainedMsg = Stargate.getString("ecoObtain");
+						obtainedMsg = Stargate.replaceVars(obtainedMsg, new String[] {"%cost%", "%portal%"}, new String[] {iConomyHandler.format(cost), portal.getName()});
+						Stargate.sendMessage(p, obtainedMsg, false);
 					}
 				}
 			}
 			
-			Stargate.sendMessage(player,  teleMsg, false);
+			Stargate.sendMessage(player, Stargate.getString("teleportMsg"), false);
 			destination.teleport(player, portal, event);
 			portal.close(false);
 		}
@@ -713,7 +722,7 @@ public class Stargate extends JavaPlugin {
 					event.setUseInteractedBlock(Result.DENY);
 					
 					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
-						Stargate.sendMessage(player, denyMsg);
+						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
 					}
 					
@@ -728,7 +737,7 @@ public class Stargate extends JavaPlugin {
 					Portal portal = Portal.getByBlock(block);
 					if (portal == null) return;
 					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
-						Stargate.sendMessage(player, denyMsg);
+						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
 					}
 					onButtonPressed(player, portal);
@@ -744,7 +753,7 @@ public class Stargate extends JavaPlugin {
 					if (portal == null) return;
 					
 					if (!Stargate.canAccessNetwork(player,  portal.getNetwork())) {
-						Stargate.sendMessage(player, denyMsg);
+						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
 					}
 					
@@ -759,7 +768,7 @@ public class Stargate extends JavaPlugin {
 					Portal portal = Portal.getByBlock(block);
 					if (portal == null) return;
 					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
-						Stargate.sendMessage(player, denyMsg);
+						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
 					}
 					onButtonPressed(player, portal);
@@ -779,7 +788,7 @@ public class Stargate extends JavaPlugin {
 			// Not creating a gate, just placing a sign
 			if (portal == null)	return;
 
-			Stargate.sendMessage(player, regMsg, false);
+			Stargate.sendMessage(player, Stargate.getString("createMsg"), false);
 			Stargate.debug("onSignChange", "Initialized stargate: " + portal.getName());
 			Stargate.server.getScheduler().scheduleSyncDelayedTask(stargate, new Runnable() {
 				public void run() {
@@ -818,14 +827,18 @@ public class Stargate extends JavaPlugin {
 				}
 				
 				if (cost > 0) {
-					Stargate.sendMessage(player, "Deducted " + iConomyHandler.format(cost), false);
+					String deductMsg = Stargate.getString("ecoDeduct");
+					deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(cost)});
+					sendMessage(player, deductMsg, false);
 				} else if (cost < 0) {
-					Stargate.sendMessage(player, "Refunded " + iConomyHandler.format(-cost), false);
+					String refundMsg = Stargate.getString("ecoRefund");
+					refundMsg = Stargate.replaceVars(refundMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(-cost)});
+					sendMessage(player, refundMsg, false);
 				}
 			}
 			
 			portal.unregister(true);
-			Stargate.sendMessage(player, dmgMsg, false);
+			Stargate.sendMessage(player, Stargate.getString("destroyMsg"), false);
 		}
 
 		@Override
@@ -1030,6 +1043,7 @@ public class Stargate extends JavaPlugin {
 				// Reload data
 				reloadConfig();
 				reloadGates();
+				lang.reload();
 				return true;
 			}
 			return false;

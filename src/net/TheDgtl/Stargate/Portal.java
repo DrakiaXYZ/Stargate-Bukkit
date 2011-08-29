@@ -484,6 +484,13 @@ public class Portal {
 	public void cycleDestination(Player player, int dir) {
 		if (!isActive() || getActivePlayer() != player) {
 			activate(player);
+			Stargate.debug("cycleDestination", "Network Size: " + allPortalsNet.get(network.toLowerCase()).size());
+			Stargate.debug("cycleDestination", "Player has access to: " + destinations.size());
+		}
+		
+		if (destinations.size() == 0) {
+			Stargate.sendMessage(player, Stargate.getString("destEmpty"));
+			return;
 		}
 
 		if (destinations.size() > 0) {
@@ -767,30 +774,30 @@ public class Portal {
 			// Check if we can create a gate on our own network
 			if (!Stargate.canCreate(player,  network)) {
 				Stargate.debug("createPortal", "Player does not have access to network");
-				Stargate.sendMessage(player, "You do not have access to that network");
+				Stargate.sendMessage(player, Stargate.getString("createNetDeny"));
 				return null;
 			} else {
 				Stargate.debug("createPortal", "Creating personal portal");
-				Stargate.sendMessage(player,  "Creating gate on personal network");
+				Stargate.sendMessage(player, Stargate.getString("createPersonal"));
 			}
 		}
 		
 		if (name.length() < 1 || name.length() > 11) {
 			Stargate.debug("createPortal", "Name length error");
-			Stargate.sendMessage(player, "Name too short or too long.");
+			Stargate.sendMessage(player, Stargate.getString("createNameLength"));
 			return null;
 		}
 		
 		if (getByName(name, network) != null) {
 			Stargate.debug("createPortal", "Name Error");
-			Stargate.sendMessage(player,  "A gate by that name already exists!");
+			Stargate.sendMessage(player,  Stargate.getString("createExists"));
 			return null;
 		}
 		
 		// Check if there are too many gates in this network
 		ArrayList<String> netList = allPortalsNet.get(network.toLowerCase());
 		if (Stargate.maxGates > 0 && netList != null && netList.size() >= Stargate.maxGates) {
-			Stargate.sendMessage(player, "This network is full.");
+			Stargate.sendMessage(player, Stargate.getString("createFull"));
 			return null;
 		}
 		
@@ -801,7 +808,7 @@ public class Portal {
 				String world = p.getWorld().getName();
 				if (!Stargate.canAccessWorld(player, world)) {
 					Stargate.debug("canCreate", "Player does not have access to destination world");
-					Stargate.sendMessage(player, "You do not have access to that world.");
+					Stargate.sendMessage(player, Stargate.getString("createWorldDeny"));
 					return null;
 				}
 			}
@@ -812,17 +819,21 @@ public class Portal {
 			Blox b = topleft.modRelative(v.getRight(), v.getDepth(), v.getDistance(), modX, 1, modZ);
 			if (Portal.getByBlock(b.getBlock()) != null) {
 				Stargate.debug("createPortal", "Gate conflicts with existing gate");
+				Stargate.sendMessage(player, Stargate.getString("createConflict"));
 				return null;
 			}
 		}
 		
-		int cost = Stargate.getCreateCost(player,  gate); 
+		int cost = Stargate.getCreateCost(player, gate); 
 		if (cost > 0) {
 			if (!Stargate.chargePlayer(player, null, gate.getCreateCost())) {
-				Stargate.sendMessage(player, "Insufficient Funds");
+				Stargate.sendMessage(player, Stargate.getString("ecoInFunds"));
 				Stargate.debug("createPortal", "Insufficient Funds");
 				return null;
 			}
+			String deductMsg = Stargate.getString("ecoDeduct");
+			deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(cost)});
+			Stargate.sendMessage(player, deductMsg, false);
 		}
 
 		Portal portal = null;
@@ -1006,6 +1017,12 @@ public class Portal {
 					// Verify portal integrity/register portal
 					if (!portal.wasVerified()) {
 						if (!portal.isVerified() || !portal.checkIntegrity()) {
+							// DEBUG
+							for (RelativeBlockVector control : portal.getGate().getControls()) {
+								if (portal.getBlockAt(control).getBlock().getTypeId() != portal.getGate().getControlBlock()) {
+									Stargate.debug("loadAllGates", "Control Block Type == " + portal.getBlockAt(control).getBlock().getTypeId());
+								}
+							}
 							portal.unregister(false);
 							iter.remove();
 							Stargate.log.info("[Stargate] Destroying stargate at " + portal.toString());

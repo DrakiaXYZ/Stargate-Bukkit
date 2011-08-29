@@ -133,12 +133,6 @@ Which would only allow black wool. If no data is supplied any version of a block
 Configuration
 ==============
 default-gate-network - The default gate network
-not-selected-message - The message when no destination is selected
-portal-destroy-message - The message when a gate is destroyed
-portal-create-message - The message when a gate is created
-not-owner-message - The message when you aren't allowed to push the gate button
-other-side-blocked-message - The message when the gate you're dialing is open
-teleport-message - The message when you are teleported
 portal-folder - The folder your portal databases are saved in
 gate-folder - The folder containing your .gate files
 destroyexplosion - Whether to destroy a stargate with explosions, or stop an explosion if it contains a gates controls.
@@ -148,14 +142,55 @@ destroycost - The cost to destroy a stargate (Can be negative for a "refund"
 usecost - The cost to use a stargate
 chargefreedestination - Enable to allow free travel from any gate to a free gate
 freegatesgreen - Enable to make gates that won't cost the player money show up as green
-not-enough-money-message - The message displayed if a player lacks money to do something
 toowner - Whether the money from gate-use goes to the owner or nobody
-debug - Whether to show massive debug output
 maxgates - If non-zero, will define the maximum amount of gates allowed on any network.
+
+debug - Whether to show massive debug output
+permdebug - Whether to show massive permission debug output
+
+=======================
+ Message Customization
+=======================
+As of 0.6.5 it is possible to customize all of the messages Stargate displays, including the [Stargate] prefix. You can find the strings in plugins/Stargate/lang/en.txt. 
+If a string is removed, or left blank, it will not be shown when the user does the action associated with it.
+There are three special cases when it comes to messages, these are:
+ecoDeduct=Spent %cost%
+ecoRefund=Redunded %cost%
+ecoObtain=Obtained %cost$ from Stargate %portal%
+
+As you can see, these three strings have variables in them. These variables are fairly self-explanatory.
+The full list of strings is as follows:
+prefix=[Stargate] 
+teleportMsg=Teleported
+destroyMsg=Gate Destroyed
+invalidMsg=Invalid Destination
+blockMsg=Destination Blocked
+denyMsg=Access Denied
+destEmpty=Destination List Empty
+
+ecoDeduct=Deducted %cost%
+ecoRefund=Redunded %cost%
+ecoObtain=Obtained %cost$ from Stargate %portal%
+ecoInFunds=Insufficient Funds
+
+createMsg=Gate Created
+createNetDeny=You do not have access to that network
+createPersonal=Creating gate on personal network
+createNameLength=Name too short or too long.
+createExists=A gate by that name already exists
+createFull=This network is full
+createWorldDeny=You do not have access to that world
+createConflict=Gate conflicts with existing gate
+
 
 =============
   Changes
 =============
+[Version 0.6.5]
+ - Moved printed message config to a seperate file
+ - Added permdebug option
+ - Hopefully fix path issues some people were having
+ - Fixed iConomy creation cost
 [Version 0.6.4]
  - Fixed iConomy handling
 [Version 0.6.3]
