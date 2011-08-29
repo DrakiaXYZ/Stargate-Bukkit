@@ -163,7 +163,6 @@ public class Stargate extends JavaPlugin {
 		iConomyHandler.createCost = config.getInt("createcost", iConomyHandler.createCost);
 		iConomyHandler.destroyCost = config.getInt("destroycost", iConomyHandler.destroyCost);
 		iConomyHandler.useCost = config.getInt("usecost", iConomyHandler.useCost);
-		iConomyHandler.inFundMsg = config.getString("not-enough-money-message", iConomyHandler.inFundMsg);
 		iConomyHandler.toOwner = config.getBoolean("toowner", iConomyHandler.toOwner);
 		iConomyHandler.chargeFreeDestination = config.getBoolean("chargefreedestination", iConomyHandler.chargeFreeDestination);
 		iConomyHandler.freeGatesGreen = config.getBoolean("freegatesgreen", iConomyHandler.freeGatesGreen);
@@ -452,6 +451,24 @@ public class Stargate extends JavaPlugin {
 		String pNet = player.getName();
 		if (pNet.length() > 11) pNet = pNet.substring(0, 11);
 		if (pNet.equalsIgnoreCase(network) && hasPerm(player, "stargate.create.personal")) return true;
+		return false;
+	}
+	
+	/*
+	 * Check if the player can create this gate layout
+	 */
+	public static boolean canCreateGate(Player player, String gate) {
+		// Check for general create
+		if (hasPerm(player, "stargate.create")) return true;
+		// Check for all gate create permissions
+		if (hasPerm(player, "stargate.create.gate")) {
+			// Do a deep check to see if the player lacks this specific gate node
+			if (!hasPermDeep(player, "stargate.create.gate." + gate)) return false;
+			return true;
+		}
+		// Check for this specific gate
+		if (hasPerm(player, "stargate.create.gate." + gate)) return true;
+		
 		return false;
 	}
 	

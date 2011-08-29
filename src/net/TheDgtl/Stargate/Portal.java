@@ -795,6 +795,15 @@ public class Portal {
 			}
 		}
 		
+		// Check if the player can create this gate layout
+		String gateName = gate.getFilename();
+		gateName = gateName.substring(0, gateName.indexOf('.'));
+		if (!Stargate.canCreateGate(player, gateName)) {
+			Stargate.debug("createPortal", "Player does not have access to gate layout");
+			Stargate.sendMessage(player, Stargate.getString("createGateDeny"));
+			return null;
+		}
+		
 		if (name.length() < 1 || name.length() > 11) {
 			Stargate.debug("createPortal", "Name length error");
 			Stargate.sendMessage(player, Stargate.getString("createNameLength"));
