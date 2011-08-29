@@ -185,7 +185,6 @@ public class Stargate extends JavaPlugin {
 		config.setProperty("createcost", iConomyHandler.createCost);
 		config.setProperty("destroycost", iConomyHandler.destroyCost);
 		config.setProperty("usecost", iConomyHandler.useCost);
-		config.setProperty("not-enough-money-message", iConomyHandler.inFundMsg);
 		config.setProperty("toowner", iConomyHandler.toOwner);
 		config.setProperty("chargefreedestination", iConomyHandler.chargeFreeDestination);
 		config.setProperty("freegatesgreen", iConomyHandler.freeGatesGreen);
@@ -447,10 +446,17 @@ public class Stargate extends JavaPlugin {
 		// Check for this specific network
 		if (hasPerm(player, "stargate.create.network." + network)) return true;
 		
-		// Check if this is a personal gate, and if the player has create.personal
-		String pNet = player.getName();
-		if (pNet.length() > 11) pNet = pNet.substring(0, 11);
-		if (pNet.equalsIgnoreCase(network) && hasPerm(player, "stargate.create.personal")) return true;
+		return false;
+	}
+	
+	/*
+	 * Check if the player can create a personal gate
+	 */
+	public static boolean canCreatePersonal(Player player) {
+		// Check for general create
+		if (hasPerm(player, "stargate.create")) return true;
+		// Check for personal
+		if (hasPerm(player, "stargate.create.personal")) return true;
 		return false;
 	}
 	
@@ -615,7 +621,7 @@ public class Stargate extends JavaPlugin {
 						return;
 					}
 					String deductMsg = Stargate.getString("ecoDeduct");
-					deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(cost)});
+					deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%", "%portal%"}, new String[] {iConomyHandler.format(cost), portal.getName()});
 					sendMessage(player, deductMsg, false);
 					if (target != null) {
 						Player p = server.getPlayer(target);
@@ -707,7 +713,7 @@ public class Stargate extends JavaPlugin {
 					return;
 				}
 				String deductMsg = Stargate.getString("ecoDeduct");
-				deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(cost)});
+				deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%", "%portal%"}, new String[] {iConomyHandler.format(cost), portal.getName()});
 				sendMessage(player, deductMsg, false);
 				if (target != null) {
 					Player p = server.getPlayer(target);
@@ -838,18 +844,18 @@ public class Stargate extends JavaPlugin {
 			if (cost != 0) {
 				if (!Stargate.chargePlayer(player, null, cost)) {
 					Stargate.debug("onBlockBreak", "Insufficient Funds");
-					Stargate.sendMessage(player, iConomyHandler.inFundMsg);
+					Stargate.sendMessage(player, Stargate.getString("inFunds"));
 					event.setCancelled(true);
 					return;
 				}
 				
 				if (cost > 0) {
 					String deductMsg = Stargate.getString("ecoDeduct");
-					deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(cost)});
+					deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%", "%portal%"}, new String[] {iConomyHandler.format(cost), portal.getName()});
 					sendMessage(player, deductMsg, false);
 				} else if (cost < 0) {
 					String refundMsg = Stargate.getString("ecoRefund");
-					refundMsg = Stargate.replaceVars(refundMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(-cost)});
+					refundMsg = Stargate.replaceVars(refundMsg, new String[] {"%cost%", "%portal%"}, new String[] {iConomyHandler.format(-cost), portal.getName()});
 					sendMessage(player, refundMsg, false);
 				}
 			}

@@ -779,19 +779,15 @@ public class Portal {
 		// Check if the player can create gates on this network
 		if (!Stargate.canCreate(player, network)) {
 			Stargate.debug("createPortal", "Player doesn't have create permissions on network. Trying personal");
-			network = player.getName();
-			if (network.length() > 11) {
-				network = network.substring(0, 11);
-			}
-			
-			// Check if we can create a gate on our own network
-			if (!Stargate.canCreate(player,  network)) {
+			if (Stargate.canCreatePersonal(player)) {
+				network = player.getName();
+				if (network.length() > 11) network = network.substring(0, 11);
+				Stargate.debug("createPortal", "Creating personal portal");
+				Stargate.sendMessage(player, Stargate.getString("createPersonal"));
+			} else {
 				Stargate.debug("createPortal", "Player does not have access to network");
 				Stargate.sendMessage(player, Stargate.getString("createNetDeny"));
 				return null;
-			} else {
-				Stargate.debug("createPortal", "Creating personal portal");
-				Stargate.sendMessage(player, Stargate.getString("createPersonal"));
 			}
 		}
 		
@@ -849,12 +845,14 @@ public class Portal {
 		int cost = Stargate.getCreateCost(player, gate); 
 		if (cost > 0) {
 			if (!Stargate.chargePlayer(player, null, gate.getCreateCost())) {
-				Stargate.sendMessage(player, Stargate.getString("ecoInFunds"));
+				String inFundMsg = Stargate.getString("ecoInFunds");
+				inFundMsg = Stargate.replaceVars(inFundMsg, new String[] {"%cost%", "%portal%"}, new String[] {iConomyHandler.format(cost), name});
+				Stargate.sendMessage(player, inFundMsg);
 				Stargate.debug("createPortal", "Insufficient Funds");
 				return null;
 			}
 			String deductMsg = Stargate.getString("ecoDeduct");
-			deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%"}, new String[] {iConomyHandler.format(cost)});
+			deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%", "%portal%"}, new String[] {iConomyHandler.format(cost), name});
 			Stargate.sendMessage(player, deductMsg, false);
 		}
 

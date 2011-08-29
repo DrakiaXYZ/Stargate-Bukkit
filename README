@@ -159,10 +159,11 @@ As of 0.6.5 it is possible to customize all of the messages Stargate displays, i
 If a string is removed, or left blank, it will not be shown when the user does the action associated with it.
 There are three special cases when it comes to messages, these are:
 ecoDeduct=Spent %cost%
-ecoRefund=Redunded %cost%
-ecoObtain=Obtained %cost$ from Stargate %portal%
+ecoRefund=Refunded %cost%
+ecoObtain=Obtained %cost% from Stargate %portal%
 
-As you can see, these three strings have variables in them. These variables are fairly self-explanatory.
+As you can see, these three strings have %cost% and %portal% variables in them. These variables are fairly self-explanatory.
+
 The full list of strings is as follows:
 prefix=[Stargate] 
 teleportMsg=Teleported
@@ -174,7 +175,7 @@ destEmpty=Destination List Empty
 
 ecoDeduct=Deducted %cost%
 ecoRefund=Redunded %cost%
-ecoObtain=Obtained %cost$ from Stargate %portal%
+ecoObtain=Obtained %cost% from Stargate %portal%
 ecoInFunds=Insufficient Funds
 
 createMsg=Gate Created
@@ -186,10 +187,12 @@ createFull=This network is full
 createWorldDeny=You do not have access to that world
 createConflict=Gate conflicts with existing gate
 
-
 =============
   Changes
 =============
+[Version 0.6.6]
+ - Added %cost% and %portal% to all eco* messages
+ - Fixed an issue when creating a gate on a network you don't have access to
 [Version 0.6.5]
  - Moved printed message config to a seperate file
  - Added permdebug option

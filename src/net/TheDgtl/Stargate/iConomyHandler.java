@@ -17,7 +17,6 @@ public class iConomyHandler {
 	public static int useCost = 0;
 	public static int createCost = 0;
 	public static int destroyCost = 0;
-	public static String inFundMsg = "Insufficient Funds.";
 	public static boolean toOwner = false;
 	public static boolean chargeFreeDestination = true;
 	public static boolean freeGatesGreen = false;

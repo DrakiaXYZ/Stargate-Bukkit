@@ -7,8 +7,8 @@ destEmpty=Destination List Empty
 denyMsg=Access Denied
 
 ecoDeduct=Deducted %cost%
-ecoRefund=Redunded %cost%
-ecoObtain=Obtained %cost$ from Stargate %portal%
+ecoRefund=Refunded %cost%
+ecoObtain=Obtained %cost% from Stargate %portal%
 ecoInFunds=Insufficient Funds
 
 createMsg=Gate Created
