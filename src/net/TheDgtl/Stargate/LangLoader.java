@@ -43,10 +43,14 @@ public class LangLoader {
 		return val;
 	}
 	
+	public void setLang(String lang) {
+		this.lang = lang;
+	}
+	
 	private void loadDefaults() {
-		InputStream is = Stargate.class.getResourceAsStream("resources/en.txt");
+		InputStream is = Stargate.class.getResourceAsStream("resources/" + lang + ".txt");
 		if (is == null) return;
-		Stargate.log.info("[Stargate] Extracting initial language file");
+		Stargate.log.info("[Stargate] Extracting initial language file -- " + lang + ".txt");
 		
 		FileOutputStream fos = null;
 		try {

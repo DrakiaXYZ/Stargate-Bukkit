@@ -80,6 +80,7 @@ public class Stargate extends JavaPlugin {
 	private static String defNetwork = "central";
 	private static boolean destroyExplosion = false;
 	public static int maxGates = 0;
+	private static String langName = "en";
 	private static int activeTime = 10;
 	private static int openTime = 10;
 	
@@ -116,8 +117,7 @@ public class Stargate extends JavaPlugin {
 		this.reloadConfig();
 		this.migrate();
 		this.reloadGates();
-		lang = new LangLoader(langFolder, "en");
-		lang.debug();
+		lang = new LangLoader(langFolder, Stargate.langName);
 		
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
@@ -155,6 +155,7 @@ public class Stargate extends JavaPlugin {
 		defNetwork = config.getString("default-gate-network", defNetwork).trim();
 		destroyExplosion = config.getBoolean("destroyexplosion", destroyExplosion);
 		maxGates = config.getInt("maxgates", maxGates);
+		langName = config.getString("lang", langName);
 		// Debug
 		debug = config.getBoolean("debug", debug);
 		permDebug = config.getBoolean("permdebug", permDebug);
@@ -180,6 +181,7 @@ public class Stargate extends JavaPlugin {
 		config.setProperty("default-gate-network", defNetwork);
 		config.setProperty("destroyexplosion", destroyExplosion);
 		config.setProperty("maxgates", maxGates);
+		config.setProperty("lang", langName);
 		// iConomy
 		config.setProperty("useiconomy", iConomyHandler.useiConomy);
 		config.setProperty("createcost", iConomyHandler.createCost);
@@ -574,6 +576,7 @@ public class Stargate extends JavaPlugin {
 	public static String replaceVars(String format, String[] search, String[] replace) {
 		if (search.length != replace.length) return "";
 		for (int i = 0; i < search.length; i++) {
+			Stargate.debug("replaceVars", "Replacing [" + search[i] + "] With [" + replace[i] + "]");
 			format = format.replaceAll(search[i], replace[i]);
 		}
 		return format;
@@ -1066,6 +1069,7 @@ public class Stargate extends JavaPlugin {
 				// Reload data
 				reloadConfig();
 				reloadGates();
+				lang.setLang(langName);
 				lang.reload();
 				return true;
 			}

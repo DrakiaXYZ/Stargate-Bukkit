@@ -375,6 +375,7 @@ public class Portal {
 				StorageMinecart smc = (StorageMinecart)mc;
 				smc.getInventory().setContents(((StorageMinecart)vehicle).getInventory().getContents());
 			}
+			mc.setVelocity(newVelocity);
 			vehicle.remove();
 		}
 	}

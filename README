@@ -148,6 +148,7 @@ chargefreedestination - Enable to allow free travel from any gate to a free gate
 freegatesgreen - Enable to make gates that won't cost the player money show up as green
 toowner - Whether the money from gate-use goes to the owner or nobody
 maxgates - If non-zero, will define the maximum amount of gates allowed on any network.
+lang - The language to use (Included languages: en, de)
 
 debug - Whether to show massive debug output
 permdebug - Whether to show massive permission debug output
@@ -190,6 +191,13 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.6.8]
+ - Fixed unmanned carts losing velocity through gates
+ - /sg reload now properly switches languages
+[Version 0.6.7]
+ - Added lang option
+ - Removed language debug output
+ - Added German language (lang=de) -- Thanks EduardBaer
 [Version 0.6.6]
  - Added %cost% and %portal% to all eco* messages
  - Fixed an issue when creating a gate on a network you don't have access to
