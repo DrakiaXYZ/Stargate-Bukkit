@@ -576,7 +576,6 @@ public class Stargate extends JavaPlugin {
 	public static String replaceVars(String format, String[] search, String[] replace) {
 		if (search.length != replace.length) return "";
 		for (int i = 0; i < search.length; i++) {
-			Stargate.debug("replaceVars", "Replacing [" + search[i] + "] With [" + replace[i] + "]");
 			format = format.replaceAll(search[i], replace[i]);
 		}
 		return format;
