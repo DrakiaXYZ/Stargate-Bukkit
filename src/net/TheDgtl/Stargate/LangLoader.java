@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class LangLoader {
+	private String UTF8_BOM = "\uFEFF";
 	// Variables
 	private String datFolder;
 	private String lang;
@@ -83,10 +84,14 @@ public class LangLoader {
 		FileInputStream fis = null;
 		try {
 			fis = new FileInputStream(datFolder + lang + ".txt");
-			InputStreamReader isr = new InputStreamReader(fis);
+			InputStreamReader isr = new InputStreamReader(fis, "UTF8");
 			BufferedReader br = new BufferedReader(isr);
 			String line = br.readLine();
+			boolean firstLine = true;
 			while (line != null) {
+				// Strip UTF BOM
+				if (firstLine) line = removeUTF8BOM(line);
+				firstLine = false;
 				// Split at first "="
 				int eq = line.indexOf('=');
 				if (eq == -1) {
@@ -115,4 +120,11 @@ public class LangLoader {
 			Stargate.debug("LangLoader::Debug", key + " => " + strList.get(key));
 		}
 	}
+	
+    private String removeUTF8BOM(String s) {
+        if (s.startsWith(UTF8_BOM)) {
+            s = s.substring(1);
+        }
+        return s;
+    }
 }
