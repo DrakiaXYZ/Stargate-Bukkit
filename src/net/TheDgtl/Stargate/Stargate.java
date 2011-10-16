@@ -47,8 +47,6 @@ import org.bukkit.util.config.Configuration;
 
 // Permissions
 import com.nijikokun.bukkit.Permissions.Permissions;
-// iConomy
-import com.iConomy.*;
 
 /**
  * Stargate.java - A customizeable portal plugin for Bukkit
@@ -121,8 +119,9 @@ public class Stargate extends JavaPlugin {
 		
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
-		if (iConomyHandler.useiConomy)
-			iConomyHandler.iconomy = (iConomy)checkPlugin("iConomy");
+		if (iConomyHandler.setupiConomy(pm)) {
+        	log.info("[Stargate] Register v" + iConomyHandler.register.getDescription().getVersion() + " found");
+        }
 		
 		pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
@@ -998,10 +997,8 @@ public class Stargate extends JavaPlugin {
 	private class sListener extends ServerListener {
 		@Override
 		public void onPluginEnable(PluginEnableEvent event) {
-			if (iConomyHandler.useiConomy && iConomyHandler.iconomy == null) {
-				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("iConomy")) {
-					iConomyHandler.iconomy = (iConomy)checkPlugin(event.getPlugin());
-				}
+			if (iConomyHandler.setupiConomy(event.getPlugin())) {
+				log.info("[Stargate] Register v" + iConomyHandler.register.getDescription().getVersion() + " found");
 			}
 			if (permissions == null) {
 				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("Permissions")) {
@@ -1012,9 +1009,8 @@ public class Stargate extends JavaPlugin {
 		
 		@Override
 		public void onPluginDisable(PluginDisableEvent event) {
-			if (iConomyHandler.useiConomy && event.getPlugin() == iConomyHandler.iconomy) {
-				log.info("[Stargate] iConomy plugin lost.");
-				iConomyHandler.iconomy = null;
+			if (iConomyHandler.checkLost(event.getPlugin())) {
+				log.info("[Stargate] Register plugin lost.");
 			}
 			if (event.getPlugin() == permissions) {
 				log.info("[Stargate] Permissions plugin lost.");

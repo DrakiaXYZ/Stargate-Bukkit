@@ -191,6 +191,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.6.10]
+ - Added Register support as opposed to iConomy
 [Version 0.6.9]
  - Added UTF8 support for lang files (With or without BOM)
 [Version 0.6.8]
