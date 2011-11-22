@@ -1,0 +1,37 @@
+# Stargate Configuration File
+# Main Stargate config
+
+# The folder for storing portals
+portal-folder: plugins/Stargate/portals/
+# The folder for storing gate layouts
+gate-folder: plugins/Stargate/gates/
+# The default gate network
+default-gate-network: central
+# Whether or not to destroy gates with explosions (Creeper, TNT, etc)
+destroyexplosion: false
+# The maximum number of gates allowed on a network - 0 for unlimited
+maxgates: 0
+# The language file to load for messages
+lang: en
+
+# Stargate economy options
+
+# Whether to use an economy plugin (Uses Register to interact with all economy plugins)
+useiconomy: 
+# The cost to create a gate
+createcost: 0
+# The cost to destroy a gate
+destroycost: 0
+# The cost to use a gate
+usecost: 0
+# Whether the charge for using a gate goes to the gates owner
+toowner: false
+# Whether a gate whose destination is a free gate is still charged
+chargefreedestination: true
+# Whether a free gate in the destination list is drawn green
+freegatesgreen: false
+
+# Debug -- Only enable if you have issues, massive console output
+debug: false
+# This will output any and all Permissions checks to console, used for permissions debugging
+permdebug: false

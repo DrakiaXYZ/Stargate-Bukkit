@@ -196,6 +196,11 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.0]
+ - Minecraft 1.0.0 support
+ - New FileConfiguration implemented
+ - Stop gates being destroyed on right-click in Creative mode
+ - Fixed signs not updating with a hackish workaround until Bukkit is fixed
 [Version 0.6.10]
  - Added Register support as opposed to iConomy
 [Version 0.6.9]
