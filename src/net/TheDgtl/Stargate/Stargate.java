@@ -14,6 +14,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
@@ -43,7 +44,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.config.Configuration;
 
 // Permissions
 import com.nijikokun.bukkit.Permissions.Permissions;
@@ -66,7 +66,7 @@ public class Stargate extends JavaPlugin {
 	private final sListener serverListener = new sListener();
 	
 	public static Logger log;
-	private Configuration config;
+	private FileConfiguration newConfig;
 	private PluginManager pm;
 	public static Server server;
 	public static Stargate stargate;
@@ -97,7 +97,7 @@ public class Stargate extends JavaPlugin {
 	public void onEnable() {
 		PluginDescriptionFile pdfFile = this.getDescription();
 		pm = getServer().getPluginManager();
-		config = this.getConfiguration();
+		newConfig = this.getConfig();
 		log = Logger.getLogger("Minecraft");
 		Stargate.server = getServer();
 		Stargate.stargate = this;
@@ -112,7 +112,7 @@ public class Stargate extends JavaPlugin {
 		pm.registerEvent(Event.Type.BLOCK_FROMTO, blockListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.BLOCK_PHYSICS, blockListener, Priority.Normal, this);
 		
-		this.reloadConfig();
+		this.loadConfig();
 		this.migrate();
 		this.reloadGates();
 		lang = new LangLoader(langFolder, Stargate.langName);
@@ -147,50 +147,29 @@ public class Stargate extends JavaPlugin {
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
 	}
 
-	public void reloadConfig() {
-		config.load();
-		portalFolder = config.getString("portal-folder", portalFolder);
-		gateFolder = config.getString("gate-folder", gateFolder);
-		defNetwork = config.getString("default-gate-network", defNetwork).trim();
-		destroyExplosion = config.getBoolean("destroyexplosion", destroyExplosion);
-		maxGates = config.getInt("maxgates", maxGates);
-		langName = config.getString("lang", langName);
+	public void loadConfig() {
+		// Copy default values if required, save config
+		newConfig.options().copyDefaults(true);
+		this.saveConfig();
+		
+		// Load values into variables
+		portalFolder = newConfig.getString("portal-folder");
+		gateFolder = newConfig.getString("gate-folder");
+		defNetwork = newConfig.getString("default-gate-network").trim();
+		destroyExplosion = newConfig.getBoolean("destroyexplosion");
+		maxGates = newConfig.getInt("maxgates");
+		langName = newConfig.getString("lang");
 		// Debug
-		debug = config.getBoolean("debug", debug);
-		permDebug = config.getBoolean("permdebug", permDebug);
+		debug = newConfig.getBoolean("debug");
+		permDebug = newConfig.getBoolean("permdebug");
 		// iConomy
-		iConomyHandler.useiConomy = config.getBoolean("useiconomy", iConomyHandler.useiConomy);
-		iConomyHandler.createCost = config.getInt("createcost", iConomyHandler.createCost);
-		iConomyHandler.destroyCost = config.getInt("destroycost", iConomyHandler.destroyCost);
-		iConomyHandler.useCost = config.getInt("usecost", iConomyHandler.useCost);
-		iConomyHandler.toOwner = config.getBoolean("toowner", iConomyHandler.toOwner);
-		iConomyHandler.chargeFreeDestination = config.getBoolean("chargefreedestination", iConomyHandler.chargeFreeDestination);
-		iConomyHandler.freeGatesGreen = config.getBoolean("freegatesgreen", iConomyHandler.freeGatesGreen);
-		
-		saveConfig();
-	}
-	
-	public void saveConfig() {
-		if (!debug)
-			config.removeProperty("debug");
-		if (!permDebug)
-			config.removeProperty("permdebug");
-		config.setProperty("portal-folder", portalFolder);
-		config.setProperty("gate-folder", gateFolder);
-		config.setProperty("default-gate-network", defNetwork);
-		config.setProperty("destroyexplosion", destroyExplosion);
-		config.setProperty("maxgates", maxGates);
-		config.setProperty("lang", langName);
-		// iConomy
-		config.setProperty("useiconomy", iConomyHandler.useiConomy);
-		config.setProperty("createcost", iConomyHandler.createCost);
-		config.setProperty("destroycost", iConomyHandler.destroyCost);
-		config.setProperty("usecost", iConomyHandler.useCost);
-		config.setProperty("toowner", iConomyHandler.toOwner);
-		config.setProperty("chargefreedestination", iConomyHandler.chargeFreeDestination);
-		config.setProperty("freegatesgreen", iConomyHandler.freeGatesGreen);
-		
-		config.save();
+		iConomyHandler.useiConomy = newConfig.getBoolean("useiconomy");
+		iConomyHandler.createCost = newConfig.getInt("createcost");
+		iConomyHandler.destroyCost = newConfig.getInt("destroycost");
+		iConomyHandler.useCost = newConfig.getInt("usecost");
+		iConomyHandler.toOwner = newConfig.getBoolean("toowner");
+		iConomyHandler.chargeFreeDestination = newConfig.getBoolean("chargefreedestination");
+		iConomyHandler.freeGatesGreen = newConfig.getBoolean("freegatesgreen");
 	}
 	
 	public void reloadGates() {
@@ -760,6 +739,11 @@ public class Stargate extends JavaPlugin {
 				if ((block.getType() == Material.STONE_BUTTON)) {
 					Portal portal = Portal.getByBlock(block);
 					if (portal == null) return;
+					
+					// Cancel item use
+					event.setUseItemInHand(Result.DENY);
+					event.setUseInteractedBlock(Result.DENY);
+					
 					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
@@ -776,6 +760,9 @@ public class Stargate extends JavaPlugin {
 					Portal portal = Portal.getByBlock(block);
 					if (portal == null) return;
 					
+					event.setUseInteractedBlock(Result.DENY);
+					event.setCancelled(true);
+					
 					if (!Stargate.canAccessNetwork(player,  portal.getNetwork())) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
@@ -791,6 +778,10 @@ public class Stargate extends JavaPlugin {
 				if (block.getType() == Material.STONE_BUTTON) {
 					Portal portal = Portal.getByBlock(block);
 					if (portal == null) return;
+					
+					event.setUseInteractedBlock(Result.DENY);
+					event.setCancelled(true);
+					
 					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
@@ -1062,7 +1053,7 @@ public class Stargate extends JavaPlugin {
 				Gate.clearGates();
 				
 				// Reload data
-				reloadConfig();
+				loadConfig();
 				reloadGates();
 				lang.setLang(langName);
 				lang.reload();
