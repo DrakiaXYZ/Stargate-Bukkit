@@ -13,6 +13,8 @@ destroyexplosion: false
 maxgates: 0
 # The language file to load for messages
 lang: en
+# Whether to remember the cursor location between uses
+destMemory: false
 
 # Stargate economy options
 

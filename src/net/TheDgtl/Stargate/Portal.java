@@ -60,6 +60,7 @@ public class Portal {
 	// Gate information
 	private String name;
 	private String destination;
+	private String lastDest = "";
 	private String network;
 	private Gate gate;
 	private String owner = "";
@@ -432,7 +433,6 @@ public class Portal {
 		
 		destinations.clear();
 		destination = "";
-		drawSign();
 		Stargate.activeList.add(this);
 		activePlayer = player;
 		String network = getNetwork();
@@ -451,6 +451,10 @@ public class Portal {
 				destinations.add(portal.getName());
 			}
 		}
+		if (Stargate.destMemory && destinations.contains(lastDest)) {
+			destination = lastDest;
+		}
+		drawSign();
 	}
 
 	public void deactivate() {
@@ -489,10 +493,12 @@ public class Portal {
 	}
 	
 	public void cycleDestination(Player player, int dir) {
+		Boolean activate = false;
 		if (!isActive() || getActivePlayer() != player) {
 			activate(player);
 			Stargate.debug("cycleDestination", "Network Size: " + allPortalsNet.get(network.toLowerCase()).size());
 			Stargate.debug("cycleDestination", "Player has access to: " + destinations.size());
+			activate = true;
 		}
 		
 		if (destinations.size() == 0) {
@@ -500,7 +506,7 @@ public class Portal {
 			return;
 		}
 
-		if (destinations.size() > 0) {
+		if (!activate || lastDest.isEmpty()) {
 			int index = destinations.indexOf(destination);
 			index += dir;
 			if (index >= destinations.size()) 
@@ -508,6 +514,7 @@ public class Portal {
 			else if (index < 0) 
 				index = destinations.size() - 1;
 			destination = destinations.get(index);
+			lastDest = destination;
 		}
 		openTime = System.currentTimeMillis() / 1000;
 		drawSign();

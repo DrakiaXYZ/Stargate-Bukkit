@@ -154,6 +154,7 @@ freegatesgreen - Enable to make gates that won't cost the player money show up a
 toowner - Whether the money from gate-use goes to the owner or nobody
 maxgates - If non-zero, will define the maximum amount of gates allowed on any network.
 lang - The language to use (Included languages: en, de)
+destMemory - Whether to set the first destination as the last used destination for all gates
 
 debug - Whether to show massive debug output
 permdebug - Whether to show massive permission debug output
@@ -196,6 +197,10 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.1]
+ - Added destMemory option
+ - Switched to sign.update() as Bukkit implemented my fix
+ - Threw in a catch for a null from location for portal events
 [Version 0.7.0]
  - Minecraft 1.0.0 support
  - New FileConfiguration implemented

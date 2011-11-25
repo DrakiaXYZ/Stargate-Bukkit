@@ -81,6 +81,7 @@ public class Stargate extends JavaPlugin {
 	private static String langName = "en";
 	private static int activeTime = 10;
 	private static int openTime = 10;
+	public static boolean destMemory = false;
 	
 	// Used for debug
 	public static boolean debug = false;
@@ -148,9 +149,10 @@ public class Stargate extends JavaPlugin {
 	}
 
 	public void loadConfig() {
-		// Copy default values if required, save config
+		reloadConfig();
+		newConfig = this.getConfig();
+		// Copy default values if required
 		newConfig.options().copyDefaults(true);
-		this.saveConfig();
 		
 		// Load values into variables
 		portalFolder = newConfig.getString("portal-folder");
@@ -159,6 +161,7 @@ public class Stargate extends JavaPlugin {
 		destroyExplosion = newConfig.getBoolean("destroyexplosion");
 		maxGates = newConfig.getInt("maxgates");
 		langName = newConfig.getString("lang");
+		destMemory = newConfig.getBoolean("destMemory");
 		// Debug
 		debug = newConfig.getBoolean("debug");
 		permDebug = newConfig.getBoolean("permdebug");
@@ -170,6 +173,8 @@ public class Stargate extends JavaPlugin {
 		iConomyHandler.toOwner = newConfig.getBoolean("toowner");
 		iConomyHandler.chargeFreeDestination = newConfig.getBoolean("chargefreedestination");
 		iConomyHandler.freeGatesGreen = newConfig.getBoolean("freegatesgreen");
+		
+		this.saveConfig();
 	}
 	
 	public void reloadGates() {
@@ -629,6 +634,10 @@ public class Stargate extends JavaPlugin {
 		public void onPlayerPortal(PlayerPortalEvent event) {
 			// Do a quick check for a stargate
 			Location from = event.getFrom();
+			if (from == null) {
+				Stargate.debug("onPlayerPortal", "From location is null. Stupid Bukkit");
+				return;
+			}
 			World world = from.getWorld();
 			int cX = from.getBlockX();
 			int cY = from.getBlockY();
