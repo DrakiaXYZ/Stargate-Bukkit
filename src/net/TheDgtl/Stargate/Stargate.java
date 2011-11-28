@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -770,7 +771,10 @@ public class Stargate extends JavaPlugin {
 					if (portal == null) return;
 					
 					event.setUseInteractedBlock(Result.DENY);
-					event.setCancelled(true);
+					// Only cancel event in creative mode
+					if (player.getGameMode().equals(GameMode.CREATIVE)) {
+						event.setCancelled(true);
+					}
 					
 					if (!Stargate.canAccessNetwork(player,  portal.getNetwork())) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
@@ -789,7 +793,9 @@ public class Stargate extends JavaPlugin {
 					if (portal == null) return;
 					
 					event.setUseInteractedBlock(Result.DENY);
-					event.setCancelled(true);
+					if (player.getGameMode().equals(GameMode.CREATIVE)) {
+						event.setCancelled(true);
+					}
 					
 					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
