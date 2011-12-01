@@ -378,7 +378,7 @@ public class Stargate extends JavaPlugin {
 		// Player gets free use
 		if (hasPerm(player, "stargate.free") || Stargate.hasPerm(player,  "stargate.free.use")) return true;
 		// Don't charge for free destination gates
-		if (!iConomyHandler.chargeFreeDestination && dest.isFree()) return true;
+		if (dest != null && !iConomyHandler.chargeFreeDestination && dest.isFree()) return true;
 		return false;
 	}
 	
