@@ -229,6 +229,18 @@ public class Gate {
 				if (id == ENTRANCE || id == EXIT) {
 					int type = topleft.modRelative(x, y, 0, modX, 1, modZ).getType();
 					if (type != portalBlockClosed && type != portalBlockOpen) {
+						// Special case for water gates
+						if (portalBlockOpen == Material.WATER.getId() || portalBlockOpen == Material.STATIONARY_WATER.getId()) {
+							if (type == Material.WATER.getId() || type == Material.STATIONARY_WATER.getId()) {
+								continue;
+							}
+						}
+						// Special case for lava gates
+						if (portalBlockOpen == Material.LAVA.getId() || portalBlockOpen == Material.STATIONARY_LAVA.getId()) {
+							if (type == Material.LAVA.getId() || type == Material.STATIONARY_LAVA.getId()) {
+								continue;
+							}
+						}
 						Stargate.debug("Gate::Matches", "Entrance/Exit Material Mismatch: " + type);
 						return false;
 					}

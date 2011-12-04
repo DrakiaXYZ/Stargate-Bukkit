@@ -197,6 +197,11 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.3]
+ - Lava and water gates no longer destroy on reload
+ - "sg reload" now closes gates before reloading
+ - Added Vault support
+ - Added missing "useiConomy" option in config
 [Version 0.7.2.1]
  - Quick fix for an NPE
 [Version 0.7.2]

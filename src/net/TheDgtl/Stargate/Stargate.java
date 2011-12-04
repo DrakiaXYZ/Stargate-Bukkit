@@ -121,8 +121,11 @@ public class Stargate extends JavaPlugin {
 		
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
-		if (iConomyHandler.setupiConomy(pm)) {
-        	log.info("[Stargate] Register v" + iConomyHandler.register.getDescription().getVersion() + " found");
+		if (iConomyHandler.setupeConomy(pm)) {
+			if (iConomyHandler.register != null)
+				log.info("[Stargate] Register v" + iConomyHandler.register.getDescription().getVersion() + " found");
+			if (iConomyHandler.economy != null)
+				log.info("[Stargate] Vault v" + iConomyHandler.vault.getDescription().getVersion() + " found");
         }
 		
 		pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
@@ -179,6 +182,11 @@ public class Stargate extends JavaPlugin {
 	}
 	
 	public void reloadGates() {
+		// Close all gates prior to reloading
+		for (Portal p : openList) {
+			p.close(true);
+		}
+		
 		Gate.loadGates(gateFolder);
 		// Replace nethergate.gate if it doesn't have an exit point.
 		if (Gate.getGateByName("nethergate.gate") == null || Gate.getGateByName("nethergate.gate").getExit() == null) {
@@ -1003,8 +1011,11 @@ public class Stargate extends JavaPlugin {
 	private class sListener extends ServerListener {
 		@Override
 		public void onPluginEnable(PluginEnableEvent event) {
-			if (iConomyHandler.setupiConomy(event.getPlugin())) {
+			if (iConomyHandler.setupRegister(event.getPlugin())) {
 				log.info("[Stargate] Register v" + iConomyHandler.register.getDescription().getVersion() + " found");
+			}
+			if (iConomyHandler.setupVault(event.getPlugin())) {
+				log.info("[Stargate] Vault v" + iConomyHandler.vault.getDescription().getVersion() + " found");
 			}
 			if (permissions == null) {
 				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("Permissions")) {
@@ -1016,7 +1027,7 @@ public class Stargate extends JavaPlugin {
 		@Override
 		public void onPluginDisable(PluginDisableEvent event) {
 			if (iConomyHandler.checkLost(event.getPlugin())) {
-				log.info("[Stargate] Register plugin lost.");
+				log.info("[Stargate] Register/Vault plugin lost.");
 			}
 			if (event.getPlugin() == permissions) {
 				log.info("[Stargate] Permissions plugin lost.");
@@ -1061,6 +1072,14 @@ public class Stargate extends JavaPlugin {
 		if (cmd.equalsIgnoreCase("sg")) {
 			if (args.length != 1) return false;
 			if (args[0].equalsIgnoreCase("reload")) {
+				// Deactivate portals
+				for (Portal p : activeList) {
+					p.deactivate();
+				}
+				// Close portals
+				for (Portal p : openList) {
+					p.close(true);
+				}
 				// Clear all lists
 				activeList.clear();
 				openList.clear();
