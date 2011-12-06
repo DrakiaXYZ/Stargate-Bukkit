@@ -6,6 +6,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
+import org.bukkit.craftbukkit.CraftWorld;
 
 /**
  * SignPost.java
@@ -71,7 +72,15 @@ public class SignPost {
 		final Sign sign = findSign();
 		if (sign == null) return;
 		
-		sign.update();
+		// TODO: Hackish workaround for signs not updating. Fix when Bukkit fixes
+		CraftWorld cw = (CraftWorld)sign.getWorld();
+		cw.getHandle().notify(sign.getX(), sign.getY(), sign.getZ());
+		
+		/*Stargate.server.getScheduler().scheduleSyncDelayedTask(Stargate.stargate, new Runnable() {
+			public void run() {
+	        	sign.update();
+			}
+		}, 5);*/
 	}
 	
 	private void findParent() {

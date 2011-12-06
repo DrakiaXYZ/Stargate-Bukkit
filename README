@@ -197,6 +197,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.3.1-pre]
+ - Revert sign update code for pre-1.0.0
 [Version 0.7.3.1]
  - Hopefully fixed "><" issue with destMemory
 [Version 0.7.3]
