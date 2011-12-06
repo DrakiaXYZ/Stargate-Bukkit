@@ -19,7 +19,7 @@ destMemory: false
 # Stargate economy options
 
 # Whether to use an economy plugin (Uses Register to interact with all economy plugins)
-useiconomy: 
+useiconomy: false
 # The cost to create a gate
 createcost: 0
 # The cost to destroy a gate

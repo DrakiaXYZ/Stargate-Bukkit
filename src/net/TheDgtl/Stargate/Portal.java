@@ -451,7 +451,7 @@ public class Portal {
 				destinations.add(portal.getName());
 			}
 		}
-		if (Stargate.destMemory && destinations.contains(lastDest)) {
+		if (Stargate.destMemory && !lastDest.isEmpty() && destinations.contains(lastDest)) {
 			destination = lastDest;
 		}
 		drawSign();

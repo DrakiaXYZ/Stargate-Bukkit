@@ -1,7 +1,11 @@
 package net.TheDgtl.Stargate;
 
+import net.milkbowl.vault.Vault;
+import net.milkbowl.vault.economy.Economy;
+
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import com.nijikokun.register.Register;
 import com.nijikokun.register.payment.Method;
@@ -17,6 +21,8 @@ public class iConomyHandler {
 	public static String pName = "Stargate";
 	public static boolean useiConomy = false;
 	public static Register register = null;
+	public static Vault vault = null;
+	public static Economy economy = null;
 	
 	public static int useCost = 0;
 	public static int createCost = 0;
@@ -26,7 +32,11 @@ public class iConomyHandler {
 	public static boolean freeGatesGreen = false;
 	
 	public static double getBalance(String player) {
-		if (useiConomy && register != null) {
+		if (!useiConomy) return 0;
+		if (economy != null) {
+			return economy.getBalance(player);
+		}
+		if (register != null) {
 			Method method = Methods.getMethod();
 			if (method == null) {
 				return 0;
@@ -43,7 +53,20 @@ public class iConomyHandler {
 	}
 	
 	public static boolean chargePlayer(String player, String target, double amount) {
-		if (useiConomy && register != null) {
+		if (!useiConomy) return true;
+		if (economy != null) {
+			if (player.equals(target)) return true;
+			
+			if (!economy.has(player, amount)) return false;
+			economy.withdrawPlayer(player, amount);
+			
+			if (target != null) {
+				economy.depositPlayer(target, amount);
+			}
+			return true;
+		}
+		
+		if (register != null) {
 			// Check for a payment method
 			Method method = Methods.getMethod();
 			if (method == null) {
@@ -73,25 +96,58 @@ public class iConomyHandler {
 	}
 	
 	public static boolean useiConomy() {
-		return (useiConomy && register != null && Methods.getMethod() != null);
+		if (!useiConomy) return false;
+		if (economy != null) return true;
+		if (register != null && Methods.getMethod() != null) return true;
+		return false;
 	}
 	
 	public static String format(int amt) {
+		if (economy != null) {
+			return economy.format(amt);
+		}
+		if (register != null) {
 		Method method = Methods.getMethod();
 		if (method == null) {
 			return Integer.toString(amt);
 		}
 		return method.format(amt);
 	}
-	
-	public static boolean setupiConomy(PluginManager pm) {
-		if (!useiConomy) return false;
-		Plugin p = pm.getPlugin("Register");
-        return setupiConomy(p);
+		return "";
 	}
 	
-	public static boolean setupiConomy(Plugin p) {
+	public static boolean setupeConomy(PluginManager pm) {
 		if (!useiConomy) return false;
+		// Check for Vault
+		Plugin p = pm.getPlugin("Vault");
+		if (p != null)
+			return setupVault(p);
+		// Check for Register
+		p = pm.getPlugin("Register");
+		if (p != null)
+			return setupRegister(p);
+		
+		return false;
+	}
+	
+	public static boolean setupVault(Plugin p) {
+		if (!useiConomy) return false;
+		if (register != null) return false;
+		if (p == null || !p.isEnabled()) return false;
+		if (!p.getDescription().getName().equals("Vault")) return false;
+		
+		RegisteredServiceProvider<Economy> economyProvider = Stargate.server.getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+        if (economyProvider != null) {
+        	vault = (Vault)p;
+            economy = economyProvider.getProvider();
+        }
+
+        return (economy != null);
+	}
+	
+	public static boolean setupRegister(Plugin p) {
+		if (!useiConomy) return false;
+		if (vault != null) return false;
 		if (p == null || !p.isEnabled()) return false;
 		if (!p.getDescription().getName().equals("Register")) return false;
 		register = (Register)p;
@@ -101,6 +157,11 @@ public class iConomyHandler {
 	public static boolean checkLost(Plugin p) {
 		if (p.equals(register)) {
 			register = null;
+			return true;
+		}
+		if (p.equals(vault)) {
+			economy = null;
+			vault = null;
 			return true;
 		}
 		return false;
