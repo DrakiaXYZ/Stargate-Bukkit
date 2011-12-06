@@ -197,6 +197,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.3.1]
+ - Hopefully fixed "><" issue with destMemory
 [Version 0.7.3]
  - Lava and water gates no longer destroy on reload
  - "sg reload" now closes gates before reloading
