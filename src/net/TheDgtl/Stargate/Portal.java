@@ -506,7 +506,7 @@ public class Portal {
 			return;
 		}
 
-		if (!activate || lastDest.isEmpty()) {
+		if (!Stargate.destMemory || !activate || lastDest.isEmpty()) {
 			int index = destinations.indexOf(destination);
 			index += dir;
 			if (index >= destinations.size()) 
