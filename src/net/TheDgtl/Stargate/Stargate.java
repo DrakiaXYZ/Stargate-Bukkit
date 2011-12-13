@@ -84,6 +84,9 @@ public class Stargate extends JavaPlugin {
 	private static int openTime = 10;
 	public static boolean destMemory = false;
 	
+	// Temp workaround for snowmen, don't check gate entrance
+	public static boolean ignoreEntrance = false;
+	
 	// Used for debug
 	public static boolean debug = false;
 	public static boolean permDebug = false;
@@ -134,11 +137,14 @@ public class Stargate extends JavaPlugin {
 		pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Normal, this);
 		pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
 		
+		
 		pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
 		
 		pm.registerEvent(Event.Type.WORLD_LOAD, worldListener, Priority.Normal, this);
 		
 		pm.registerEvent(Event.Type.ENTITY_EXPLODE, entityListener, Priority.Normal, this);
+		// TODO: Add when snowmanTrailEvent is pulled
+		//pm.registerEvent(Event.Type.SNOWMAN_TRAIL, entityListener, Priority.Normal, this);
 		//pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Priority.Normal, this);
 		//pm.registerEvent(Event.Type.ENTITY_COMBUST, entityListener, Priority.Normal, this);
 		
@@ -166,6 +172,7 @@ public class Stargate extends JavaPlugin {
 		maxGates = newConfig.getInt("maxgates");
 		langName = newConfig.getString("lang");
 		destMemory = newConfig.getBoolean("destMemory");
+		ignoreEntrance = newConfig.getBoolean("ignoreEntrance");
 		// Debug
 		debug = newConfig.getBoolean("debug");
 		permDebug = newConfig.getBoolean("permdebug");
@@ -882,9 +889,8 @@ public class Stargate extends JavaPlugin {
 		@Override
 		public void onBlockPhysics(BlockPhysicsEvent event) {
 			Block block = event.getBlock();
-			if (block.getType() == Material.PORTAL) {
-				event.setCancelled((Portal.getByEntrance(block) != null));
-			}
+			Portal portal = Portal.getByEntrance(block);
+			if (portal != null) event.setCancelled(true);
 		}
 
 		@Override
@@ -924,6 +930,15 @@ public class Stargate extends JavaPlugin {
 				}
 			}
 		}
+		// TODO: Uncomment when Bukkit pulls SnowmanTrailEvent
+		/*
+		@Override
+		public void onSnowmanTrail(SnowmanTrailEvent event) {
+			Portal p = Portal.getByEntrance(event.getBlock());
+			if (p != null) event.setCancelled(true);
+		}
+		*/
+		
 		// Going to leave this commented out until they fix EntityDamagebyBlock
 		/*
 		@Override

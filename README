@@ -155,6 +155,7 @@ toowner - Whether the money from gate-use goes to the owner or nobody
 maxgates - If non-zero, will define the maximum amount of gates allowed on any network.
 lang - The language to use (Included languages: en, de)
 destMemory - Whether to set the first destination as the last used destination for all gates
+ignoreEntrance - Set this option to true to not check the entrance of a gate on startup. This is a workaround for snowmen breaking gates.
 
 debug - Whether to show massive debug output
 permdebug - Whether to show massive permission debug output
@@ -197,6 +198,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.3.3]
+ - Added "ignoreEntrance" option to not check entrance to gate on integrity check (Workaround for snowmen until event is pulled)
 [Version 0.7.3.2]
  - Actually fixed "><" issue with destMemory
 [Version 0.7.3.1]

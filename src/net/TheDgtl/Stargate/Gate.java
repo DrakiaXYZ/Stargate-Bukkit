@@ -227,6 +227,9 @@ public class Gate {
 				int id = types.get(layout[y][x]);
 
 				if (id == ENTRANCE || id == EXIT) {
+					// TODO: Remove once snowmanTrailEvent is added
+					if (Stargate.ignoreEntrance) continue;
+					
 					int type = topleft.modRelative(x, y, 0, modX, 1, modZ).getType();
 					if (type != portalBlockClosed && type != portalBlockOpen) {
 						// Special case for water gates
