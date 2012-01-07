@@ -25,6 +25,10 @@ public class StargateListener extends CustomEventListener implements Listener {
 		
 	}
 	
+	public void onStargatePortal(StargatePortalEvent event) {
+		
+	}
+	
 	@Override
 	public void onCustomEvent(Event event) {
 		if (event instanceof StargateOpenEvent) {
@@ -35,6 +39,8 @@ public class StargateListener extends CustomEventListener implements Listener {
 			onStargateActivate((StargateActivateEvent)event);
 		} else if (event instanceof StargateDeactivateEvent) {
 			onStargateDeactivate((StargateDeactivateEvent)event);
+		} else if (event instanceof StargatePortalEvent) {
+			onStargatePortal((StargatePortalEvent)event);
 		}
 	}
 }

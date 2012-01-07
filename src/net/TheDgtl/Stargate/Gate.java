@@ -216,12 +216,12 @@ public class Gate {
 	public Boolean getToOwner() {
 		return toOwner;
 	}
-
-	public boolean matches(Block topleft, int modX, int modZ) {
-		return matches(new Blox(topleft), modX, modZ);
+	
+	public boolean matches(Blox topleft, int modX, int modZ) {
+		return matches(topleft, modX, modZ, false);
 	}
 
-	public boolean matches(Blox topleft, int modX, int modZ) {
+	public boolean matches(Blox topleft, int modX, int modZ, boolean onCreate) {
 		for (int y = 0; y < layout.length; y++) {
 			for (int x = 0; x < layout[y].length; x++) {
 				int id = types.get(layout[y][x]);
@@ -231,6 +231,10 @@ public class Gate {
 					if (Stargate.ignoreEntrance) continue;
 					
 					int type = topleft.modRelative(x, y, 0, modX, 1, modZ).getType();
+					
+					// Ignore entrance if it's air and we're creating a new gate
+					if (onCreate && type == Material.AIR.getId()) continue;
+					
 					if (type != portalBlockClosed && type != portalBlockOpen) {
 						// Special case for water gates
 						if (portalBlockOpen == Material.WATER.getId() || portalBlockOpen == Material.STATIONARY_WATER.getId()) {

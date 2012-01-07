@@ -13,6 +13,7 @@ import net.TheDgtl.Stargate.event.StargateActivateEvent;
 import net.TheDgtl.Stargate.event.StargateCloseEvent;
 import net.TheDgtl.Stargate.event.StargateDeactivateEvent;
 import net.TheDgtl.Stargate.event.StargateOpenEvent;
+import net.TheDgtl.Stargate.event.StargatePortalEvent;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -326,6 +327,19 @@ public class Portal {
 		// Handle backwards gates
 		int adjust = isBackwards() ? 0 :180;
 		exit.setYaw(origin.getRotation() - traveller.getYaw() + this.getRotation() + adjust);
+		
+		// Call the StargatePortalEvent to allow plugins to change destination
+		if (!origin.equals(this)) {
+			StargatePortalEvent pEvent = new StargatePortalEvent(player, origin, this, exit);
+			Stargate.server.getPluginManager().callEvent(pEvent);
+			// Teleport is cancelled
+			if (pEvent.isCancelled()) {
+				origin.teleport(player, origin, event);
+				return;
+			}
+			// Update exit if needed
+			exit = pEvent.getExit();
+		}
 
 		// The new method to teleport in a move event is set the "to" field.
 		event.setTo(exit);
@@ -755,7 +769,7 @@ public class Portal {
 					Blox tl = parent.modRelative(-vector.getRight(), -vector.getDepth(), -vector.getDistance(), modX, 1, modZ);
 
 					if (gate == null) {
-						if (possibility.matches(tl, modX, modZ)) {
+						if (possibility.matches(tl, modX, modZ, true)) {
 							gate = possibility;
 							topleft = tl;
 
@@ -881,6 +895,11 @@ public class Portal {
 			if (dest != null) {
 				portal.open(true);
 				dest.drawSign();
+			}
+		// Set the inside of the gate to its closed material
+		} else {
+			for (Blox inside : portal.getEntrances()) {
+				inside.setType(portal.getGate().getPortalBlockClosed());
 			}
 		}
 		

@@ -198,6 +198,9 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.4.0]
+ - Fixed issue with non-air closed portal blocks
+ - Added StargatePortalEvent/onStargatePortal event
 [Version 0.7.3.3]
  - Added "ignoreEntrance" option to not check entrance to gate on integrity check (Workaround for snowmen until event is pulled)
 [Version 0.7.3.2]
