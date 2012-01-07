@@ -441,7 +441,7 @@ public class Portal {
 	}
 
 	public void activate(Player player) {
-		StargateActivateEvent event = new StargateActivateEvent(this);
+		StargateActivateEvent event = new StargateActivateEvent(this, player);
 		Stargate.server.getPluginManager().callEvent(event);
 		if (event.isCancelled()) return;
 		
