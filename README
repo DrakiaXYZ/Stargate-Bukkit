@@ -198,6 +198,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.4.2]
+ - stargate.create.personal permission now also allows user to use personal gates
 [Version 0.7.4.1]
  - Quick API update to add player to the activate event
 [Version 0.7.4.0]
