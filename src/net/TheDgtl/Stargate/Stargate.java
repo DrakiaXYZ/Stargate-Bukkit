@@ -6,6 +6,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.TheDgtl.Stargate.event.StargateAccessEvent;
+
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -387,6 +389,15 @@ public class Stargate extends JavaPlugin {
 	}
 	
 	/*
+	 * Call the StargateAccessPortal event, used for other plugins to bypass Permissions checks
+	 */
+	public static StargateAccessEvent canAccessPortal(Player player, Portal portal) {
+		StargateAccessEvent event = new StargateAccessEvent(player, portal);
+		Stargate.server.getPluginManager().callEvent(event);
+		return event;
+	}
+	
+	/*
 	 * Return true if the portal is free for the player
 	 */
 	public static boolean isFree(Player player, Portal src, Portal dest) {
@@ -600,18 +611,27 @@ public class Stargate extends JavaPlugin {
 				
 				Portal dest = portal.getDestination();
 				if (dest == null) return;
-				// Check if player has access to this network
-				if (!canAccessNetwork(player, portal.getNetwork())) {
+				// Check if we're bypassing the permission check
+				StargateAccessEvent access = canAccessPortal(player, portal);
+				if (access.getDeny()) {
 					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 					portal.close(false);
 					return;
 				}
-				
-				// Check if player has access to destination world
-				if (!canAccessWorld(player, dest.getWorld().getName())) {
-					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-					portal.close(false);
-					return;
+				if (!access.getBypassPerms()) {
+					// Check if player has access to this network
+					if (!canAccessNetwork(player, portal.getNetwork())) {
+						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
+						portal.close(false);
+						return;
+					}
+					
+					// Check if player has access to destination world
+					if (!canAccessWorld(player, dest.getWorld().getName())) {
+						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
+						portal.close(false);
+						return;
+					}
 				}
 				
 				int cost = Stargate.getUseCost(player, portal, dest);
@@ -694,20 +714,30 @@ public class Stargate extends JavaPlugin {
 			Portal destination = portal.getDestination();
 			if (destination == null) return;
 			
-			// Check if player has access to this network
-			if (!canAccessNetwork(player, portal.getNetwork())) {
+			// Check if we're bypassing the perm check
+			StargateAccessEvent access = canAccessPortal(player, portal);
+			if (access.getDeny()) {
 				Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 				portal.teleport(player, portal, event);
 				portal.close(false);
 				return;
 			}
-			
-			// Check if player has access to destination world
-			if (!canAccessWorld(player, destination.getWorld().getName())) {
-				Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-				portal.teleport(player, portal, event);
-				portal.close(false);
-				return;
+			if (!access.getBypassPerms()) {
+				// Check if player has access to this network
+				if (!canAccessNetwork(player, portal.getNetwork())) {
+					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
+					portal.teleport(player, portal, event);
+					portal.close(false);
+					return;
+				}
+				
+				// Check if player has access to destination world
+				if (!canAccessWorld(player, destination.getWorld().getName())) {
+					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
+					portal.teleport(player, portal, event);
+					portal.close(false);
+					return;
+				}
 			}
 			
 			int cost = Stargate.getUseCost(player, portal, destination);
@@ -751,9 +781,17 @@ public class Stargate extends JavaPlugin {
 					event.setUseItemInHand(Result.DENY);
 					event.setUseInteractedBlock(Result.DENY);
 					
-					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+					// Check if we're bypassing the perm check
+					StargateAccessEvent access = canAccessPortal(player, portal);
+					if (access.getDeny()) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
+					}
+					if (!access.getBypassPerms()) {
+						if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+							Stargate.sendMessage(player, Stargate.getString("denyMsg"));
+							return;
+						}
 					}
 					
 					if ((!portal.isOpen()) && (!portal.isFixed())) {
@@ -771,9 +809,17 @@ public class Stargate extends JavaPlugin {
 					event.setUseItemInHand(Result.DENY);
 					event.setUseInteractedBlock(Result.DENY);
 					
-					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+					// Check if we're bypassing the perm check
+					StargateAccessEvent access = canAccessPortal(player, portal);
+					if (access.getDeny()) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
+					}
+					if (!access.getBypassPerms()) {
+						if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+							Stargate.sendMessage(player, Stargate.getString("denyMsg"));
+							return;
+						}
 					}
 					onButtonPressed(player, portal);
 				}
@@ -793,9 +839,17 @@ public class Stargate extends JavaPlugin {
 						event.setCancelled(true);
 					}
 					
-					if (!Stargate.canAccessNetwork(player,  portal.getNetwork())) {
+					// Check if we're bypassing the perm check
+					StargateAccessEvent access = canAccessPortal(player, portal);
+					if (access.getDeny()) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
+					}
+					if (!access.getBypassPerms()) {
+						if (!Stargate.canAccessNetwork(player,  portal.getNetwork())) {
+							Stargate.sendMessage(player, Stargate.getString("denyMsg"));
+							return;
+						}
 					}
 					
 					if ((!portal.isOpen()) && (!portal.isFixed())) {
@@ -814,9 +868,17 @@ public class Stargate extends JavaPlugin {
 						event.setCancelled(true);
 					}
 					
-					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+					// Check if we're bypassing the perm check
+					StargateAccessEvent access = canAccessPortal(player, portal);
+					if (access.getDeny()) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
+					}
+					if (!access.getBypassPerms()) {
+						if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+							Stargate.sendMessage(player, Stargate.getString("denyMsg"));
+							return;
+						}
 					}
 					onButtonPressed(player, portal);
 				}
