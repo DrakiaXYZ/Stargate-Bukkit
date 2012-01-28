@@ -126,6 +126,10 @@ public class Stargate extends JavaPlugin {
 		
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
+		if (permissions != null && permissions.getDescription().getVersion().equals("2.7.2")) {
+			log.info("[Stargate] Permissions is 2.7.2, most likely a bridge, disabling.");
+			permissions = null;
+		}
 		if (iConomyHandler.setupeConomy(pm)) {
 			if (iConomyHandler.register != null)
 				log.info("[Stargate] Register v" + iConomyHandler.register.getDescription().getVersion() + " found");
@@ -347,7 +351,7 @@ public class Stargate extends JavaPlugin {
 				return true;
 			}
 			if (permDebug)
-				Stargate.debug("hasPermDeep::Permissions", perm + " => " + permissions.getHandler().has(player, perm));
+				Stargate.debug("hasPermDeep::SuperPerms", perm + " => " + player.hasPermission(perm));
 			return player.hasPermission(perm);
 		}
 	}
@@ -391,10 +395,11 @@ public class Stargate extends JavaPlugin {
 	/*
 	 * Call the StargateAccessPortal event, used for other plugins to bypass Permissions checks
 	 */
-	public static StargateAccessEvent canAccessPortal(Player player, Portal portal) {
-		StargateAccessEvent event = new StargateAccessEvent(player, portal);
+	public static boolean canAccessPortal(Player player, Portal portal, boolean deny) {
+		StargateAccessEvent event = new StargateAccessEvent(player, portal, deny);
 		Stargate.server.getPluginManager().callEvent(event);
-		return event;
+		if (event.getDeny()) return false;
+		return true;
 	}
 	
 	/*
@@ -611,27 +616,21 @@ public class Stargate extends JavaPlugin {
 				
 				Portal dest = portal.getDestination();
 				if (dest == null) return;
-				// Check if we're bypassing the permission check
-				StargateAccessEvent access = canAccessPortal(player, portal);
-				if (access.getDeny()) {
+				boolean deny = false;
+				// Check if player has access to this network
+				if (!canAccessNetwork(player, portal.getNetwork())) {
+					deny = true;
+				}
+				
+				// Check if player has access to destination world
+				if (!canAccessWorld(player, dest.getWorld().getName())) {
+					deny = true;
+				}
+				
+				if (!canAccessPortal(player, portal, deny)) {
 					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 					portal.close(false);
 					return;
-				}
-				if (!access.getBypassPerms()) {
-					// Check if player has access to this network
-					if (!canAccessNetwork(player, portal.getNetwork())) {
-						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-						portal.close(false);
-						return;
-					}
-					
-					// Check if player has access to destination world
-					if (!canAccessWorld(player, dest.getWorld().getName())) {
-						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-						portal.close(false);
-						return;
-					}
 				}
 				
 				int cost = Stargate.getUseCost(player, portal, dest);
@@ -714,30 +713,22 @@ public class Stargate extends JavaPlugin {
 			Portal destination = portal.getDestination();
 			if (destination == null) return;
 			
-			// Check if we're bypassing the perm check
-			StargateAccessEvent access = canAccessPortal(player, portal);
-			if (access.getDeny()) {
+			boolean deny = false;
+			// Check if player has access to this network
+			if (!canAccessNetwork(player, portal.getNetwork())) {
+				deny = true;
+			}
+			
+			// Check if player has access to destination world
+			if (!canAccessWorld(player, destination.getWorld().getName())) {
+				deny = true;
+			}
+			
+			if (!canAccessPortal(player, portal, deny)) {
 				Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 				portal.teleport(player, portal, event);
 				portal.close(false);
 				return;
-			}
-			if (!access.getBypassPerms()) {
-				// Check if player has access to this network
-				if (!canAccessNetwork(player, portal.getNetwork())) {
-					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-					portal.teleport(player, portal, event);
-					portal.close(false);
-					return;
-				}
-				
-				// Check if player has access to destination world
-				if (!canAccessWorld(player, destination.getWorld().getName())) {
-					Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-					portal.teleport(player, portal, event);
-					portal.close(false);
-					return;
-				}
 			}
 			
 			int cost = Stargate.getUseCost(player, portal, destination);
@@ -781,17 +772,14 @@ public class Stargate extends JavaPlugin {
 					event.setUseItemInHand(Result.DENY);
 					event.setUseInteractedBlock(Result.DENY);
 					
-					// Check if we're bypassing the perm check
-					StargateAccessEvent access = canAccessPortal(player, portal);
-					if (access.getDeny()) {
+					boolean deny = false;
+					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+						deny = true;
+					}
+					
+					if (!Stargate.canAccessPortal(player, portal, deny)) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
-					}
-					if (!access.getBypassPerms()) {
-						if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
-							Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-							return;
-						}
 					}
 					
 					if ((!portal.isOpen()) && (!portal.isFixed())) {
@@ -809,17 +797,14 @@ public class Stargate extends JavaPlugin {
 					event.setUseItemInHand(Result.DENY);
 					event.setUseInteractedBlock(Result.DENY);
 					
-					// Check if we're bypassing the perm check
-					StargateAccessEvent access = canAccessPortal(player, portal);
-					if (access.getDeny()) {
+					boolean deny = false;
+					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+						deny = true;
+					}
+					
+					if (!Stargate.canAccessPortal(player, portal, deny)) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
-					}
-					if (!access.getBypassPerms()) {
-						if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
-							Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-							return;
-						}
 					}
 					onButtonPressed(player, portal);
 				}
@@ -839,17 +824,14 @@ public class Stargate extends JavaPlugin {
 						event.setCancelled(true);
 					}
 					
-					// Check if we're bypassing the perm check
-					StargateAccessEvent access = canAccessPortal(player, portal);
-					if (access.getDeny()) {
+					boolean deny = false;
+					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+						deny = true;
+					}
+					
+					if (!Stargate.canAccessPortal(player, portal, deny)) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
-					}
-					if (!access.getBypassPerms()) {
-						if (!Stargate.canAccessNetwork(player,  portal.getNetwork())) {
-							Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-							return;
-						}
 					}
 					
 					if ((!portal.isOpen()) && (!portal.isFixed())) {
@@ -868,17 +850,14 @@ public class Stargate extends JavaPlugin {
 						event.setCancelled(true);
 					}
 					
-					// Check if we're bypassing the perm check
-					StargateAccessEvent access = canAccessPortal(player, portal);
-					if (access.getDeny()) {
+					boolean deny = false;
+					if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
+						deny = true;
+					}
+					
+					if (!Stargate.canAccessPortal(player, portal, deny)) {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
-					}
-					if (!access.getBypassPerms()) {
-						if (!Stargate.canAccessNetwork(player, portal.getNetwork())) {
-							Stargate.sendMessage(player, Stargate.getString("denyMsg"));
-							return;
-						}
 					}
 					onButtonPressed(player, portal);
 				}
@@ -1097,7 +1076,8 @@ public class Stargate extends JavaPlugin {
 				log.info("[Stargate] Vault v" + iConomyHandler.vault.getDescription().getVersion() + " found");
 			}
 			if (permissions == null) {
-				if (event.getPlugin().getDescription().getName().equalsIgnoreCase("Permissions")) {
+				PluginDescriptionFile desc = event.getPlugin().getDescription();
+				if (desc.getName().equalsIgnoreCase("Permissions") && !desc.getVersion().equals("2.7.2")) {
 					permissions = (Permissions)checkPlugin(event.getPlugin());
 				}
 			}

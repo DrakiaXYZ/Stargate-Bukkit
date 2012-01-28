@@ -198,6 +198,10 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.4.4]
+ - Changed the implementation of StargateAccessEvent.
+ - Disable Permissions if version is 2.7.2 (Common version used between bridges)
+ - Fix long-standing bug with hasPermDeep check. Oops.
 [Version 0.7.4.3]
  - Implement StargateAccessEvent, used for bypassing permission checks/denying access to gates.
 [Version 0.7.4.2]

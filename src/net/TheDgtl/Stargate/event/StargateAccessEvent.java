@@ -10,23 +10,13 @@ public class StargateAccessEvent extends StargateEvent {
 	 */
 	private static final long serialVersionUID = -1009056668229801760L;
 	private Player player;
-	private boolean bypassPerms;
 	private boolean deny;
 	
-	public StargateAccessEvent(Player player, Portal portal) {
+	public StargateAccessEvent(Player player, Portal portal, boolean deny) {
 		super("StargateAccessEvent", portal);
 		
 		this.player = player;
-		this.bypassPerms = false;
-		this.deny = false;
-	}
-	
-	public void setBypassPerms(boolean access) {
-		this.bypassPerms = access;
-	}
-	
-	public boolean getBypassPerms() {
-		return this.bypassPerms;
+		this.deny = deny;
 	}
 	
 	public boolean getDeny() {
