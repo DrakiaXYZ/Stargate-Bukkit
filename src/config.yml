@@ -17,6 +17,8 @@ lang: en
 destMemory: false
 # Ignore the entrance blocks of a gate when checking. Used to work around snowmen
 ignoreEntrance: false
+# Whether to allow vehicles through gates
+handleVehicles: true
 
 # Stargate economy options
 

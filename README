@@ -27,6 +27,7 @@ stargate.option -- Allow use of all options
   stargate.option.free -- Allow use of 'F'ree
   stargate.option.backwards -- Allow use of 'B'ackwards
   stargate.option.show -- Allow use of 'S'how
+  stargate.option.nonetwork -- Allow use of 'N'oNetwork
   
 stargate.create -- Allow creating gates on any network (Override all create permissions)
   stargate.create.personal -- Allow creating gates on network {playername}
@@ -80,6 +81,7 @@ Sign Layout:
  			'F' for a free gate
  			'B' is for a backwards facing gate (You will exit the back)
  			'S' is for showing an always-on gate in the network list
+ 			'N' is for hiding the network name
 
 Options:
 The options are the single letter, not the word. So to make a private hidden gate, your 4th line would be 'PH'.
@@ -156,6 +158,7 @@ maxgates - If non-zero, will define the maximum amount of gates allowed on any n
 lang - The language to use (Included languages: en, de)
 destMemory - Whether to set the first destination as the last used destination for all gates
 ignoreEntrance - Set this option to true to not check the entrance of a gate on startup. This is a workaround for snowmen breaking gates.
+handleVehicles - Whether or not to handle vehicles going through gates. Set to false to disallow vehicles (Manned or not) going through gates.
 
 debug - Whether to show massive debug output
 permdebug - Whether to show massive permission debug output
@@ -198,6 +201,13 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.5.0]
+ - Refactored creation code a bit
+ - Added StargateCreateEvent, see Stargate-API for usage.
+ - Added StargateDestroyEvent, see Stargate-API for usage.
+ - Updated Event API to the new standard, please see: http://wiki.bukkit.org/Introduction_to_the_New_Event_System
+ - Added handleVehicles option.
+ - Added 'N'o Network option (Hides the network from the sign)
 [Version 0.7.4.4]
  - Changed the implementation of StargateAccessEvent.
  - Disable Permissions if version is 2.7.2 (Common version used between bridges)

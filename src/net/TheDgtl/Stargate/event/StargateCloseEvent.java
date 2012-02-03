@@ -1,11 +1,22 @@
 package net.TheDgtl.Stargate.event;
 
+import org.bukkit.event.HandlerList;
+
 import net.TheDgtl.Stargate.Portal;
 
 public class StargateCloseEvent extends StargateEvent {
 	private static final long serialVersionUID = -4382967941863636023L;
 	private boolean force;
-
+	
+	private static final HandlerList handlers = new HandlerList();
+	
+	public HandlerList getHandlers() {
+		return handlers;
+	}
+	
+	public static HandlerList getHandlerList() {
+		return handlers;
+	}
 	public StargateCloseEvent(Portal portal, boolean force) {
 		super("StargateCloseEvent", portal);
 		

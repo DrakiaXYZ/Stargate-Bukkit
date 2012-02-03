@@ -4,12 +4,23 @@ import net.TheDgtl.Stargate.Portal;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 
 public class StargatePortalEvent extends StargateEvent {
 	private static final long serialVersionUID = -7263321536459960366L;
 	private Player player;
 	private Portal destination;
 	private Location exit;
+	
+	private static final HandlerList handlers = new HandlerList();
+	
+	public HandlerList getHandlers() {
+		return handlers;
+	}
+	
+	public static HandlerList getHandlerList() {
+		return handlers;
+	}
 	
 	public StargatePortalEvent(Player player, Portal portal, Portal dest, Location exit) {
 		super ("StargatePortalEvent", portal);

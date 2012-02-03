@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.TheDgtl.Stargate.event.StargateAccessEvent;
+import net.TheDgtl.Stargate.event.StargateDestroyEvent;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -21,27 +22,21 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
-import org.bukkit.event.Event;
-import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Result;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
-import org.bukkit.event.server.ServerListener;
-import org.bukkit.event.vehicle.VehicleListener;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
-import org.bukkit.event.world.WorldListener;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -57,16 +52,10 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  * @author Dinnerbone
  * @author Steven "Drakia" Scott
  */
+@SuppressWarnings("unused")
 public class Stargate extends JavaPlugin {
 	// Permissions
 	private static Permissions permissions = null;
-	
-	private final bListener blockListener = new bListener();
-	private final pListener playerListener = new pListener();
-	private final vListener vehicleListener = new vListener();
-	private final wListener worldListener = new wListener();
-	private final eListener entityListener = new eListener();
-	private final sListener serverListener = new sListener();
 	
 	public static Logger log;
 	private FileConfiguration newConfig;
@@ -85,6 +74,7 @@ public class Stargate extends JavaPlugin {
 	private static int activeTime = 10;
 	private static int openTime = 10;
 	public static boolean destMemory = false;
+	public static boolean handleVehicles = true;
 	
 	// Temp workaround for snowmen, don't check gate entrance
 	public static boolean ignoreEntrance = false;
@@ -116,9 +106,6 @@ public class Stargate extends JavaPlugin {
 		
 		log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
 		
-		pm.registerEvent(Event.Type.BLOCK_FROMTO, blockListener, Priority.Normal, this);
-		pm.registerEvent(Event.Type.BLOCK_PHYSICS, blockListener, Priority.Normal, this);
-		
 		this.loadConfig();
 		this.migrate();
 		this.reloadGates();
@@ -137,29 +124,13 @@ public class Stargate extends JavaPlugin {
 				log.info("[Stargate] Vault v" + iConomyHandler.vault.getDescription().getVersion() + " found");
         }
 		
-		pm.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Normal, this);
-		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
+		pm.registerEvents(new pListener(), this);
+		pm.registerEvents(new bListener(), this);
 		
-		pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Priority.Normal, this);
-		pm.registerEvent(Event.Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
-		
-		
-		pm.registerEvent(Event.Type.VEHICLE_MOVE, vehicleListener, Priority.Normal, this);
-		
-		pm.registerEvent(Event.Type.WORLD_LOAD, worldListener, Priority.Normal, this);
-		
-		pm.registerEvent(Event.Type.ENTITY_EXPLODE, entityListener, Priority.Normal, this);
-		// TODO: Add when snowmanTrailEvent is pulled
-		//pm.registerEvent(Event.Type.SNOWMAN_TRAIL, entityListener, Priority.Normal, this);
-		//pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Priority.Normal, this);
-		//pm.registerEvent(Event.Type.ENTITY_COMBUST, entityListener, Priority.Normal, this);
-		
-		// Used to disable built-in portal for Stargates
-		pm.registerEvent(Event.Type.PLAYER_PORTAL, playerListener, Priority.Normal, this);
-		
-		// Dependency Loading
-		pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Monitor, this);
-		pm.registerEvent(Event.Type.PLUGIN_DISABLE, serverListener, Priority.Monitor, this);
+		pm.registerEvents(new vListener(), this);
+		pm.registerEvents(new eListener(), this);
+		pm.registerEvents(new wListener(), this);
+		pm.registerEvents(new sListener(), this);
 		
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
 	}
@@ -179,6 +150,7 @@ public class Stargate extends JavaPlugin {
 		langName = newConfig.getString("lang");
 		destMemory = newConfig.getBoolean("destMemory");
 		ignoreEntrance = newConfig.getBoolean("ignoreEntrance");
+		handleVehicles = newConfig.getBoolean("handleVehicles");
 		// Debug
 		debug = newConfig.getBoolean("debug");
 		permDebug = newConfig.getBoolean("permdebug");
@@ -598,9 +570,10 @@ public class Stargate extends JavaPlugin {
 		return format;
 	}
 	
-	private class vListener extends VehicleListener {
-		@Override
+	private class vListener implements Listener {
+		@EventHandler
 		public void onVehicleMove(VehicleMoveEvent event) {
+			if (!handleVehicles) return;
 			Entity passenger = event.getVehicle().getPassenger();
 			Vehicle vehicle = event.getVehicle();
 			
@@ -666,8 +639,8 @@ public class Stargate extends JavaPlugin {
 		}
 	}
 	
-	private class pListener extends PlayerListener {
-		@Override
+	private class pListener implements Listener {
+		@EventHandler
 		public void onPlayerPortal(PlayerPortalEvent event) {
 			// Do a quick check for a stargate
 			Location from = event.getFrom();
@@ -695,7 +668,7 @@ public class Stargate extends JavaPlugin {
 			}
 		}
 		
-		@Override
+		@EventHandler
 		public void onPlayerMove(PlayerMoveEvent event) {
 			Player player = event.getPlayer();
 			Portal portal = Portal.getByEntrance(event.getTo());
@@ -758,7 +731,7 @@ public class Stargate extends JavaPlugin {
 			portal.close(false);
 		}
 		
-		@Override
+		@EventHandler
 		public void onPlayerInteract(PlayerInteractEvent event) {
 			Player player = event.getPlayer();
 			Block block = event.getClickedBlock();
@@ -865,8 +838,8 @@ public class Stargate extends JavaPlugin {
 		}
 	}
 
-	private class bListener extends BlockListener {
-		@Override
+	private class bListener implements Listener {
+		@EventHandler
 		public void onSignChange(SignChangeEvent event) {
 			Player player = event.getPlayer();
 			Block block = event.getBlock();
@@ -885,7 +858,7 @@ public class Stargate extends JavaPlugin {
 			}, 1);
 		}
 		
-		@Override
+		@EventHandler
 		public void onBlockBreak(BlockBreakEvent event) {
 			if (event.isCancelled()) return;
 			Block block = event.getBlock();
@@ -897,14 +870,30 @@ public class Stargate extends JavaPlugin {
 			Portal portal = Portal.getByBlock(block);
 			if (portal == null) return;
 			
+			boolean deny = false;
+			String denyMsg = "";
+			
 			if (!Stargate.canDestroy(player, portal)) {
-				Stargate.sendMessage(player, "Permission Denied");
+				denyMsg = "Permission Denied"; // TODO: Change to Stargate.getString()
+				deny = true;
 				Stargate.log.info("[Stargate] " + player.getName() + " tried to destroy gate");
+			}
+			
+			int cost = Stargate.getDestroyCost(player,  portal.getGate());
+			
+			StargateDestroyEvent dEvent = new StargateDestroyEvent(portal, player, deny, denyMsg, cost);
+			Stargate.server.getPluginManager().callEvent(dEvent);
+			if (dEvent.isCancelled()) {
+				event.setCancelled(true);
+				return;
+			}
+			if (dEvent.getDeny()) {
+				Stargate.sendMessage(player, dEvent.getDenyReason());
 				event.setCancelled(true);
 				return;
 			}
 			
-			int cost = Stargate.getDestroyCost(player,  portal.getGate());
+			cost = dEvent.getCost();
 			
 			if (cost != 0) {
 				if (!Stargate.chargePlayer(player, null, cost)) {
@@ -929,14 +918,14 @@ public class Stargate extends JavaPlugin {
 			Stargate.sendMessage(player, Stargate.getString("destroyMsg"), false);
 		}
 
-		@Override
+		@EventHandler
 		public void onBlockPhysics(BlockPhysicsEvent event) {
 			Block block = event.getBlock();
 			Portal portal = Portal.getByEntrance(block);
 			if (portal != null) event.setCancelled(true);
 		}
 
-		@Override
+		@EventHandler
 		public void onBlockFromTo(BlockFromToEvent event) {
 			Portal portal = Portal.getByEntrance(event.getBlock());
 
@@ -946,8 +935,8 @@ public class Stargate extends JavaPlugin {
 		}
 	}
 	
-	private class wListener extends WorldListener {
-		@Override
+	private class wListener implements Listener {
+		@EventHandler
 		public void onWorldLoad(WorldLoadEvent event) {
 			World w = event.getWorld();
 			// We have to make sure the world is actually loaded. This gets called twice for some reason.
@@ -957,8 +946,8 @@ public class Stargate extends JavaPlugin {
 		}
 	}
 	
-	private class eListener extends EntityListener {
-		@Override
+	private class eListener implements Listener {
+		@EventHandler
 		public void onEntityExplode(EntityExplodeEvent event) {
 			if (event.isCancelled()) return;
 			for (Block b : event.blockList()) {
@@ -1066,8 +1055,8 @@ public class Stargate extends JavaPlugin {
 		}*/
 	}
 	
-	private class sListener extends ServerListener {
-		@Override
+	private class sListener implements Listener {
+		@EventHandler
 		public void onPluginEnable(PluginEnableEvent event) {
 			if (iConomyHandler.setupRegister(event.getPlugin())) {
 				log.info("[Stargate] Register v" + iConomyHandler.register.getDescription().getVersion() + " found");
@@ -1083,7 +1072,7 @@ public class Stargate extends JavaPlugin {
 			}
 		}
 		
-		@Override
+		@EventHandler
 		public void onPluginDisable(PluginDisableEvent event) {
 			if (iConomyHandler.checkLost(event.getPlugin())) {
 				log.info("[Stargate] Register/Vault plugin lost.");
