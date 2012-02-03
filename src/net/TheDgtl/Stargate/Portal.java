@@ -288,7 +288,7 @@ public class Portal {
 	}
 	
 	public static ArrayList<String> getNetwork(String network) {
-		return allPortalsNet.get(network);
+		return allPortalsNet.get(network.toLowerCase());
 	}
 
 	public boolean open(boolean force) {
