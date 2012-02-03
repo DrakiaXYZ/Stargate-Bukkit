@@ -936,14 +936,6 @@ public class Portal {
 		
 		cost = cEvent.getCost();
 		
-		// No button on an always-open gate.
-		if (!alwaysOn) {
-			button = topleft.modRelative(buttonVector.getRight(), buttonVector.getDepth(), buttonVector.getDistance() + 1, modX, 1, modZ);
-			button.setType(Material.STONE_BUTTON.getId());
-			button.setData(facing);
-			portal.setButton(button);
-		}
-		
 		// Name & Network can be changed in the event, so do these checks here.
 		if (portal.getName().length() < 1 || portal.getName().length() > 11) {
 			Stargate.debug("createPortal", "Name length error");
@@ -975,6 +967,14 @@ public class Portal {
 			String deductMsg = Stargate.getString("ecoDeduct");
 			deductMsg = Stargate.replaceVars(deductMsg, new String[] {"%cost%", "%portal%"}, new String[] {iConomyHandler.format(cost), name});
 			Stargate.sendMessage(player, deductMsg, false);
+		}
+		
+		// No button on an always-open gate.
+		if (!alwaysOn) {
+			button = topleft.modRelative(buttonVector.getRight(), buttonVector.getDepth(), buttonVector.getDistance() + 1, modX, 1, modZ);
+			button.setType(Material.STONE_BUTTON.getId());
+			button.setData(facing);
+			portal.setButton(button);
 		}
 		
 		portal.register();

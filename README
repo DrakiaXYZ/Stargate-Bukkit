@@ -201,6 +201,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.5.1]
+ - Don't create button on failed creation
 [Version 0.7.5.0]
  - Refactored creation code a bit
  - Added StargateCreateEvent, see Stargate-API for usage.
