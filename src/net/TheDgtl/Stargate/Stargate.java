@@ -123,8 +123,8 @@ public class Stargate extends JavaPlugin {
 		
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
-		if (permissions != null && permissions.getDescription().getVersion().equals("2.7.2")) {
-			log.info("[Stargate] Permissions is 2.7.2, most likely a bridge, disabling.");
+		if (permissions != null && (permissions.getDescription().getVersion().equals("2.7.2") ||  permissions.getDescription().getVersion().equals("2.7.7"))) {
+			log.info("[Stargate] Permissions is 2.7.2/2.7.7, most likely a bridge, disabling.");
 			permissions = null;
 		}
 		if (iConomyHandler.setupeConomy(pm)) {
@@ -1068,7 +1068,7 @@ public class Stargate extends JavaPlugin {
 			}
 			if (permissions == null) {
 				PluginDescriptionFile desc = event.getPlugin().getDescription();
-				if (desc.getName().equalsIgnoreCase("Permissions") && !desc.getVersion().equals("2.7.2")) {
+				if (desc.getName().equalsIgnoreCase("Permissions") && !desc.getVersion().equals("2.7.2") && !desc.getVersion().equals("2.7.7")) {
 					permissions = (Permissions)checkPlugin(event.getPlugin());
 				}
 			}

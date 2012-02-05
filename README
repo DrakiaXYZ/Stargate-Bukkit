@@ -201,6 +201,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.5.3]
+ - Added another check for Perm bridges.
 [Version 0.7.5.2]
  - Make sure our timer is stopped on disable
  - Move Event reg before loading gates to stop portal material vanishing
