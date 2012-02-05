@@ -89,6 +89,7 @@ public class Stargate extends JavaPlugin {
 	public void onDisable() {
 		Portal.closeAllGates();
 		Portal.clearGates();
+		getServer().getScheduler().cancelTasks(this);
 	}
 
 	public void onEnable() {
@@ -105,6 +106,15 @@ public class Stargate extends JavaPlugin {
 		langFolder = getDataFolder().getPath().replaceAll("\\\\", "/") + "/lang/";
 		
 		log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
+		
+		// Register events before loading gates to stop weird things happening.
+		pm.registerEvents(new pListener(), this);
+		pm.registerEvents(new bListener(), this);
+		
+		pm.registerEvents(new vListener(), this);
+		pm.registerEvents(new eListener(), this);
+		pm.registerEvents(new wListener(), this);
+		pm.registerEvents(new sListener(), this);
 		
 		this.loadConfig();
 		this.migrate();
@@ -123,14 +133,6 @@ public class Stargate extends JavaPlugin {
 			if (iConomyHandler.economy != null)
 				log.info("[Stargate] Vault v" + iConomyHandler.vault.getDescription().getVersion() + " found");
         }
-		
-		pm.registerEvents(new pListener(), this);
-		pm.registerEvents(new bListener(), this);
-		
-		pm.registerEvents(new vListener(), this);
-		pm.registerEvents(new eListener(), this);
-		pm.registerEvents(new wListener(), this);
-		pm.registerEvents(new sListener(), this);
 		
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
 	}

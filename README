@@ -201,6 +201,9 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.5.2]
+ - Make sure our timer is stopped on disable
+ - Move Event reg before loading gates to stop portal material vanishing
 [Version 0.7.5.1]
  - Don't create button on failed creation
 [Version 0.7.5.0]
