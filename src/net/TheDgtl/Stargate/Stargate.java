@@ -124,8 +124,12 @@ public class Stargate extends JavaPlugin {
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
 		if (permissions != null && (permissions.getDescription().getVersion().equals("2.7.2") ||  permissions.getDescription().getVersion().equals("2.7.7"))) {
-			log.info("[Stargate] Permissions is 2.7.2/2.7.7, most likely a bridge, disabling.");
-			permissions = null;
+			if (pm.getPlugin("PermissionsEx") != null) {
+				log.info("[Stargate] Found PEX, main plugin is built of fail, use bridge");
+			} else {
+				log.info("[Stargate] Permissions is 2.7.2/2.7.7, most likely a bridge, disabling.");
+				permissions = null;
+			}
 		}
 		if (iConomyHandler.setupeConomy(pm)) {
 			if (iConomyHandler.register != null)
@@ -135,6 +139,10 @@ public class Stargate extends JavaPlugin {
         }
 		
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
+		
+		if (pm.getPlugin("PermissionsEx") != null && pm.getPlugin("Permissions") == null) {
+			log.warning("[Stargate] Stargate is not guaranteed to work with PEX without the Permissions Bridge. Please do not request support unless you switch to a real Permissions handler.");
+		}
 	}
 
 	public void loadConfig() {
@@ -362,7 +370,9 @@ public class Stargate extends JavaPlugin {
 		// Can access this network
 		if (hasPerm(player, "stargate.network." + network)) return true;
 		// Is able to create personal gates (Assumption is made they can also access them)
-		if (network.equals(player.getName()) && hasPerm(player, "stargate.create.personal")) return true;
+		String playerName = player.getName();
+		if (playerName.length() > 11) playerName = playerName.substring(0, 11);
+		if (network.equals(playerName) && hasPerm(player, "stargate.create.personal")) return true;
 		return false;
 	}
 	
@@ -1068,7 +1078,17 @@ public class Stargate extends JavaPlugin {
 			}
 			if (permissions == null) {
 				PluginDescriptionFile desc = event.getPlugin().getDescription();
-				if (desc.getName().equalsIgnoreCase("Permissions") && !desc.getVersion().equals("2.7.2") && !desc.getVersion().equals("2.7.7")) {
+				if (desc.getName().equalsIgnoreCase("Permissions")) {
+					
+					if (pm.getPlugin("PermissionsEx") == null) {
+						if (desc.getVersion().equals("2.7.2") || desc.getVersion().equals("2.7.7")) {
+							log.info("[Stargate] Permissions is 2.7.2/2.7.7, most likely a bridge, disabling.");
+							return;
+						}
+					} else {
+						log.info("[Stargate] Found PEX. Main plugin is built of fail. Use bridge instead");
+					}
+					
 					permissions = (Permissions)checkPlugin(event.getPlugin());
 				}
 			}

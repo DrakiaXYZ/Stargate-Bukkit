@@ -201,6 +201,10 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.5.5]
+ - PEX is built of fail, if we have it, use bridge instead.
+[Version 0.7.5.4]
+ - Fix issue with private gates for players with long names
 [Version 0.7.5.3]
  - Added another check for Perm bridges.
 [Version 0.7.5.2]
