@@ -6,7 +6,6 @@ import org.bukkit.event.HandlerList;
 import net.TheDgtl.Stargate.Portal;
 
 public class StargateAccessEvent extends StargateEvent {
-	private static final long serialVersionUID = -1009056668229801760L;
 	private Player player;
 	private boolean deny;
 	

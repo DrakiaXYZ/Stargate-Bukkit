@@ -6,7 +6,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 
 public class StargateOpenEvent extends StargateEvent {
-	private static final long serialVersionUID = -2804865767733660648L;
 	private Player player;
 	private boolean force;
 	

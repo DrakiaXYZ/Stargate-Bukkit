@@ -6,12 +6,10 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
 public class StargateEvent extends Event implements Cancellable {
-	private static final long serialVersionUID = -5079274654178040431L;
 	protected Portal portal;
 	protected boolean cancelled;
 	
 	public StargateEvent(String event, Portal portal) {
-		super (event);
 		this.portal = portal;
 		this.cancelled = false;
 	}

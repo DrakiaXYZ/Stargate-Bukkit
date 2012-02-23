@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 
 public class StargatePortalEvent extends StargateEvent {
-	private static final long serialVersionUID = -7263321536459960366L;
 	private Player player;
 	private Portal destination;
 	private Location exit;

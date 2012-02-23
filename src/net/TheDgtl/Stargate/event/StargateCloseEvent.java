@@ -5,7 +5,6 @@ import org.bukkit.event.HandlerList;
 import net.TheDgtl.Stargate.Portal;
 
 public class StargateCloseEvent extends StargateEvent {
-	private static final long serialVersionUID = -4382967941863636023L;
 	private boolean force;
 	
 	private static final HandlerList handlers = new HandlerList();

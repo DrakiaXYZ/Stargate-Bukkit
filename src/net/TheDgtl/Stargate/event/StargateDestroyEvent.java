@@ -5,7 +5,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 
 public class StargateDestroyEvent extends StargateEvent {
-	private static final long serialVersionUID = 1429032103662930225L;
 	private Player player;
 	private boolean deny;
 	private String denyReason;
