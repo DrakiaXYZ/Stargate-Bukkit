@@ -29,6 +29,8 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -944,6 +946,25 @@ public class Stargate extends JavaPlugin {
 			if (portal != null) {
 				event.setCancelled((event.getBlock().getY() == event.getToBlock().getY()));
 			}
+		}
+		
+		@EventHandler
+		public void onPistonExtend(BlockPistonExtendEvent event) {
+			for(Block block : event.getBlocks()) {
+				Portal portal = Portal.getByBlock(block);
+				if (portal != null) {
+					event.setCancelled(true);
+					return;
+				}
+			}
+		}
+		
+		@EventHandler
+		public void onPistonRetract(BlockPistonRetractEvent event) {
+			if (!event.isSticky()) return;
+			Block affected = event.getRetractLocation().getBlock();
+			Portal portal = Portal.getByBlock(affected);
+			if (portal != null) event.setCancelled(true);
 		}
 	}
 	

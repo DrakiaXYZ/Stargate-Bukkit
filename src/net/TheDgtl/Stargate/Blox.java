@@ -1,6 +1,7 @@
 package net.TheDgtl.Stargate;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
@@ -16,6 +17,7 @@ public class Blox {
 	private int y;
 	private int z;
 	private World world;
+	private Blox parent = null;
 
 	public Blox (World world, int x, int y, int z) {
 		this.x = x;
@@ -96,6 +98,35 @@ public class Blox {
 	
 	public World getWorld() {
 		return world;
+	}
+	
+	public Block getParent() {
+		if (parent == null) findParent();
+		if (parent == null) return null;
+		return parent.getBlock();
+	}
+	
+	private void findParent() {
+		int offsetX = 0;
+		int offsetY = 0;
+		int offsetZ = 0;
+		
+		if (getBlock().getType() == Material.WALL_SIGN) {
+			if (getData() == 0x2) {
+				offsetZ = 1;
+			} else if (getData() == 0x3) {
+				offsetZ = -1;
+			} else if (getData() == 0x4) {
+				offsetX = 1;
+			} else if (getData() == 0x5) {
+				offsetX = -1;
+			}
+		} else if (getBlock().getType() == Material.SIGN_POST) {
+			offsetY = -1;
+		} else {
+			return;
+		}
+		parent = new Blox(world, getX() + offsetX, getY() + offsetY, getZ() + offsetZ);
 	}
 	
 	public String toString() {

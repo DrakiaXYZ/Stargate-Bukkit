@@ -201,6 +201,11 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.5.8]
+ - Fixed an exploit with pistons to destroy gates
+[Version 0.7.5.7]
+ - Removed SignPost class
+ - Resolved issues with signs in 1.2
 [Version 0.7.5.6]
  - Quick update to the custom event code, works with R5+ now.
 [Version 0.7.5.5]

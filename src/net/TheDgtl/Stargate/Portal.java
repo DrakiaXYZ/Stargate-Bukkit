@@ -54,7 +54,7 @@ public class Portal {
 	private float rotX;
 	
 	// Block references
-	private SignPost id;
+	private Blox id;
 	private Blox button;
 	private Blox[] frame;
 	private Blox[] entrances;
@@ -87,7 +87,7 @@ public class Portal {
 	private long openTime;
 
 	private Portal(Blox topLeft, int modX, int modZ,
-			float rotX, SignPost id, Blox button,
+			float rotX, Blox id, Blox button,
 			String dest, String name,
 			boolean verified, String network, Gate gate, String owner, 
 			boolean hidden, boolean alwaysOn, boolean priv, boolean free, boolean backwards, boolean show, boolean noNetwork) {
@@ -590,29 +590,30 @@ public class Portal {
 	}
 
 	public final void drawSign() {
-		id.setText(0, "--" + name + "--");
+		Sign sign = (Sign)id.getBlock().getState();
+		sign.setLine(0, "--" + name + "--");
 		int max = destinations.size() - 1;
 		int done = 0;
 
 		if (!isActive()) {
-			id.setText(++done, "Right click to");
-			id.setText(++done, "use the gate");
+			sign.setLine(++done, "Right click to");
+			sign.setLine(++done, "use the gate");
 			if (!noNetwork) {
-				id.setText(++done, " (" + network + ") ");
+				sign.setLine(++done, " (" + network + ") ");
 			}
 		} else {
 			if (isFixed()) {
-				id.setText(++done, "To: " + destination);
+				sign.setLine(++done, "To: " + destination);
 				if (noNetwork) {
-					id.setText(++done, "");
+					sign.setLine(++done, "");
 				} else {
-					id.setText(++done, " (" + network + ") ");
+					sign.setLine(++done, " (" + network + ") ");
 				}
 				Portal dest = Portal.getByName(destination, network);
 				if (dest == null) {
-					id.setText(++done, "(Not Connected)");
+					sign.setLine(++done, "(Not Connected)");
 				} else {
-					id.setText(++done, "");
+					sign.setLine(++done, "");
 				}
 			} else {
 				int index = destinations.indexOf(destination);
@@ -621,55 +622,55 @@ public class Portal {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destinations.get(index - 2), network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 2));
+						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 2));
 					} else {
-						id.setText(done, destinations.get(index - 2));
+						sign.setLine(done, destinations.get(index - 2));
 					}
 				}
 				if ((index > 0) && (++done <= 3)) {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destinations.get(index - 1), network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 1));
+						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 1));
 					} else {
-						id.setText(done, destinations.get(index - 1));
+						sign.setLine(done, destinations.get(index - 1));
 					}
 				}
 				if (++done <= 3) {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destination, network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + " >" + destination + "< ");
+						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + " >" + destination + "< ");
 					} else {
-						id.setText(done, " >" + destination + "< ");
+						sign.setLine(done, " >" + destination + "< ");
 					}
 				}
 				if ((max >= index + 1) && (++done <= 3)) {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destinations.get(index + 1), network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 1));
+						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 1));
 					} else {
-						id.setText(done, destinations.get(index + 1));
+						sign.setLine(done, destinations.get(index + 1));
 					}
 				}
 				if ((max >= index + 2) && (++done <= 3)) {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destinations.get(index + 2), network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						id.setText(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 2));
+						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 2));
 					} else {
-						id.setText(done, destinations.get(index + 2));
+						sign.setLine(done, destinations.get(index + 2));
 					}
 				}
 			}
 		}
 
 		for (done++; done <= 3; done++) {
-			id.setText(done, "");
+			sign.setLine(done, "");
 		}
-
-		id.update();
+		
+		sign.update();
 	}
 
 	public void unregister(boolean removeAll) {
@@ -696,11 +697,12 @@ public class Portal {
 		allPortalsNet.get(getNetwork().toLowerCase()).remove(getName().toLowerCase());
 
 		if (id.getBlock().getType() == Material.WALL_SIGN) {
-			id.setText(0, getName());
-			id.setText(1, "");
-			id.setText(2, "");
-			id.setText(3, "");
-			id.update();
+			Sign sign = (Sign)id.getBlock().getState();
+			sign.setLine(0, getName());
+			sign.setLine(1, "");
+			sign.setLine(2, "");
+			sign.setLine(3, "");
+			sign.update();
 		}
 
 		for (String originName : allPortalsNet.get(getNetwork().toLowerCase())) {
@@ -750,7 +752,7 @@ public class Portal {
 	}
 
 	public static Portal createPortal(SignChangeEvent event, Player player) {
-		SignPost id = new SignPost(new Blox(event.getBlock()));
+		Blox id = new Blox(event.getBlock());
 		Block idParent = id.getParent();
 		if (idParent == null) {
 			return null;
@@ -1117,12 +1119,11 @@ public class Portal {
 						continue;
 					}
 					String name = split[0];
-					Blox s = new Blox(world, split[1]);
-					if (!(s.getBlock().getState() instanceof Sign)) {
-						Stargate.log.info("[Stargate] Sign on line " + l + " doesn't exist. BlockType = " + s.getBlock().getType());
+					Blox sign = new Blox(world, split[1]);
+					if (!(sign.getBlock().getState() instanceof Sign)) {
+						Stargate.log.info("[Stargate] Sign on line " + l + " doesn't exist. BlockType = " + sign.getBlock().getType());
 						continue;
 					}
-					SignPost sign = new SignPost(s);
 					Blox button = (split[2].length() > 0) ? new Blox(world, split[2]) : null;
 					int modX = Integer.parseInt(split[3]);
 					int modZ = Integer.parseInt(split[4]);
