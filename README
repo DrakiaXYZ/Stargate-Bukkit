@@ -201,6 +201,9 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.5.9]
+ - Quick event fix for latest dev builds
+ - Fix for sign ClassCastException
 [Version 0.7.5.8]
  - Fixed an exploit with pistons to destroy gates
 [Version 0.7.5.7]

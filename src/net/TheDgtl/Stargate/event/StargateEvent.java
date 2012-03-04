@@ -5,7 +5,7 @@ import net.TheDgtl.Stargate.Portal;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
-public class StargateEvent extends Event implements Cancellable {
+public abstract class StargateEvent extends Event implements Cancellable {
 	protected Portal portal;
 	protected boolean cancelled;
 	

@@ -590,6 +590,11 @@ public class Portal {
 	}
 
 	public final void drawSign() {
+		if (!(id.getBlock().getState() instanceof Sign)) {
+			Stargate.log.warning("[Stargate] Sign block is not a Sign object");
+			Stargate.debug("Portal::drawSign", "Block: " + id.getBlock().getType() + " @ " + id.getBlock().getLocation());
+			return;
+		}
 		Sign sign = (Sign)id.getBlock().getState();
 		sign.setLine(0, "--" + name + "--");
 		int max = destinations.size() - 1;
@@ -696,7 +701,7 @@ public class Portal {
 		
 		allPortalsNet.get(getNetwork().toLowerCase()).remove(getName().toLowerCase());
 
-		if (id.getBlock().getType() == Material.WALL_SIGN) {
+		if (id.getBlock().getType() == Material.WALL_SIGN && id.getBlock().getState() instanceof Sign) {
 			Sign sign = (Sign)id.getBlock().getState();
 			sign.setLine(0, getName());
 			sign.setLine(1, "");
