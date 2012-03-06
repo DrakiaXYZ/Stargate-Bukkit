@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -531,6 +532,9 @@ public class Portal {
 			if (Stargate.canSee(player, portal)) {
 				destinations.add(portal.getName());
 			}
+		}
+		if (Stargate.sortLists) {
+			Collections.sort(destinations);
 		}
 		if (Stargate.destMemory && !lastDest.isEmpty() && destinations.contains(lastDest)) {
 			destination = lastDest;

@@ -77,6 +77,7 @@ public class Stargate extends JavaPlugin {
 	private static int openTime = 10;
 	public static boolean destMemory = false;
 	public static boolean handleVehicles = true;
+	public static boolean sortLists = false;
 	
 	// Temp workaround for snowmen, don't check gate entrance
 	public static boolean ignoreEntrance = false;
@@ -163,6 +164,7 @@ public class Stargate extends JavaPlugin {
 		destMemory = newConfig.getBoolean("destMemory");
 		ignoreEntrance = newConfig.getBoolean("ignoreEntrance");
 		handleVehicles = newConfig.getBoolean("handleVehicles");
+		sortLists = newConfig.getBoolean("sortLists");
 		// Debug
 		debug = newConfig.getBoolean("debug");
 		permDebug = newConfig.getBoolean("permdebug");

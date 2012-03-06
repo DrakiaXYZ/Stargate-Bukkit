@@ -36,6 +36,8 @@ toowner: false
 chargefreedestination: true
 # Whether a free gate in the destination list is drawn green
 freegatesgreen: false
+# Whether to sort network lists alphabetically
+sortLists: false
 
 # Debug -- Only enable if you have issues, massive console output
 debug: false

@@ -159,6 +159,7 @@ lang - The language to use (Included languages: en, de)
 destMemory - Whether to set the first destination as the last used destination for all gates
 ignoreEntrance - Set this option to true to not check the entrance of a gate on startup. This is a workaround for snowmen breaking gates.
 handleVehicles - Whether or not to handle vehicles going through gates. Set to false to disallow vehicles (Manned or not) going through gates.
+sortLists - If true, network lists will be sorted alphabetically.
 
 debug - Whether to show massive debug output
 permdebug - Whether to show massive permission debug output
@@ -201,6 +202,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.5.10]
+ - Added sortLists options
 [Version 0.7.5.9]
  - Quick event fix for latest dev builds
  - Fix for sign ClassCastException
