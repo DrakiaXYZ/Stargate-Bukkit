@@ -49,11 +49,25 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 /**
- * Stargate.java - A customizeable portal plugin for Bukkit
- * @author Shaun (sturmeh)
- * @author Dinnerbone
- * @author Steven "Drakia" Scott
+ * Stargate - A portal plugin for Bukkit
+ * Copyright (C) 2011 Shaun (sturmeh)
+ * Copyright (C) 2011 Dinnerbone
+ * Copyright (C) 2011, 2012 Steven "Drakia" Scott <Contact@TheDgtl.net>
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 @SuppressWarnings("unused")
 public class Stargate extends JavaPlugin {
 	// Permissions
@@ -127,12 +141,8 @@ public class Stargate extends JavaPlugin {
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
 		if (permissions != null && (permissions.getDescription().getVersion().equals("2.7.2") ||  permissions.getDescription().getVersion().equals("2.7.7"))) {
-			if (pm.getPlugin("PermissionsEx") != null) {
-				log.info("[Stargate] Found PEX, main plugin is built of fail, use bridge");
-			} else {
-				log.info("[Stargate] Permissions is 2.7.2/2.7.7, most likely a bridge, disabling.");
-				permissions = null;
-			}
+			log.info("[Stargate] Permissions is 2.7.2/2.7.7, most likely a bridge, disabling.");
+			permissions = null;
 		}
 		if (iConomyHandler.setupeConomy(pm)) {
 			if (iConomyHandler.register != null)
@@ -142,10 +152,6 @@ public class Stargate extends JavaPlugin {
         }
 		
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
-		
-		if (pm.getPlugin("PermissionsEx") != null && pm.getPlugin("Permissions") == null) {
-			log.warning("[Stargate] Stargate is not guaranteed to work with PEX without the Permissions Bridge. Please do not request support unless you switch to a real Permissions handler.");
-		}
 	}
 
 	public void loadConfig() {
@@ -1102,16 +1108,10 @@ public class Stargate extends JavaPlugin {
 			if (permissions == null) {
 				PluginDescriptionFile desc = event.getPlugin().getDescription();
 				if (desc.getName().equalsIgnoreCase("Permissions")) {
-					
-					if (pm.getPlugin("PermissionsEx") == null) {
-						if (desc.getVersion().equals("2.7.2") || desc.getVersion().equals("2.7.7")) {
-							log.info("[Stargate] Permissions is 2.7.2/2.7.7, most likely a bridge, disabling.");
-							return;
-						}
-					} else {
-						log.info("[Stargate] Found PEX. Main plugin is built of fail. Use bridge instead");
+					if (desc.getVersion().equals("2.7.2") || desc.getVersion().equals("2.7.7")) {
+						log.info("[Stargate] Permissions is 2.7.2/2.7.7, most likely a bridge, disabling.");
+						return;
 					}
-					
 					permissions = (Permissions)checkPlugin(event.getPlugin());
 				}
 			}

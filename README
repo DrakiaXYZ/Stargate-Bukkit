@@ -202,6 +202,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.5.11]
+ - PEX now returns accurate results without requiring use of the bridge.
 [Version 0.7.5.10]
  - Added sortLists options
 [Version 0.7.5.9]
