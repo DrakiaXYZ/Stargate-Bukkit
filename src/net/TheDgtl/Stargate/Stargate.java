@@ -2,6 +2,8 @@ package net.TheDgtl.Stargate;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -103,6 +105,9 @@ public class Stargate extends JavaPlugin {
 	public static ConcurrentLinkedQueue<Portal> openList = new ConcurrentLinkedQueue<Portal>();
 	public static ConcurrentLinkedQueue<Portal> activeList = new ConcurrentLinkedQueue<Portal>();
 	
+	// Used for populating gate open/closed material.
+	public static Queue<BloxPopulator> blockPopulatorQueue = new LinkedList<BloxPopulator>();
+	
 	public void onDisable() {
 		Portal.closeAllGates();
 		Portal.clearGates();
@@ -152,6 +157,7 @@ public class Stargate extends JavaPlugin {
         }
 		
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new BlockPopulatorThread(), 0L, 1L);
 	}
 
 	public void loadConfig() {
@@ -1125,6 +1131,17 @@ public class Stargate extends JavaPlugin {
 			if (event.getPlugin() == permissions) {
 				log.info("[Stargate] Permissions plugin lost.");
 				permissions = null;
+			}
+		}
+	}
+	
+	private class BlockPopulatorThread implements Runnable {
+		public void run() {
+			long sTime = System.nanoTime();
+			while (System.nanoTime() - sTime < 50000000) {
+				BloxPopulator b = Stargate.blockPopulatorQueue.poll();
+				if (b == null) return;
+				b.getBlox().getBlock().setTypeId(b.getMat());
 			}
 		}
 	}

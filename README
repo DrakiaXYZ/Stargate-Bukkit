@@ -202,6 +202,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.6]
+ - Moved gate opening/closing to a Queue/Runnable system to resolve server lag issues with very large gates
 [Version 0.7.5.11]
  - PEX now returns accurate results without requiring use of the bridge.
 [Version 0.7.5.10]

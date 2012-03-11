@@ -320,8 +320,9 @@ public class Portal {
 
 		getWorld().loadChunk(getWorld().getChunkAt(topLeft.getBlock()));
 
+		int openType = gate.getPortalBlockOpen();
 		for (Blox inside : getEntrances()) {
-			inside.setType(gate.getPortalBlockOpen());
+			Stargate.blockPopulatorQueue.add(new BloxPopulator(inside, openType));
 		}
 
 		isOpen = true;
@@ -356,8 +357,9 @@ public class Portal {
 		if (isAlwaysOn() && !force) return; // Only close always-open if forced
 		
 		// Close this gate, then the dest gate.
+		int closedType = gate.getPortalBlockClosed();
 		for (Blox inside : getEntrances()) {
-			inside.setType(gate.getPortalBlockClosed());
+			Stargate.blockPopulatorQueue.add(new BloxPopulator(inside, closedType));
 		}
 
 		player = null;
