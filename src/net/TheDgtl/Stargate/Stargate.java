@@ -262,6 +262,10 @@ public class Stargate extends JavaPlugin {
 	public static String getSaveLocation() {
 		return portalFolder;
 	}
+	
+	public static String getGateFolder() {
+		return gateFolder;
+	}
 
 	public static String getDefaultNetwork() {
 		return defNetwork;

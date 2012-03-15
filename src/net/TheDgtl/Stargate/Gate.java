@@ -61,7 +61,7 @@ public class Gate {
 	private int destroyCost = -1;
 	private boolean toOwner = false;
 
-	private Gate(String filename, Character[][] layout, HashMap<Character, Integer> types, HashMap<Character, Integer> metadata) {
+	public Gate(String filename, Character[][] layout, HashMap<Character, Integer> types, HashMap<Character, Integer> metadata) {
 		this.filename = filename;
 		this.layout = layout;
 		this.metadata = metadata;
@@ -175,6 +175,14 @@ public class Gate {
 	public Character[][] getLayout() {
 		return layout;
 	}
+	
+	public HashMap<Character, Integer> getTypes() {
+		return types;
+	}
+	
+	public HashMap<Character, Integer> getMetaData() {
+		return metadata;
+	}
 
 	public RelativeBlockVector[] getEntrances() {
 		return entrances;
@@ -206,9 +214,17 @@ public class Gate {
 	public int getPortalBlockOpen() {
 		return portalBlockOpen;
 	}
+	
+	public void setPortalBlockOpen(int type) {
+		portalBlockOpen = type;
+	}
 
 	public int getPortalBlockClosed() {
 		return portalBlockClosed;
+	}
+	
+	public void setPortalBlockClosed(int type) {
+		portalBlockClosed = type;
 	}
 	
 	public int getUseCost() {
@@ -281,7 +297,7 @@ public class Gate {
 		return true;
 	}
 
-	private static void registerGate(Gate gate) {
+	public static void registerGate(Gate gate) {
 		gates.put(gate.getFilename(), gate);
 
 		int blockID = gate.getControlBlock();
@@ -293,7 +309,7 @@ public class Gate {
 		controlBlocks.get(blockID).add(gate);
 	}
 
-	private static Gate loadGate(File file) {
+	public static Gate loadGate(File file) {
 		Scanner scanner = null;
 		boolean designing = false;
 		ArrayList<ArrayList<Character>> design = new ArrayList<ArrayList<Character>>();

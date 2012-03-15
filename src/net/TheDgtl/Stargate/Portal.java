@@ -524,10 +524,6 @@ public class Portal {
 	}
 
 	public void activate(Player player) {
-		StargateActivateEvent event = new StargateActivateEvent(this, player);
-		Stargate.server.getPluginManager().callEvent(event);
-		if (event.isCancelled()) return;
-		
 		destinations.clear();
 		destination = "";
 		Stargate.activeList.add(this);
@@ -554,6 +550,15 @@ public class Portal {
 		if (Stargate.destMemory && !lastDest.isEmpty() && destinations.contains(lastDest)) {
 			destination = lastDest;
 		}
+		
+		StargateActivateEvent event = new StargateActivateEvent(this, player, destinations, destination);
+		Stargate.server.getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			Stargate.activeList.remove(this);
+			return;
+		}
+		destination = event.getDestination();
+		destinations = event.getDestinations();
 		drawSign();
 	}
 

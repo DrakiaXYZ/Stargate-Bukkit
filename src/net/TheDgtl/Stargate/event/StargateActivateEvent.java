@@ -1,5 +1,7 @@
 package net.TheDgtl.Stargate.event;
 
+import java.util.ArrayList;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 
@@ -24,7 +26,9 @@ import net.TheDgtl.Stargate.Portal;
  */
 
 public class StargateActivateEvent extends StargateEvent {
-	Player player;
+	private Player player;
+	private ArrayList<String> destinations;
+	private String destination;
 	
 	private static final HandlerList handlers = new HandlerList();
 	
@@ -35,13 +39,31 @@ public class StargateActivateEvent extends StargateEvent {
 	public static HandlerList getHandlerList() {
 		return handlers;
 	}
-	public StargateActivateEvent(Portal portal, Player player) {
+	public StargateActivateEvent(Portal portal, Player player, ArrayList<String> destinations, String destination) {
 		super("StargatActivateEvent", portal);
 		
 		this.player = player;
+		this.destinations = destinations;
+		this.destination = destination;
 	}
 	
 	public Player getPlayer() {
 		return player;
+	}
+	
+	public ArrayList<String> getDestinations() {
+		return destinations;
+	}
+	
+	public void setDestinations(ArrayList<String> destinations) {
+		this.destinations = destinations;
+	}
+	
+	public String getDestination() {
+		return destination;
+	}
+	
+	public void setDestination(String destination) {
+		this.destination = destination;
 	}
 }
