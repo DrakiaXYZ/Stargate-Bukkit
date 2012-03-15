@@ -337,6 +337,7 @@ public class Portal {
 			Portal end = getDestination();
 			// Only open dest if it's not-fixed or points at this gate
 			if (end != null && (!end.isFixed() || end.getDestinationName().equalsIgnoreCase(getName())) && !end.isOpen()) {
+				Stargate.debug("portal::open", "Ver: " + end.isVerified());
 				end.open(openFor, false);
 				end.setDestination(this);
 				if (end.isVerified()) end.drawSign();
@@ -523,7 +524,7 @@ public class Portal {
 		return gate.matches(topLeft, modX, modZ);
 	}
 
-	public void activate(Player player) {
+	public boolean activate(Player player) {
 		destinations.clear();
 		destination = "";
 		Stargate.activeList.add(this);
@@ -555,11 +556,12 @@ public class Portal {
 		Stargate.server.getPluginManager().callEvent(event);
 		if (event.isCancelled()) {
 			Stargate.activeList.remove(this);
-			return;
+			return false;
 		}
 		destination = event.getDestination();
 		destinations = event.getDestinations();
 		drawSign();
+		return true;
 	}
 
 	public void deactivate() {
@@ -588,7 +590,10 @@ public class Portal {
 	public void cycleDestination(Player player, int dir) {
 		Boolean activate = false;
 		if (!isActive() || getActivePlayer() != player) {
-			activate(player);
+			// If the event is cancelled, return
+			if (!activate(player)) {
+				return;
+			}
 			Stargate.debug("cycleDestination", "Network Size: " + allPortalsNet.get(network.toLowerCase()).size());
 			Stargate.debug("cycleDestination", "Player has access to: " + destinations.size());
 			activate = true;
@@ -646,7 +651,6 @@ public class Portal {
 				}
 			} else {
 				int index = destinations.indexOf(destination);
-
 				if ((index == max) && (max > 1) && (++done <= 3)) {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destinations.get(index - 2), network);

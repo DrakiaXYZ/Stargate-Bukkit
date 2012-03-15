@@ -275,7 +275,7 @@ public class Stargate extends JavaPlugin {
 		return lang.getString(name);
 	}
 
-	private void onButtonPressed(Player player, Portal portal) {
+	public static void openPortal(Player player, Portal portal) {
 		Portal destination = portal.getDestination();
 		
 		// Always-open gate -- Do nothing
@@ -811,7 +811,7 @@ public class Stargate extends JavaPlugin {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
 					}
-					onButtonPressed(player, portal);
+					openPortal(player, portal);
 				}
 				return;
 			}
@@ -864,7 +864,7 @@ public class Stargate extends JavaPlugin {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
 					}
-					onButtonPressed(player, portal);
+					openPortal(player, portal);
 				}
 			}
 		}
