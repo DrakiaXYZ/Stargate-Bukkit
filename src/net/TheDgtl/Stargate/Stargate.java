@@ -18,6 +18,7 @@ import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -95,6 +96,7 @@ public class Stargate extends JavaPlugin {
 	public static boolean handleVehicles = true;
 	public static boolean sortLists = false;
 	public static boolean protectEntrance = false;
+	public static ChatColor signColor;
 	
 	// Temp workaround for snowmen, don't check gate entrance
 	public static boolean ignoreEntrance = false;
@@ -179,6 +181,14 @@ public class Stargate extends JavaPlugin {
 		handleVehicles = newConfig.getBoolean("handleVehicles");
 		sortLists = newConfig.getBoolean("sortLists");
 		protectEntrance = newConfig.getBoolean("protectEntrance");
+		// Sign color
+		String sc = newConfig.getString("signColor");
+		try {
+			signColor = ChatColor.valueOf(sc.toUpperCase());
+		} catch (Exception ignore) {
+			log.warning("[Stargate] You have specified an invalid color in your config.yml. Defaulting to BLACK");
+			signColor = ChatColor.BLACK;
+		}
 		// Debug
 		debug = newConfig.getBoolean("debug");
 		permDebug = newConfig.getBoolean("permdebug");
@@ -259,6 +269,10 @@ public class Stargate extends JavaPlugin {
 			player.sendMessage(ChatColor.RED + Stargate.getString("prefix") + ChatColor.WHITE + message);
 		else
 			player.sendMessage(ChatColor.GREEN + Stargate.getString("prefix") + ChatColor.WHITE + message);
+	}
+	
+	public static void setLine(Sign sign, int index, String text) {
+		sign.setLine(index, Stargate.signColor + text);
 	}
 
 	public static String getSaveLocation() {

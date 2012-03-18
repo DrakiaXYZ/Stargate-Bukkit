@@ -19,6 +19,12 @@ destMemory: false
 ignoreEntrance: false
 # Whether to allow vehicles through gates
 handleVehicles: true
+# Whether to sort network lists alphabetically
+sortLists: false
+# Whether to protect gate entrance material
+protectEntrance: false
+# The color used for drawing signs (Default: BLACK).
+signColor: BLACK
 
 # Stargate economy options
 
@@ -36,10 +42,6 @@ toowner: false
 chargefreedestination: true
 # Whether a free gate in the destination list is drawn green
 freegatesgreen: false
-# Whether to sort network lists alphabetically
-sortLists: false
-# Whether to protect gate entrance material
-protectEntrance: false
 
 # Debug -- Only enable if you have issues, massive console output
 debug: false

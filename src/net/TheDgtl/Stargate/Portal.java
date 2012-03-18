@@ -624,29 +624,29 @@ public class Portal {
 			return;
 		}
 		Sign sign = (Sign)id.getBlock().getState();
-		sign.setLine(0, "--" + name + "--");
+		Stargate.setLine(sign, 0, "--" + name + "--");
 		int max = destinations.size() - 1;
 		int done = 0;
 
 		if (!isActive()) {
-			sign.setLine(++done, "Right click to");
-			sign.setLine(++done, "use the gate");
+			Stargate.setLine(sign, ++done, "Right click to");
+			Stargate.setLine(sign, ++done, "use the gate");
 			if (!noNetwork) {
-				sign.setLine(++done, " (" + network + ") ");
+				Stargate.setLine(sign, ++done, " (" + network + ") ");
 			}
 		} else {
 			if (isFixed()) {
-				sign.setLine(++done, "To: " + destination);
+				Stargate.setLine(sign, ++done, "To: " + destination);
 				if (noNetwork) {
-					sign.setLine(++done, "");
+					Stargate.setLine(sign, ++done, "");
 				} else {
-					sign.setLine(++done, " (" + network + ") ");
+					Stargate.setLine(sign, ++done, " (" + network + ") ");
 				}
 				Portal dest = Portal.getByName(destination, network);
 				if (dest == null) {
-					sign.setLine(++done, "(Not Connected)");
+					Stargate.setLine(sign, ++done, "(Not Connected)");
 				} else {
-					sign.setLine(++done, "");
+					Stargate.setLine(sign, ++done, "");
 				}
 			} else {
 				int index = destinations.indexOf(destination);
@@ -654,45 +654,45 @@ public class Portal {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destinations.get(index - 2), network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 2));
+						Stargate.setLine(sign, done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 2));
 					} else {
-						sign.setLine(done, destinations.get(index - 2));
+						Stargate.setLine(sign, done, destinations.get(index - 2));
 					}
 				}
 				if ((index > 0) && (++done <= 3)) {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destinations.get(index - 1), network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 1));
+						Stargate.setLine(sign, done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index - 1));
 					} else {
-						sign.setLine(done, destinations.get(index - 1));
+						Stargate.setLine(sign, done, destinations.get(index - 1));
 					}
 				}
 				if (++done <= 3) {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destination, network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + " >" + destination + "< ");
+						Stargate.setLine(sign, done, (green ? ChatColor.DARK_GREEN : "") + " >" + destination + "< ");
 					} else {
-						sign.setLine(done, " >" + destination + "< ");
+						Stargate.setLine(sign, done, " >" + destination + "< ");
 					}
 				}
 				if ((max >= index + 1) && (++done <= 3)) {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destinations.get(index + 1), network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 1));
+						Stargate.setLine(sign, done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 1));
 					} else {
-						sign.setLine(done, destinations.get(index + 1));
+						Stargate.setLine(sign, done, destinations.get(index + 1));
 					}
 				}
 				if ((max >= index + 2) && (++done <= 3)) {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destinations.get(index + 2), network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						sign.setLine(done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 2));
+						Stargate.setLine(sign, done, (green ? ChatColor.DARK_GREEN : "") + destinations.get(index + 2));
 					} else {
-						sign.setLine(done, destinations.get(index + 2));
+						Stargate.setLine(sign, done, destinations.get(index + 2));
 					}
 				}
 			}
