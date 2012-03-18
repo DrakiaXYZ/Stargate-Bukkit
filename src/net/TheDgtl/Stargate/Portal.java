@@ -337,7 +337,6 @@ public class Portal {
 			Portal end = getDestination();
 			// Only open dest if it's not-fixed or points at this gate
 			if (end != null && (!end.isFixed() || end.getDestinationName().equalsIgnoreCase(getName())) && !end.isOpen()) {
-				Stargate.debug("portal::open", "Ver: " + end.isVerified());
 				end.open(openFor, false);
 				end.setDestination(this);
 				if (end.isVerified()) end.drawSign();

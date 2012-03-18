@@ -38,6 +38,8 @@ chargefreedestination: true
 freegatesgreen: false
 # Whether to sort network lists alphabetically
 sortLists: false
+# Whether to protect gate entrance material
+protectEntrance: false
 
 # Debug -- Only enable if you have issues, massive console output
 debug: false

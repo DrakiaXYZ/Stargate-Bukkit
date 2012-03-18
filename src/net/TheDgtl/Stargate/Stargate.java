@@ -94,6 +94,7 @@ public class Stargate extends JavaPlugin {
 	public static boolean destMemory = false;
 	public static boolean handleVehicles = true;
 	public static boolean sortLists = false;
+	public static boolean protectEntrance = false;
 	
 	// Temp workaround for snowmen, don't check gate entrance
 	public static boolean ignoreEntrance = false;
@@ -177,6 +178,7 @@ public class Stargate extends JavaPlugin {
 		ignoreEntrance = newConfig.getBoolean("ignoreEntrance");
 		handleVehicles = newConfig.getBoolean("handleVehicles");
 		sortLists = newConfig.getBoolean("sortLists");
+		protectEntrance = newConfig.getBoolean("protectEntrance");
 		// Debug
 		debug = newConfig.getBoolean("debug");
 		permDebug = newConfig.getBoolean("permdebug");
@@ -895,11 +897,10 @@ public class Stargate extends JavaPlugin {
 			if (event.isCancelled()) return;
 			Block block = event.getBlock();
 			Player player = event.getPlayer();
-			if (block.getType() != Material.WALL_SIGN && block.getType() != Material.STONE_BUTTON && !Gate.isGateBlock(block.getTypeId())) {
-				return;
-			}
 
 			Portal portal = Portal.getByBlock(block);
+			if (portal == null && protectEntrance)
+				portal = Portal.getByEntrance(block);
 			if (portal == null) return;
 			
 			boolean deny = false;
@@ -1002,13 +1003,12 @@ public class Stargate extends JavaPlugin {
 		public void onEntityExplode(EntityExplodeEvent event) {
 			if (event.isCancelled()) return;
 			for (Block b : event.blockList()) {
-				if (b.getType() != Material.WALL_SIGN && b.getType() != Material.STONE_BUTTON && !Gate.isGateBlock(b.getTypeId())) continue;
 				Portal portal = Portal.getByBlock(b);
 				if (portal == null) continue;
 				if (destroyExplosion) {
 					portal.unregister(true);
 				} else {
-					b.setType(b.getType());
+					Stargate.blockPopulatorQueue.add(new BloxPopulator(new Blox(b), b.getTypeId(), b.getData()));
 					event.setCancelled(true);
 				}
 			}
@@ -1146,6 +1146,7 @@ public class Stargate extends JavaPlugin {
 				BloxPopulator b = Stargate.blockPopulatorQueue.poll();
 				if (b == null) return;
 				b.getBlox().getBlock().setTypeId(b.getMat());
+				b.getBlox().getBlock().setData(b.getData());
 			}
 		}
 	}
