@@ -160,6 +160,8 @@ destMemory - Whether to set the first destination as the last used destination f
 ignoreEntrance - Set this option to true to not check the entrance of a gate on startup. This is a workaround for snowmen breaking gates.
 handleVehicles - Whether or not to handle vehicles going through gates. Set to false to disallow vehicles (Manned or not) going through gates.
 sortLists - If true, network lists will be sorted alphabetically.
+protectEntrance - If true, will protect from users breaking gate entrance blocks (This is more resource intensive than the usual check, and should only be enabled for servers that use solid open/close blocks)
+signColor: This allows you to specify the color of the gate signs. Valid colors:
 
 debug - Whether to show massive debug output
 permdebug - Whether to show massive permission debug output
@@ -202,8 +204,14 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.6.2]
+ - Button now activates if gate is opened, allowing redstone interaction
+ - Fixed issue with sign line lengths. All sign text should now fit with color codes.
 [Version 0.7.6.1]
- - API update to support StargateCommand
+ - Update API for StargateCommand
+ - Resolved issue with block data on explosion
+ - Added signColor option
+ - Added protectEntrance option
 [Version 0.7.6]
  - Moved gate opening/closing to a Queue/Runnable system to resolve server lag issues with very large gates
 [Version 0.7.5.11]

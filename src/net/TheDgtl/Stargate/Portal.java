@@ -380,6 +380,9 @@ public class Portal {
 	}
 
 	public boolean isOpenFor(Player player) {
+		if (!isOpen) {
+			return false;
+		}
 		if ((isAlwaysOn()) || (this.player == null)) {
 			return true;
 		}
@@ -624,27 +627,27 @@ public class Portal {
 			return;
 		}
 		Sign sign = (Sign)id.getBlock().getState();
-		Stargate.setLine(sign, 0, "--" + name + "--");
+		Stargate.setLine(sign, 0, "-" + name + "-");
 		int max = destinations.size() - 1;
 		int done = 0;
 
 		if (!isActive()) {
-			Stargate.setLine(sign, ++done, "Right click to");
-			Stargate.setLine(sign, ++done, "use the gate");
+			Stargate.setLine(sign, ++done, "Right click");
+			Stargate.setLine(sign, ++done, "to use gate");
 			if (!noNetwork) {
-				Stargate.setLine(sign, ++done, " (" + network + ") ");
+				Stargate.setLine(sign, ++done, "(" + network + ")");
 			}
 		} else {
 			if (isFixed()) {
-				Stargate.setLine(sign, ++done, "To: " + destination);
+				Stargate.setLine(sign, ++done, ">" + destination + "<");
 				if (noNetwork) {
 					Stargate.setLine(sign, ++done, "");
 				} else {
-					Stargate.setLine(sign, ++done, " (" + network + ") ");
+					Stargate.setLine(sign, ++done, "(" + network + ")");
 				}
 				Portal dest = Portal.getByName(destination, network);
 				if (dest == null) {
-					Stargate.setLine(sign, ++done, "(Not Connected)");
+					Stargate.setLine(sign, ++done, "Disconnected");
 				} else {
 					Stargate.setLine(sign, ++done, "");
 				}
@@ -672,7 +675,7 @@ public class Portal {
 					if (iConomyHandler.useiConomy() && iConomyHandler.freeGatesGreen) {
 						Portal dest = Portal.getByName(destination, network);
 						boolean green = Stargate.isFree(activePlayer, this, dest);
-						Stargate.setLine(sign, done, (green ? ChatColor.DARK_GREEN : "") + " >" + destination + "< ");
+						Stargate.setLine(sign, done, (green ? ChatColor.DARK_GREEN : "") + ">" + destination + "<");
 					} else {
 						Stargate.setLine(sign, done, " >" + destination + "< ");
 					}

@@ -827,7 +827,11 @@ public class Stargate extends JavaPlugin {
 						Stargate.sendMessage(player, Stargate.getString("denyMsg"));
 						return;
 					}
+					
 					openPortal(player, portal);
+					if (portal.isOpenFor(player)) {
+						event.setUseInteractedBlock(Result.ALLOW);
+					}
 				}
 				return;
 			}
