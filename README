@@ -204,6 +204,10 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.6.3]
+ - Fixed issue with displaying iConomy prices
+ - iConomy is now hooked on "sg reload" if not already hooked and enabled
+ - iConomy is now unhooked on "sg reload" if hooked and disabled
 [Version 0.7.6.2]
  - Button now activates if gate is opened, allowing redstone interaction
  - Fixed issue with sign line lengths. All sign text should now fit with color codes.

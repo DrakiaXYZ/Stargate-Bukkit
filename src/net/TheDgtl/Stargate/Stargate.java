@@ -613,7 +613,7 @@ public class Stargate extends JavaPlugin {
 	public static String replaceVars(String format, String[] search, String[] replace) {
 		if (search.length != replace.length) return "";
 		for (int i = 0; i < search.length; i++) {
-			format = format.replaceAll(search[i], replace[i]);
+			format = format.replace(search[i], replace[i]);
 		}
 		return format;
 	}
@@ -1224,6 +1224,21 @@ public class Stargate extends JavaPlugin {
 				reloadGates();
 				lang.setLang(langName);
 				lang.reload();
+				
+				// Load iConomy support if enabled/clear if disabled
+				if (iConomyHandler.useiConomy && iConomyHandler.register == null && iConomyHandler.economy == null) {
+					if (iConomyHandler.setupeConomy(pm)) {
+						if (iConomyHandler.register != null)
+							log.info("[Stargate] Register v" + iConomyHandler.register.getDescription().getVersion() + " found");
+						if (iConomyHandler.economy != null)
+							log.info("[Stargate] Vault v" + iConomyHandler.vault.getDescription().getVersion() + " found");
+			        }
+				}
+				if (!iConomyHandler.useiConomy) {
+					iConomyHandler.vault = null;
+					iConomyHandler.register = null;
+					iConomyHandler.economy = null;
+				}
 				return true;
 			}
 			return false;

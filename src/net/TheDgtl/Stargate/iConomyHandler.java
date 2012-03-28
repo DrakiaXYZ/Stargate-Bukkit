@@ -31,7 +31,6 @@ import com.nijikokun.register.payment.Methods;
  */
 
 public class iConomyHandler {
-	public static String pName = "Stargate";
 	public static boolean useiConomy = false;
 	public static Register register = null;
 	public static Vault vault = null;
