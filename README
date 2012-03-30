@@ -204,6 +204,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.6.4]
+ - Move blockBreak to HIGHEST priority, this resolves issues with region protection plugins
 [Version 0.7.6.3]
  - Fixed issue with displaying iConomy prices
  - iConomy is now hooked on "sg reload" if not already hooked and enabled

@@ -27,6 +27,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -910,7 +911,8 @@ public class Stargate extends JavaPlugin {
 			}, 1);
 		}
 		
-		@EventHandler
+		// Switch to HIGHEST priority so as to come after block protection plugins (Hopefully)
+		@EventHandler(priority = EventPriority.HIGHEST)
 		public void onBlockBreak(BlockBreakEvent event) {
 			if (event.isCancelled()) return;
 			Block block = event.getBlock();
