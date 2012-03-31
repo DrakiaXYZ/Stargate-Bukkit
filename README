@@ -49,6 +49,7 @@ stargate.free -- Allow free use/creation/destruction of gates
 stargate.admin -- Allow all admin features (Hidden/Private only so far)
   stargate.admin.private -- Allow use of Private gates not owned by user
   stargate.admin.hidden -- Allow access to Hidden gates not ownerd by user
+  stargate.admin.reload -- Allow use of /sg reload
 
 =============
 Default Permissions
@@ -204,6 +205,9 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.6.5]
+ - Resolve issue with buttons on glass gates falling off
+ - /sg reload can now be used ingame (stargate.admin.reload permission)
 [Version 0.7.6.4]
  - Move blockBreak to HIGHEST priority, this resolves issues with region protection plugins
 [Version 0.7.6.3]

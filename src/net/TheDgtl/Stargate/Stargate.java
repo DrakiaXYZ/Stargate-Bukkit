@@ -259,11 +259,11 @@ public class Stargate extends JavaPlugin {
 		}
 	}
 	
-	public static void sendMessage(Player player, String message) {
+	public static void sendMessage(CommandSender player, String message) {
 		sendMessage(player, message, true);
 	}
 	
-	public static void sendMessage(Player player, String message, boolean error) {
+	public static void sendMessage(CommandSender player, String message, boolean error) {
 		if (message.isEmpty()) return;
 		message = message.replaceAll("(&([a-f0-9]))", "\u00A7$2");
 		if (error)
@@ -976,6 +976,8 @@ public class Stargate extends JavaPlugin {
 			Block block = event.getBlock();
 			Portal portal = Portal.getByEntrance(block);
 			if (portal != null) event.setCancelled(true);
+			portal = Portal.getByControl(block);
+			if (portal != null) event.setCancelled(true);
 		}
 
 		@EventHandler
@@ -1200,8 +1202,11 @@ public class Stargate extends JavaPlugin {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (sender instanceof Player) {
-			Stargate.sendMessage((Player)sender, "Permission Denied");
-			return true;
+			Player p = (Player)sender;
+			if (!hasPerm(p, "stargate.admin") && !hasPerm(p, "stargate.admin.reload")) {
+				sendMessage(sender, "Permission Denied");
+				return true;
+			}
 		}
 		String cmd = command.getName();
 		if (cmd.equalsIgnoreCase("sg")) {
@@ -1241,6 +1246,7 @@ public class Stargate extends JavaPlugin {
 					iConomyHandler.register = null;
 					iConomyHandler.economy = null;
 				}
+				sendMessage(sender, "Stargate reloaded");
 				return true;
 			}
 			return false;

@@ -57,6 +57,7 @@ public class Portal {
 	// Static variables used to store portal lists
 	private static final HashMap<Blox, Portal> lookupBlocks = new HashMap<Blox, Portal>();
 	private static final HashMap<Blox, Portal> lookupEntrances = new HashMap<Blox, Portal>();
+	private static final HashMap<Blox, Portal> lookupControls = new HashMap<Blox, Portal>();
 	private static final ArrayList<Portal> allPortals = new ArrayList<Portal>();
 	private static final HashMap<String, ArrayList<String>> allPortalsNet = new HashMap<String, ArrayList<String>>();
 	private static final HashMap<String, HashMap<String, Portal>> lookupNamesNet = new HashMap<String, HashMap<String, Portal>>();
@@ -717,10 +718,14 @@ public class Portal {
 			lookupBlocks.remove(block);
 		}
 		// Include the sign and button
-		lookupBlocks.remove(new Blox(id.getBlock()));
+		lookupBlocks.remove(id);
 		if (button != null) {
 			lookupBlocks.remove(button);
 		}
+		
+		lookupControls.remove(id);
+		if (button != null)
+			lookupControls.remove(button);
 
 		for (Blox entrance : getEntrances()) {
 			lookupEntrances.remove(entrance);
@@ -768,10 +773,14 @@ public class Portal {
 			lookupBlocks.put(block, this);
 		}
 		// Include the sign and button
-		lookupBlocks.put(new Blox(id.getBlock()), this);
+		lookupBlocks.put(id, this);
 		if (button != null) {
 			lookupBlocks.put(button, this);
 		}
+		
+		lookupControls.put(id, this);
+		if (button != null)
+			lookupControls.put(button, this);
 
 		for (Blox entrance : getEntrances()) {
 			lookupEntrances.put(entrance, this);
@@ -1058,6 +1067,10 @@ public class Portal {
 	public static Portal getByEntrance(Block block) {
 		return lookupEntrances.get(new Blox(block));
 	}
+	
+	public static Portal getByControl(Block block) {
+		return lookupControls.get(new Blox(block));
+	}
 
 	public static Portal getByBlock(Block block) {
 		return lookupBlocks.get(new Blox(block));
@@ -1128,6 +1141,7 @@ public class Portal {
 		lookupBlocks.clear();
 		lookupNamesNet.clear();
 		lookupEntrances.clear();
+		lookupControls.clear();
 		allPortals.clear();
 		allPortalsNet.clear();
 	}
