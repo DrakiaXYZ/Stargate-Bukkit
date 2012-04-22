@@ -719,6 +719,7 @@ public class Stargate extends JavaPlugin {
 		
 		@EventHandler
 		public void onPlayerMove(PlayerMoveEvent event) {
+			if (event.isCancelled()) return;
 			Player player = event.getPlayer();
 			Portal portal = Portal.getByEntrance(event.getTo());
 			
@@ -782,6 +783,7 @@ public class Stargate extends JavaPlugin {
 		
 		@EventHandler
 		public void onPlayerInteract(PlayerInteractEvent event) {
+			if (event.isCancelled()) return;
 			Player player = event.getPlayer();
 			Block block = event.getClickedBlock();
 			
