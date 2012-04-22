@@ -691,6 +691,7 @@ public class Stargate extends JavaPlugin {
 	private class pListener implements Listener {
 		@EventHandler
 		public void onPlayerPortal(PlayerPortalEvent event) {
+			if (event.isCancelled()) return;
 			// Do a quick check for a stargate
 			Location from = event.getFrom();
 			if (from == null) {
@@ -896,6 +897,7 @@ public class Stargate extends JavaPlugin {
 	private class bListener implements Listener {
 		@EventHandler
 		public void onSignChange(SignChangeEvent event) {
+			if (event.isCancelled()) return;
 			Player player = event.getPlayer();
 			Block block = event.getBlock();
 			if (block.getType() != Material.WALL_SIGN) return;

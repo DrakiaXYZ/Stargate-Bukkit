@@ -205,6 +205,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.6.6]
+ - Check move/portal/interact/signchange events for cancellation
 [Version 0.7.6.5]
  - Resolve issue with buttons on glass gates falling off
  - /sg reload can now be used ingame (stargate.admin.reload permission)
