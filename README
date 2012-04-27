@@ -205,6 +205,8 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.6.7]
+ - Reload all gates on world unload, this stops gates with invalid destinations being in memory.
 [Version 0.7.6.6]
  - Check move/portal/interact/signchange events for cancellation
 [Version 0.7.6.5]

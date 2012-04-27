@@ -44,6 +44,7 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
@@ -1020,6 +1021,18 @@ public class Stargate extends JavaPlugin {
 			// We have to make sure the world is actually loaded. This gets called twice for some reason.
 			if (w.getBlockAt(w.getSpawnLocation()).getWorld() != null) {
 				Portal.loadAllGates(w);
+			}
+		}
+		
+		// We need to reload all gates on world unload, boo
+		@EventHandler
+		public void onWorldUnload(WorldUnloadEvent event) {
+			Stargate.debug("onWorldUnload", "Reloading all Stargates");
+			World w = event.getWorld();
+			Portal.clearGates();
+			for (World world : server.getWorlds()) {
+				if (world.equals(w)) continue;
+				Portal.loadAllGates(world);
 			}
 		}
 	}
