@@ -205,6 +205,11 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.7.0]
+ - Added 'R'andom option - This still follows the permission rules defined for normal gate usage
+ - Added a bit more debug output
+[Version 0.7.6.8]
+ - Hopefully fix backwards gate exiting
 [Version 0.7.6.7]
  - Reload all gates on world unload, this stops gates with invalid destinations being in memory.
 [Version 0.7.6.6]

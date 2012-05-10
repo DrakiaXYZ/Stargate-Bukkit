@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Level;
 
@@ -93,6 +94,7 @@ public class Portal {
 	private boolean backwards = false;
 	private boolean show = false;
 	private boolean noNetwork = false;
+	private boolean random = false;
 	
 	// In-use information
 	private Player player;
@@ -105,7 +107,7 @@ public class Portal {
 			float rotX, Blox id, Blox button,
 			String dest, String name,
 			boolean verified, String network, Gate gate, String owner, 
-			boolean hidden, boolean alwaysOn, boolean priv, boolean free, boolean backwards, boolean show, boolean noNetwork) {
+			boolean hidden, boolean alwaysOn, boolean priv, boolean free, boolean backwards, boolean show, boolean noNetwork, boolean random) {
 		this.topLeft = topLeft;
 		this.modX = modX;
 		this.modZ = modZ;
@@ -125,12 +127,18 @@ public class Portal {
 		this.backwards = backwards;
 		this.show = show;
 		this.noNetwork = noNetwork;
+		this.random = random;
 		this.world = topLeft.getWorld();
-		this.fixed = dest.length() > 0;
+		this.fixed = dest.length() > 0 || this.random;
 		
 		if (this.isAlwaysOn() && !this.isFixed()) {
 			this.alwaysOn = false;
 			Stargate.debug("Portal", "Can not create a non-fixed always-on gate. Setting AlwaysOn = false");
+		}
+		
+		if (this.random && !this.isAlwaysOn()) {
+			this.random = false;
+			Stargate.debug("Portal", "Can not create a random gate that is not always on");
 		}
 		
 		if (verified) {
@@ -173,6 +181,10 @@ public class Portal {
 		return noNetwork;
 	}
 	
+	public boolean isRandom() {
+		return random;
+	}
+	
 	public void setAlwaysOn(boolean alwaysOn) {
 		this.alwaysOn = alwaysOn;
 	}
@@ -199,6 +211,10 @@ public class Portal {
 	
 	public void setNoNetwork(boolean noNetwork) {
 		this.noNetwork = noNetwork;
+	}
+	
+	public void setRandom(boolean random) {
+		this.random = random;
 	}
 	
 	/**
@@ -234,8 +250,22 @@ public class Portal {
 		drawSign();
 	}
 
-	public Portal getDestination() {
+	public Portal getDestination(Player player) {
+		if (isRandom()) {
+			destinations = getDestinations(player, getNetwork());
+			if (destinations.size() == 0) {
+				destinations.clear();
+				return null;
+			}
+			String dest = destinations.get((new Random()).nextInt(destinations.size()));
+			destinations.clear();
+			return Portal.getByName(dest, getNetwork());
+		}
 		return Portal.getByName(destination, getNetwork());
+	}
+	
+	public Portal getDestination() {
+		return getDestination(null);
 	}
 	
 	public void setDestination(Portal destination) {
@@ -337,7 +367,7 @@ public class Portal {
 
 			Portal end = getDestination();
 			// Only open dest if it's not-fixed or points at this gate
-			if (end != null && (!end.isFixed() || end.getDestinationName().equalsIgnoreCase(getName())) && !end.isOpen()) {
+			if (!random && end != null && (!end.isFixed() || end.getDestinationName().equalsIgnoreCase(getName())) && !end.isOpen()) {
 				end.open(openFor, false);
 				end.setDestination(this);
 				if (end.isVerified()) end.drawSign();
@@ -412,9 +442,13 @@ public class Portal {
 		Location exit = getExit(traveller);
 
 		// Handle backwards gates
-		int adjust = isBackwards() ? 0 :180;
+		int adjust = 180;
+		if (isBackwards() || origin.isBackwards())
+			adjust = 0;
+		if (isBackwards() && origin.isBackwards())
+			adjust = 180;
 		exit.setYaw(origin.getRotation() - traveller.getYaw() + this.getRotation() + adjust);
-		
+
 		// Call the StargatePortalEvent to allow plugins to change destination
 		if (!origin.equals(this)) {
 			StargatePortalEvent pEvent = new StargatePortalEvent(player, origin, this, exit);
@@ -526,6 +560,33 @@ public class Portal {
 	public boolean checkIntegrity() {
 		return gate.matches(topLeft, modX, modZ);
 	}
+	
+	public ArrayList<String> getDestinations(Player player, String network) {
+		ArrayList<String> destinations = new ArrayList<String>();
+		for (String dest : allPortalsNet.get(network.toLowerCase())) {
+			Portal portal = getByName(dest, network);
+			// Check if dest is a random gate
+			if (portal.isRandom()) continue;
+			// Check if dest is always open (Don't show if so)
+			if (portal.isAlwaysOn() && !portal.isShown()) continue;
+			// Check if dest is this portal
+			if (dest.equalsIgnoreCase(getName())) continue;
+			// Check if dest is a fixed gate not pointing to this gate
+			if (portal.isFixed() && !portal.getDestinationName().equalsIgnoreCase(getName())) continue;
+			// Allow random use by non-players (Minecarts)
+			if (player == null) {
+				destinations.add(portal.getName());
+				continue;
+			}
+			// Check if this player can access the dest world
+			if (!Stargate.canAccessWorld(player, portal.getWorld().getName())) continue;
+			// Visible to this player.
+			if (Stargate.canSee(player, portal)) {
+				destinations.add(portal.getName());
+			}
+		}
+		return destinations;
+	}
 
 	public boolean activate(Player player) {
 		destinations.clear();
@@ -533,21 +594,7 @@ public class Portal {
 		Stargate.activeList.add(this);
 		activePlayer = player;
 		String network = getNetwork();
-		for (String dest : allPortalsNet.get(network.toLowerCase())) {
-			Portal portal = getByName(dest, network);
-			// Check if dest is always open (Don't show if so)
-			if (portal.isAlwaysOn() && !portal.isShown()) continue;
-			// Check if this player can access the dest world
-			if (!Stargate.canAccessWorld(player, portal.getWorld().getName())) continue;
-			// Check if dest is this portal
-			if (dest.equalsIgnoreCase(getName())) continue;
-			// Check if dest is a fixed gate not pointing to this gate
-			if (portal.isFixed() && !portal.getDestinationName().equalsIgnoreCase(getName())) continue;
-			// Visible to this player.
-			if (Stargate.canSee(player, portal)) {
-				destinations.add(portal.getName());
-			}
-		}
+		destinations = getDestinations(player, network);
 		if (Stargate.sortLists) {
 			Collections.sort(destinations);
 		}
@@ -640,14 +687,18 @@ public class Portal {
 			}
 		} else {
 			if (isFixed()) {
-				Stargate.setLine(sign, ++done, ">" + destination + "<");
+				if (isRandom()) {
+					Stargate.setLine(sign, ++done, "> Random <");
+				} else {
+					Stargate.setLine(sign, ++done, ">" + destination + "<");
+				}
 				if (noNetwork) {
 					Stargate.setLine(sign, ++done, "");
 				} else {
 					Stargate.setLine(sign, ++done, "(" + network + ")");
 				}
 				Portal dest = Portal.getByName(destination, network);
-				if (dest == null) {
+				if (dest == null && !isRandom()) {
 					Stargate.setLine(sign, ++done, "Disconnected");
 				} else {
 					Stargate.setLine(sign, ++done, "");
@@ -762,7 +813,7 @@ public class Portal {
 	}
 
 	private void register() {
-		fixed = destination.length() > 0;
+		fixed = destination.length() > 0 || random;
 		if (!lookupNamesNet.containsKey(getNetwork().toLowerCase())) {
 			Stargate.debug("register", "Network not in lookupNamesNet, adding");
 			lookupNamesNet.put(getNetwork().toLowerCase(), new HashMap<String, Portal>());
@@ -814,14 +865,15 @@ public class Portal {
 		String name = filterName(event.getLine(0));
 		String destName = filterName(event.getLine(1));
 		String network = filterName(event.getLine(2));
-		String options = filterName(event.getLine(3));
-		boolean hidden = (options.indexOf('h') != -1 || options.indexOf('H') != -1);
-		boolean alwaysOn = (options.indexOf('a') != -1 || options.indexOf('A') != -1);
-		boolean priv = (options.indexOf('p') != -1 || options.indexOf('P') != -1);
-		boolean free = (options.indexOf('f') != - 1|| options.indexOf('F') != -1);
-		boolean backwards = (options.indexOf('b') != -1 || options.indexOf('B') != -1);
-		boolean show = (options.indexOf('s') != -1 || options.indexOf('S') != -1);
-		boolean noNetwork = (options.indexOf('n') != -1 || options.indexOf('N') != -1);
+		String options = filterName(event.getLine(3)).toLowerCase();
+		boolean hidden = (options.indexOf('h') != -1);
+		boolean alwaysOn = (options.indexOf('a') != -1);
+		boolean priv = (options.indexOf('p') != -1);
+		boolean free = (options.indexOf('f') != - 1);
+		boolean backwards = (options.indexOf('b') != -1);
+		boolean show = (options.indexOf('s') != -1);
+		boolean noNetwork = (options.indexOf('n') != -1);
+		boolean random = (options.indexOf('r') != -1);
 		
 		// Check permissions for options.
 		if (hidden && !Stargate.canOption(player, "hidden")) hidden = false;
@@ -833,7 +885,7 @@ public class Portal {
 		if (noNetwork && !Stargate.canOption(player, "nonetwork")) noNetwork = false;
 		
 		// Can not create a non-fixed always-on gate.
-		if (alwaysOn && destName.length() == 0) {
+		if (alwaysOn && destName.length() == 0 && !random) {
 			alwaysOn = false;
 		}
 		
@@ -902,7 +954,7 @@ public class Portal {
 		}
 		
 		// Debug
-		Stargate.debug("createPortal", "h = " + hidden + " a = " + alwaysOn + " p = " + priv + " f = " + free + " b = " + backwards + " s = " + show + " n = " + noNetwork);
+		Stargate.debug("createPortal", "h = " + hidden + " a = " + alwaysOn + " p = " + priv + " f = " + free + " b = " + backwards + " s = " + show + " n = " + noNetwork + " r = " + random);
 
 		if ((network.length() < 1) || (network.length() > 11)) {
 			network = Stargate.getDefaultNetwork();
@@ -934,8 +986,6 @@ public class Portal {
 			Stargate.debug("createPortal", "Player does not have access to gate layout");
 			deny = true;
 			denyMsg = Stargate.getString("createGateDeny");
-			//Stargate.sendMessage(player, Stargate.getString("createGateDeny"));
-			//return null;
 		}
 		
 		// Check if the user can create gates to this world.
@@ -945,10 +995,8 @@ public class Portal {
 				String world = p.getWorld().getName();
 				if (!Stargate.canAccessWorld(player, world)) {
 					Stargate.debug("canCreate", "Player does not have access to destination world");
-					//Stargate.sendMessage(player, Stargate.getString("createWorldDeny"));
 					deny = true;
 					denyMsg = Stargate.getString("createWorldDeny");
-					//return null;
 				}
 			}
 		}
@@ -965,7 +1013,7 @@ public class Portal {
 		
 		Blox button = null;
 		Portal portal = null;
-		portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, false, network, gate, player.getName(), hidden, alwaysOn, priv, free, backwards, show, noNetwork);
+		portal = new Portal(topleft, modX, modZ, rotX, id, button, destName, name, false, network, gate, player.getName(), hidden, alwaysOn, priv, free, backwards, show, noNetwork, random);
 		
 		int cost = Stargate.getCreateCost(player, gate);
 		
@@ -1026,7 +1074,9 @@ public class Portal {
 		portal.register();
 		portal.drawSign();
 		// Open always on gate
-		if (portal.isAlwaysOn()) {
+		if (portal.isRandom()) {
+			portal.open(true);
+		} else if (portal.isAlwaysOn()) {
 			Portal dest = Portal.getByName(destName, portal.getNetwork());
 			if (dest != null) {
 				portal.open(true);
@@ -1126,6 +1176,8 @@ public class Portal {
 				builder.append(portal.isShown());
 				builder.append(':');
 				builder.append(portal.isNoNetwork());
+				builder.append(':');
+				builder.append(portal.isRandom());
 				
 				bw.append(builder.toString());
 				bw.newLine();
@@ -1195,8 +1247,9 @@ public class Portal {
 					boolean backwards = (split.length > 16) ? split[16].equalsIgnoreCase("true") : false;
 					boolean show = (split.length > 17) ? split[17].equalsIgnoreCase("true") : false;
 					boolean noNetwork = (split.length > 18) ? split[18].equalsIgnoreCase("true") : false;
+					boolean random = (split.length > 19) ? split[19].equalsIgnoreCase("true") : false;
 
-					Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv, free, backwards, show, noNetwork);
+					Portal portal = new Portal(topLeft, modX, modZ, rotX, sign, button, dest, name, false, network, gate, owner, hidden, alwaysOn, priv, free, backwards, show, noNetwork, random);
 					portal.register();
 					portal.close(true);
 				}

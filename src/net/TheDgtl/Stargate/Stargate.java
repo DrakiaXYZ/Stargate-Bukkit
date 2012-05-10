@@ -301,6 +301,10 @@ public class Stargate extends JavaPlugin {
 			return;
 		}
 		
+		// Random gate -- Do nothing
+		if (portal.isRandom())
+			return;
+		
 		// Invalid destination
 		if ((destination == null) || (destination == portal)) {
 			Stargate.sendMessage(player, Stargate.getString("invalidMsg"));
@@ -344,11 +348,11 @@ public class Stargate extends JavaPlugin {
 	public static boolean hasPerm(Player player, String perm) {
 		if (permissions != null) {
 			if (permDebug)
-				Stargate.debug("hasPerm::Permissions", perm + " => " + permissions.getHandler().has(player, perm));
+				Stargate.debug("hasPerm::Permissions(" + player.getName() + ")", perm + " => " + permissions.getHandler().has(player, perm));
 			return permissions.getHandler().has(player, perm);
 		} else {
 			if (permDebug)
-				Stargate.debug("hasPerm::SuperPerm", perm + " => " + player.hasPermission(perm));
+				Stargate.debug("hasPerm::SuperPerm(" + player.getName() + ")", perm + " => " + player.hasPermission(perm));
 			return player.hasPermission(perm);
 		}
 	}
@@ -637,7 +641,7 @@ public class Stargate extends JavaPlugin {
 					return;
 				}
 				
-				Portal dest = portal.getDestination();
+				Portal dest = portal.getDestination(player);
 				if (dest == null) return;
 				boolean deny = false;
 				// Check if player has access to this network
@@ -735,7 +739,7 @@ public class Stargate extends JavaPlugin {
 				return;
 			}
 			
-			Portal destination = portal.getDestination();
+			Portal destination = portal.getDestination(player);
 			if (destination == null) return;
 			
 			boolean deny = false;
