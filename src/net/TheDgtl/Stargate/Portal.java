@@ -137,8 +137,8 @@ public class Portal {
 		}
 		
 		if (this.random && !this.isAlwaysOn()) {
-			this.random = false;
-			Stargate.debug("Portal", "Can not create a random gate that is not always on");
+			this.alwaysOn = true;
+			Stargate.debug("Portal", "Gate marked as random, set to always-on");
 		}
 		
 		if (verified) {
@@ -883,14 +883,21 @@ public class Portal {
 		if (backwards && !Stargate.canOption(player, "backwards")) backwards = false;
 		if (show && !Stargate.canOption(player,  "show")) show = false;
 		if (noNetwork && !Stargate.canOption(player, "nonetwork")) noNetwork = false;
+		if (random && !Stargate.canOption(player, "random")) random = false;
 		
 		// Can not create a non-fixed always-on gate.
-		if (alwaysOn && destName.length() == 0 && !random) {
+		if (alwaysOn && destName.length() == 0) {
 			alwaysOn = false;
 		}
 		
 		// Show isn't useful if A is false
 		if (show && !alwaysOn) {
+			show = false;
+		}
+		
+		// Random gates are always on and can't be shown
+		if (random) {
+			alwaysOn = true;
 			show = false;
 		}
 		

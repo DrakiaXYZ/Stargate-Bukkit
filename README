@@ -28,6 +28,7 @@ stargate.option -- Allow use of all options
   stargate.option.backwards -- Allow use of 'B'ackwards
   stargate.option.show -- Allow use of 'S'how
   stargate.option.nonetwork -- Allow use of 'N'oNetwork
+  stargate.option.random -- Allow use of 'Random' gates
   
 stargate.create -- Allow creating gates on any network (Override all create permissions)
   stargate.create.personal -- Allow creating gates on network {playername}
@@ -83,6 +84,7 @@ Sign Layout:
  			'B' is for a backwards facing gate (You will exit the back)
  			'S' is for showing an always-on gate in the network list
  			'N' is for hiding the network name
+ 			'R' is for random gates. These follow standard permissions of gates, but have a random exit location every time a player enters.
 
 Options:
 The options are the single letter, not the word. So to make a private hidden gate, your 4th line would be 'PH'.
@@ -205,6 +207,9 @@ createConflict=Gate conflicts with existing gate
 =============
   Changes
 =============
+[Version 0.7.7.1]
+ - Permission checking for 'R'andom gates.
+ - Random now implies AlwaysOn
 [Version 0.7.7.0]
  - Added 'R'andom option - This still follows the permission rules defined for normal gate usage
  - Added a bit more debug output
