@@ -205,11 +205,25 @@ createWorldDeny=You do not have access to that world
 createConflict=Gate conflicts with existing gate
 
 =============
+ Known Bugs
+=============
+Client randomly crashes on teleport.
+
+=============
   Changes
 =============
+[Version 0.7.7.4]
+ - Removed try/catch, it was still segfaulting. 
+ - Built against 1.3.1
+[Version 0.7.7.3]
+ - Wrap sign changing in try/catch. Stupid Bukkit
+[Version 0.7.7.2]
+ - Load chunk before trying to draw signs
+ - Implement a workaround for BUKKIT-1033
 [Version 0.7.7.1]
  - Permission checking for 'R'andom gates.
  - Random now implies AlwaysOn
+ - Added all languages to JAR
 [Version 0.7.7.0]
  - Added 'R'andom option - This still follows the permission rules defined for normal gate usage
  - Added a bit more debug output

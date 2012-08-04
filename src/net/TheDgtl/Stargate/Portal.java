@@ -23,6 +23,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -669,7 +670,9 @@ public class Portal {
 	}
 
 	public final void drawSign() {
-		if (!(id.getBlock().getState() instanceof Sign)) {
+		BlockState bs = null;
+		bs = id.getBlock().getState();
+		if (!(bs instanceof Sign)) {
 			Stargate.log.warning("[Stargate] Sign block is not a Sign object");
 			Stargate.debug("Portal::drawSign", "Block: " + id.getBlock().getType() + " @ " + id.getBlock().getLocation());
 			return;
