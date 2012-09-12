@@ -212,6 +212,8 @@ Client randomly crashes on teleport.
 =============
   Changes
 =============
+[Version 0.7.7.5]
+ - Resolve issue of right clicking introduced in 1.3.1/2
 [Version 0.7.7.4]
  - Removed try/catch, it was still segfaulting. 
  - Built against 1.3.1

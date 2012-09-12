@@ -789,12 +789,18 @@ public class Stargate extends JavaPlugin {
 		
 		@EventHandler
 		public void onPlayerInteract(PlayerInteractEvent event) {
-			if (event.isCancelled()) return;
 			Player player = event.getPlayer();
-			Block block = event.getClickedBlock();
+			Block block = null;
+			if (event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_AIR) {
+				block = player.getTargetBlock(null, 5);
+			} else {
+				block = event.getClickedBlock();
+			}
+			
+			if (block == null) return;
 			
 			// Right click
-			if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+			if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
 				if (block.getType() == Material.WALL_SIGN) {
 					Portal portal = Portal.getByBlock(block);
 					if (portal == null) return;
