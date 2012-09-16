@@ -20,3 +20,8 @@ createExists=A gate by that name already exists
 createFull=This network is full
 createWorldDeny=You do not have access to that world
 createConflict=Gate conflicts with existing gate
+
+signRightClick=Right click
+signToUse=to use gate
+signRandom=Random
+signDisconnected=Disconnected

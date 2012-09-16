@@ -1,3 +1,4 @@
+author=Grovert11
 prefix=[Stargate] 
 teleportMsg=Je bent geteleporteerd.
 destroyMsg=Gate kapot gemaakt
@@ -20,3 +21,8 @@ createExists=Er bestaat al een gate met die naam
 createFull=Dit netwerk is vol.
 createWorldDeny=Je mag niet in die wereld komen.
 createConflict=Gate maakt een conflict met een bestaande gate.
+
+signRightClick=Right click
+signToUse=to use gate
+signRandom=Random
+signDisconnected=Disconnected

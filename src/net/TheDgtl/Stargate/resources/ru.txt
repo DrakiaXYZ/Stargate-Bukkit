@@ -1,4 +1,5 @@
-﻿prefix=[Портал] 
+﻿author=ckr@jk
+prefix=[Портал] 
 teleportMsg=Вы перемещены
 destroyMsg=Портал уничтожен
 invalidMsg=Недопустимый пункт назначения
@@ -20,3 +21,8 @@ createExists=Портал с таким именем уже существует
 createFull=Эта сеть порталов заполнена
 createWorldDeny=У вас нет доступа к этому миру
 createConflict=Портал конфликтует с уже существующим порталом
+
+signRightClick=Right click
+signToUse=to use gate
+signRandom=Random
+signDisconnected=Disconnected

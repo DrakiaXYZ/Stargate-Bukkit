@@ -35,29 +35,39 @@ public class LangLoader {
 	private String datFolder;
 	private String lang;
 	private HashMap<String, String> strList;
+	private HashMap<String, String> defList;
 	
 	public LangLoader(String datFolder, String lang) {
 		this.lang = lang;
 		this.datFolder = datFolder;
-		strList = new HashMap<String, String>();
 		
 		File tmp = new File(datFolder, lang + ".txt");
 		if (!tmp.exists()) {
 			tmp.getParentFile().mkdirs();
-			loadDefaults();
 		}
+		updateLanguage(lang);
 		
-		load();
+		strList = load(lang);
+		// We have a default hashMap used for when new text is added.
+		InputStream is = Stargate.class.getResourceAsStream("resources/" + lang + ".txt");
+		if (is != null) {
+			defList = load("en", is);
+		} else {
+			defList = null;
+			Stargate.log.severe("[Stargate] Error loading backup language. There may be missing text ingame");
+		}
 	}
 	
 	public boolean reload() {
-		strList = new HashMap<String, String>();
-		load();
+		// This extracts/updates the language as needed
+		updateLanguage(lang);
+		strList = load(lang);
 		return true;
 	}
 	
 	public String getString(String name) {
 		String val = strList.get(name);
+		if (val == null && defList != null) val = defList.get(name);
 		if (val == null) return "";
 		return val;
 	}
@@ -66,11 +76,16 @@ public class LangLoader {
 		this.lang = lang;
 	}
 	
-	private void loadDefaults() {
+	// This function updates on-disk language files
+	// with missing lines from the in-JAR files
+	private void updateLanguage(String lang) {
+		// Load the current language file
+		HashMap<String, String> curLang = load(lang);
+		
 		InputStream is = Stargate.class.getResourceAsStream("resources/" + lang + ".txt");
 		if (is == null) return;
-		Stargate.log.info("[Stargate] Extracting initial language file -- " + lang + ".txt");
 		
+		boolean updated = false;
 		FileOutputStream fos = null;
 		try {
 			// Input stuff
@@ -83,9 +98,28 @@ public class LangLoader {
 			BufferedWriter bw = new BufferedWriter(out);
 			
 			String line = br.readLine();
+			boolean firstLine = true;
 			while (line != null) {
-				bw.write(line);
-				bw.newLine();
+				// Strip UTF BOM
+				if (firstLine) line = removeUTF8BOM(line);
+				firstLine = false;
+				// Split at first "="
+				int eq = line.indexOf('=');
+				if (eq == -1) {
+					bw.newLine();
+					line = br.readLine();
+					continue;
+				}
+				String key = line.substring(0, eq);
+				
+				if (curLang == null || curLang.get(key) == null) {
+					bw.write(line);
+					bw.newLine();
+					updated = true;
+				} else {
+					bw.write(key + "=" + curLang.get(key));
+					bw.newLine();
+				}
 				line = br.readLine();
 			}
 			bw.close();
@@ -96,13 +130,25 @@ public class LangLoader {
 				try {fos.close();} catch (Exception ex) {}
 			}
 		}
+		if (updated)
+			Stargate.log.info("[Stargate] Your language file (" + lang + ".txt) has been updated");
 	}
 	
-	private boolean load() {
+	private HashMap<String, String> load(String lang) {
+		return load(lang, null);
+	}
+	
+	private HashMap<String, String> load(String lang, InputStream is) {
+		HashMap<String, String> strings = new HashMap<String, String>();
 		FileInputStream fis = null;
+		InputStreamReader isr = null;
 		try {
-			fis = new FileInputStream(datFolder + lang + ".txt");
-			InputStreamReader isr = new InputStreamReader(fis, "UTF8");
+			if (is == null) {
+				fis = new FileInputStream(datFolder + lang + ".txt");
+				isr = new InputStreamReader(fis, "UTF8");
+			} else {
+				isr = new InputStreamReader(is, "UTF8");
+			}
 			BufferedReader br = new BufferedReader(isr);
 			String line = br.readLine();
 			boolean firstLine = true;
@@ -118,24 +164,29 @@ public class LangLoader {
 				}
 				String key = line.substring(0, eq);
 				String val = line.substring(eq + 1);
-				strList.put(key,  val);
+				strings.put(key,  val);
 				line = br.readLine();
 			}
 		} catch (Exception ex) {
-			return false;
+			return null;
 		} finally {
 			if (fis != null) {
 				try {fis.close();}
 				catch (Exception ex) {}
 			}
 		}
-		return true;
+		return strings;
 	}
 	
 	public void debug() {
 		Set<String> keys = strList.keySet();
 		for (String key : keys) {
-			Stargate.debug("LangLoader::Debug", key + " => " + strList.get(key));
+			Stargate.debug("LangLoader::Debug::strList", key + " => " + strList.get(key));
+		}
+		if (defList == null) return;
+		keys = defList.keySet();
+		for (String key : keys) {
+			Stargate.debug("LangLoader::Debug::defList", key + " => " + defList.get(key));
 		}
 	}
 	

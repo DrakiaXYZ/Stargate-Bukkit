@@ -1,3 +1,4 @@
+author=TheProbleemm
 prefix=[Stargate] 
 teleportMsg=Voce foi teleportado.
 destroyMsg=Portal destruido.
@@ -20,3 +21,8 @@ createExists=Já existe um portal com esse nome.
 createFull=Esta rede esta cheia.
 createWorldDeny=Voce nao tem acesso a esse mundo.
 createConflict=Portal em conflito com um portal ja existente.
+
+signRightClick=Right click
+signToUse=to use gate
+signRandom=Random
+signDisconnected=Disconnected

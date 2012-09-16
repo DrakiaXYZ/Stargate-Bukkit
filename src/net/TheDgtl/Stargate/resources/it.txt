@@ -1,3 +1,4 @@
+author=fr33soul
 prefix=[Stargate] 
 teleportMsg=Teletrasporto
 destroyMsg=Portale distrutto
@@ -20,3 +21,8 @@ createExists=Questo nome gia' esiste
 createFull=Questa rete e' piena
 createWorldDeny=Non hai accesso a questo mondo
 createConflict=Il portale crea conflitti con uno gia' esistente
+
+signRightClick=Right click
+signToUse=to use gate
+signRandom=Random
+signDisconnected=Disconnected

@@ -212,6 +212,14 @@ Client randomly crashes on teleport.
 =============
   Changes
 =============
+[Version 0.7.8.0]
+ - Updated languages to include sign text (Please update any languages you are able!)
+ - Resolved NPE due to Bukkit bug with signs
+ - Resolved issue regarding new getTargetBlock code throwing an exception
+ - Languages now auto-update based on the .JAR version (New entries only, doesn't overwrite customization)
+ - New command "/sg about", will list the author of the current language file if available 
+ - Language now has a fallback to English for missing lines (It's the only language I can personally update on release)
+ - Added Spanish (Thanks Manuestaire) and Hungarian (Thanks HPoltergeist)
 [Version 0.7.7.5]
  - Resolve issue of right clicking introduced in 1.3.1/2
 [Version 0.7.7.4]

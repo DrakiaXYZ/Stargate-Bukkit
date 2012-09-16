@@ -1,4 +1,5 @@
-﻿prefix=[Stargate] 
+﻿author=Dauphin14
+prefix=[Stargate] 
 teleportMsg=Téléportation Réussie.
 destroyMsg=Portail detruit.
 invalidMsg=Destination invalide.
@@ -20,3 +21,8 @@ createExists=Il existe déjà un portail avec le même nom.
 createFull=Le reseau est plein.
 createWorldDeny=Vous n'avez pas accès à ce monde.
 createConflict=Ce portail entre en conflit avec un portail déjà existant.
+
+signRightClick=Right click
+signToUse=to use gate
+signRandom=Random
+signDisconnected=Disconnected

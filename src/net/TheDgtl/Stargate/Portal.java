@@ -23,7 +23,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -670,28 +669,27 @@ public class Portal {
 	}
 
 	public final void drawSign() {
-		BlockState bs = null;
-		bs = id.getBlock().getState();
-		if (!(bs instanceof Sign)) {
+		Material sMat = id.getBlock().getType();
+		if (sMat != Material.SIGN && sMat != Material.WALL_SIGN && sMat != Material.SIGN_POST) {
 			Stargate.log.warning("[Stargate] Sign block is not a Sign object");
 			Stargate.debug("Portal::drawSign", "Block: " + id.getBlock().getType() + " @ " + id.getBlock().getLocation());
 			return;
 		}
-		Sign sign = (Sign)id.getBlock().getState();
+		Sign sign = (Sign)new StargateSign(id.getBlock());
 		Stargate.setLine(sign, 0, "-" + name + "-");
 		int max = destinations.size() - 1;
 		int done = 0;
 
 		if (!isActive()) {
-			Stargate.setLine(sign, ++done, "Right click");
-			Stargate.setLine(sign, ++done, "to use gate");
+			Stargate.setLine(sign, ++done, Stargate.getString("signRightClick"));
+			Stargate.setLine(sign, ++done, Stargate.getString("signToUse"));
 			if (!noNetwork) {
 				Stargate.setLine(sign, ++done, "(" + network + ")");
 			}
 		} else {
 			if (isFixed()) {
 				if (isRandom()) {
-					Stargate.setLine(sign, ++done, "> Random <");
+					Stargate.setLine(sign, ++done, "> " + Stargate.getString("signRandom") + " <");
 				} else {
 					Stargate.setLine(sign, ++done, ">" + destination + "<");
 				}
@@ -702,7 +700,7 @@ public class Portal {
 				}
 				Portal dest = Portal.getByName(destination, network);
 				if (dest == null && !isRandom()) {
-					Stargate.setLine(sign, ++done, "Disconnected");
+					Stargate.setLine(sign, ++done, Stargate.getString("signDisconnected"));
 				} else {
 					Stargate.setLine(sign, ++done, "");
 				}

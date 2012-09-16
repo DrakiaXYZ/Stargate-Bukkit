@@ -144,9 +144,12 @@ public class Stargate extends JavaPlugin {
 		pm.registerEvents(new sListener(), this);
 		
 		this.loadConfig();
+		
+		// It is important to load languages here, as they are used during reloadGates()
+		lang = new LangLoader(langFolder, Stargate.langName);
+		
 		this.migrate();
 		this.reloadGates();
-		lang = new LangLoader(langFolder, Stargate.langName);
 		
 		// Check to see if iConomy/Permissions is loaded yet.
 		permissions = (Permissions)checkPlugin("Permissions");
@@ -792,7 +795,12 @@ public class Stargate extends JavaPlugin {
 			Player player = event.getPlayer();
 			Block block = null;
 			if (event.isCancelled() && event.getAction() == Action.RIGHT_CLICK_AIR) {
-				block = player.getTargetBlock(null, 5);
+				try {
+					block = player.getTargetBlock(null, 5);
+				} catch (IllegalStateException ex) {
+					// We can safely ignore this exception, it only happens in void or max height
+					return;
+				}
 			} else {
 				block = event.getClickedBlock();
 			}
@@ -1228,16 +1236,22 @@ public class Stargate extends JavaPlugin {
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		if (sender instanceof Player) {
-			Player p = (Player)sender;
-			if (!hasPerm(p, "stargate.admin") && !hasPerm(p, "stargate.admin.reload")) {
-				sendMessage(sender, "Permission Denied");
-				return true;
-			}
-		}
 		String cmd = command.getName();
 		if (cmd.equalsIgnoreCase("sg")) {
 			if (args.length != 1) return false;
+			if (args[0].equalsIgnoreCase("about")) {
+				sender.sendMessage("Stargate Plugin created by Drakia");
+				if (!lang.getString("author").isEmpty())
+					sender.sendMessage("Language created by " + lang.getString("author"));
+				return true;
+			}
+			if (sender instanceof Player) {
+				Player p = (Player)sender;
+				if (!hasPerm(p, "stargate.admin") && !hasPerm(p, "stargate.admin.reload")) {
+					sendMessage(sender, "Permission Denied");
+					return true;
+				}
+			}
 			if (args[0].equalsIgnoreCase("reload")) {
 				// Deactivate portals
 				for (Portal p : activeList) {
