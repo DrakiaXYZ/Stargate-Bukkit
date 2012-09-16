@@ -220,6 +220,7 @@ Client randomly crashes on teleport.
  - New command "/sg about", will list the author of the current language file if available 
  - Language now has a fallback to English for missing lines (It's the only language I can personally update on release)
  - Added Spanish (Thanks Manuestaire) and Hungarian (Thanks HPoltergeist)
+ - Added portal.setOwner(String) API
 [Version 0.7.7.5]
  - Resolve issue of right clicking introduced in 1.3.1/2
 [Version 0.7.7.4]

@@ -288,6 +288,10 @@ public class Portal {
 		return owner;
 	}
 	
+	public void setOwner(String owner) {
+		this.owner = owner;
+	}
+	
 	public Blox[] getEntrances() {
 		if (entrances == null) {
 			RelativeBlockVector[] space = gate.getEntrances();
