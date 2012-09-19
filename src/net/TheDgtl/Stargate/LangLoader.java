@@ -94,7 +94,7 @@ public class LangLoader {
 			
 			// Save file
 			fos = new FileOutputStream(datFolder + lang + ".txt");
-			OutputStreamWriter out = new OutputStreamWriter(fos);
+			OutputStreamWriter out = new OutputStreamWriter(fos, "UTF8");
 			BufferedWriter bw = new BufferedWriter(out);
 			
 			String line = br.readLine();
