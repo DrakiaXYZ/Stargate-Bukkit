@@ -22,7 +22,7 @@ createFull=Ez a hálózat tele van
 createWorldDeny=Nincs hozzáférésed ahhoz a világhoz
 createConflict=Ez a kapu ütközik egy meglévö kapuval
 
-signRightClick=Right click
-signToUse=to use gate
+signRightClick=Jobb katt a
+signToUse=használathoz
 signRandom=Random
-signDisconnected=Disconnected
+signDisconnected=Szétkapcsolva
