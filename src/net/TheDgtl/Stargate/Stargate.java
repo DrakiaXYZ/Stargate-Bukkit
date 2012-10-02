@@ -715,7 +715,7 @@ public class Stargate extends JavaPlugin {
 					for (int k = -2; k < 2; k++) {
 						Block b = world.getBlockAt(cX + i, cY + j, cZ + k);
 						// We only need to worry about portal mat
-						if (b.getType() != Material.PORTAL) continue;
+						if (b.getType() != Material.WATER) continue;
 						Portal portal = Portal.getByEntrance(b);
 						if (portal != null) {
 							event.setCancelled(true);
