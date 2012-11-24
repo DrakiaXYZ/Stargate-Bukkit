@@ -49,3 +49,4 @@ chargefreedestination: true
 freegatesgreen: false
 debug: false
 permdebug: false
+enableBungee: false

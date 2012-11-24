@@ -814,6 +814,13 @@ public class Stargate extends JavaPlugin {
 			
 			Stargate.sendMessage(player, Stargate.getString("teleportMsg"), false);
 			if (portal.isBungee()) {
+				
+				if (!enableBungee) {
+					player.sendMessage(Stargate.getString("bungeeDisabled"));
+					portal.close(false);
+					return;
+				}
+				
 				portal.teleport(player, portal, event);
 				
 				// Teleport player via BungeeCord

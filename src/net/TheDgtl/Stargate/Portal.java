@@ -1366,7 +1366,7 @@ public class Portal {
 
 					if (!portal.isFixed()) continue;
 					
-					if (portal.isBungee()) {
+					if (Stargate.enableBungee && portal.isBungee()) {
 						OpenCount++;
 						portal.open(true);
 						portal.drawSign();
