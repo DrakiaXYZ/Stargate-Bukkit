@@ -1,8 +1,8 @@
 author=Manuestaire
 prefix=[Stargate] 
 teleportMsg=Teletransportado
-destroyMsg=Portal Destruido
-invalidMsg=Destino Inválido
+destroyMsg=Portal Destruído
+invalidMsg=Elige Destino
 blockMsg=Destino Bloqueado
 destEmpty=La lista de destinos está vacía
 denyMsg=Acceso denegado
@@ -22,7 +22,7 @@ createFull=Esta red está llena
 createWorldDeny=No tienes permisos para acceder a ese mundo
 createConflict=El portal entra en conflicto con un portal ya existente
 
-signRightClick=Right click
-signToUse=to use gate
-signRandom=Random
-signDisconnected=Disconnected
+signRightClick=Click derecho
+signToUse=para usar
+signRandom=Aleatorio
+signDisconnected=Desconectado

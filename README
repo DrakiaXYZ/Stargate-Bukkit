@@ -212,6 +212,10 @@ Client randomly crashes on teleport.
 =============
   Changes
 =============
+[Version 0.7.9.0]
+ - Added BungeeCord multi-server support (Requires Stargate-Bungee for BungeeCord)
+ - Updated Spanish language file
+ - Added basic plugin metrics via http://mcstats.org/
 [Version 0.7.8.1]
  - Resolve issue of language file being overwritten as ANSI instead of UTF8
 [Version 0.7.8.0]

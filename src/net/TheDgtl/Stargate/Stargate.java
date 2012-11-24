@@ -1,6 +1,7 @@
 package net.TheDgtl.Stargate;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -11,6 +12,7 @@ import java.util.logging.Logger;
 import net.TheDgtl.Stargate.event.StargateAccessEvent;
 import net.TheDgtl.Stargate.event.StargateDestroyEvent;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -98,6 +100,7 @@ public class Stargate extends JavaPlugin {
 	public static boolean handleVehicles = true;
 	public static boolean sortLists = false;
 	public static boolean protectEntrance = false;
+	public static boolean enableBungee = true;
 	public static ChatColor signColor;
 	
 	// Temp workaround for snowmen, don't check gate entrance
@@ -145,6 +148,12 @@ public class Stargate extends JavaPlugin {
 		
 		this.loadConfig();
 		
+		// Enable the required channels for Bungee support
+		if (enableBungee) {
+			Bukkit.getMessenger().registerOutgoingPluginChannel(this, "SGBungee");
+			Bukkit.getMessenger().registerIncomingPluginChannel(this, "SGBungee", new pmListener());
+		}
+		
 		// It is important to load languages here, as they are used during reloadGates()
 		lang = new LangLoader(langFolder, Stargate.langName);
 		
@@ -166,6 +175,19 @@ public class Stargate extends JavaPlugin {
 		
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new SGThread(), 0L, 100L);
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new BlockPopulatorThread(), 0L, 1L);
+		
+		// Enable Plugin Metrics
+		try {
+			MetricsLite ml = new MetricsLite(this);
+			if (!ml.isOptOut()) {
+				ml.start();
+				log.info("[Stargate] Plugin metrics enabled.");
+			} else {
+				log.info("[Stargate] Plugin metrics not enabled.");
+			}
+		} catch (IOException ex) {
+			log.warning("[Stargate] Error enabling plugin metrics: " + ex);
+		}
 	}
 
 	public void loadConfig() {
@@ -186,6 +208,7 @@ public class Stargate extends JavaPlugin {
 		handleVehicles = newConfig.getBoolean("handleVehicles");
 		sortLists = newConfig.getBoolean("sortLists");
 		protectEntrance = newConfig.getBoolean("protectEntrance");
+		enableBungee = newConfig.getBoolean("enableBungee");
 		// Sign color
 		String sc = newConfig.getString("signColor");
 		try {
@@ -567,7 +590,7 @@ public class Stargate extends JavaPlugin {
 		// Portal is free
 		if (src.isFree()) return 0;
 		// Not charging for free destinations
-		if (!iConomyHandler.chargeFreeDestination && dest.isFree()) return 0;
+		if (dest != null && !iConomyHandler.chargeFreeDestination && dest.isFree()) return 0;
 		// Cost is 0 if the player owns this gate and funds go to the owner
 		if (src.getGate().getToOwner() && src.getOwner().equalsIgnoreCase(player.getName())) return 0;
 		// Player gets free gate use
@@ -636,6 +659,9 @@ public class Stargate extends JavaPlugin {
 			
 			Portal portal = Portal.getByEntrance(event.getTo());
 			if (portal == null || !portal.isOpen()) return;
+			
+			// We don't support vehicles in Bungee portals
+			if (portal.isBungee()) return;
 			
 			if (passenger instanceof Player) {
 				Player player = (Player)passenger;
@@ -743,16 +769,17 @@ public class Stargate extends JavaPlugin {
 			}
 			
 			Portal destination = portal.getDestination(player);
-			if (destination == null) return;
+			if (!portal.isBungee() && destination == null) return;
 			
 			boolean deny = false;
 			// Check if player has access to this network
+			// For Bungee gates this will be the target server name
 			if (!canAccessNetwork(player, portal.getNetwork())) {
 				deny = true;
 			}
 			
 			// Check if player has access to destination world
-			if (!canAccessWorld(player, destination.getWorld().getName())) {
+			if (!portal.isBungee() && !canAccessWorld(player, destination.getWorld().getName())) {
 				deny = true;
 			}
 			
@@ -786,6 +813,18 @@ public class Stargate extends JavaPlugin {
 			}
 			
 			Stargate.sendMessage(player, Stargate.getString("teleportMsg"), false);
+			if (portal.isBungee()) {
+				portal.teleport(player, portal, event);
+				
+				// Teleport player via BungeeCord
+				String pMsg = portal.getNetwork() + "@#@" + portal.getDestinationName();
+				player.sendPluginMessage(stargate, "SGBungee", pMsg.getBytes());
+				
+				// Close portal if required (Should never be)
+				portal.close(false);
+				return;
+			}
+			
 			destination.teleport(player, portal, event);
 			portal.close(false);
 		}
