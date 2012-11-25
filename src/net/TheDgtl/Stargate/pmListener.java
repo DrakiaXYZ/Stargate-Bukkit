@@ -19,7 +19,5 @@ public class pmListener implements PluginMessageListener {
 		
 		// Teleport the player to their destination portal
 		dest.teleport(player, dest, null);
-		Stargate.debug("PML", "Recieved message: " + new String(message) + " Player: " + player.getName());
 	}
-
 }
