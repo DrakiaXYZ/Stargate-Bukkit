@@ -7,7 +7,7 @@ public class pmListener implements PluginMessageListener {
 
 	@Override
 	public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-		if (!channel.equals("SGBungee")) return;
+		if (!channel.equals("SGBungee") || !Stargate.enableBungee) return;
 		
 		// Message should be destination gate name.
 		Portal dest = Portal.getBungeeGate(new String(message));
