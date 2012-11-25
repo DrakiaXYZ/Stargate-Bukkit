@@ -1313,6 +1313,8 @@ public class Stargate extends JavaPlugin {
 				Portal.clearGates();
 				Gate.clearGates();
 				
+				// Store the old Bungee enabled value
+				boolean oldEnableBungee = enableBungee;
 				// Reload data
 				loadConfig();
 				reloadGates();
@@ -1333,6 +1335,18 @@ public class Stargate extends JavaPlugin {
 					iConomyHandler.register = null;
 					iConomyHandler.economy = null;
 				}
+				
+				// Enable the required channels for Bungee support
+				if (oldEnableBungee != enableBungee) {
+					if (enableBungee) {
+						Bukkit.getMessenger().registerOutgoingPluginChannel(this, "SGBungee");
+						Bukkit.getMessenger().registerIncomingPluginChannel(this, "SGBungee", new pmListener());
+					} else {
+						Bukkit.getMessenger().unregisterIncomingPluginChannel(this, "SGBungee");
+						Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "SGBungee");
+					}
+				}
+				
 				sendMessage(sender, "Stargate reloaded");
 				return true;
 			}

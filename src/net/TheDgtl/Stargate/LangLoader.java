@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -80,6 +81,9 @@ public class LangLoader {
 	// with missing lines from the in-JAR files
 	private void updateLanguage(String lang) {
 		// Load the current language file
+		ArrayList<String> keyList = new ArrayList<String>();
+		ArrayList<String> valList = new ArrayList<String>();
+		
 		HashMap<String, String> curLang = load(lang);
 		
 		InputStream is = Stargate.class.getResourceAsStream("resources/" + lang + ".txt");
@@ -92,11 +96,6 @@ public class LangLoader {
 			InputStreamReader isr = new InputStreamReader(is);
 			BufferedReader br = new BufferedReader(isr);
 			
-			// Save file
-			fos = new FileOutputStream(datFolder + lang + ".txt");
-			OutputStreamWriter out = new OutputStreamWriter(fos, "UTF8");
-			BufferedWriter bw = new BufferedWriter(out);
-			
 			String line = br.readLine();
 			boolean firstLine = true;
 			while (line != null) {
@@ -106,22 +105,44 @@ public class LangLoader {
 				// Split at first "="
 				int eq = line.indexOf('=');
 				if (eq == -1) {
-					bw.newLine();
+					keyList.add("");
+					valList.add("");
 					line = br.readLine();
 					continue;
 				}
 				String key = line.substring(0, eq);
+				String val = line.substring(eq);
 				
 				if (curLang == null || curLang.get(key) == null) {
-					bw.write(line);
-					bw.newLine();
+					keyList.add(key);
+					valList.add(val);
 					updated = true;
 				} else {
-					bw.write(key + "=" + curLang.get(key));
-					bw.newLine();
+					keyList.add(key);
+					valList.add("=" + curLang.get(key));
+					curLang.remove(key);
 				}
 				line = br.readLine();
 			}
+			br.close();
+			
+			// Save file
+			fos = new FileOutputStream(datFolder + lang + ".txt");
+			OutputStreamWriter out = new OutputStreamWriter(fos, "UTF8");
+			BufferedWriter bw = new BufferedWriter(out);
+			
+			// Output normal Language data
+			for (int i = 0; i < keyList.size(); i++) {
+				bw.write(keyList.get(i) + valList.get(i));
+				bw.newLine();
+			}
+			bw.newLine();
+			// Output any custom language strings the user had
+			for (String key : curLang.keySet()) {
+				bw.write(key + "=" + curLang.get(key));
+				bw.newLine();
+			}
+			
 			bw.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
