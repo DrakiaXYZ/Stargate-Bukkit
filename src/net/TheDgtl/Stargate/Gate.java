@@ -316,6 +316,7 @@ public class Gate {
 		HashMap<Character, Integer> types = new HashMap<Character, Integer>();
 		HashMap<Character, Integer> metadata = new HashMap<Character, Integer>();
 		HashMap<String, String> config = new HashMap<String, String>();
+		HashSet<Integer> frameTypes = new HashSet<Integer>();
 		int cols = 0;
 		
 		// Init types map
@@ -365,7 +366,7 @@ public class Gate {
 							Integer id = Integer.parseInt(value);
 
 							types.put(symbol, id);
-							frameBlocks.add(id);
+							frameTypes.add(id);
 						} else {
 							config.put(key, value);
 						}
@@ -408,10 +409,13 @@ public class Gate {
 		if (gate.getControls().length != 2) {
 			Stargate.log.log(Level.SEVERE, "Could not load Gate " + file.getName() + " - Gates must have exactly 2 control points.");
 			return null;
-		} else {
-			gate.save(file.getParent() + "/"); // Updates format for version changes
-			return gate;
 		}
+		
+		// Merge frame types, add open mat to list
+		frameBlocks.addAll(frameTypes);
+		
+		gate.save(file.getParent() + "/"); // Updates format for version changes
+		return gate;
 	}
 
 	private static int readConfig(HashMap<String, String> config, Gate gate, File file, String key, int def) {

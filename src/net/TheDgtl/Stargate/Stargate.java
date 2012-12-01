@@ -723,6 +723,7 @@ public class Stargate extends JavaPlugin {
 	}
 	
 	private class pListener implements Listener {
+
 		@EventHandler
 		public void onPlayerPortal(PlayerPortalEvent event) {
 			if (event.isCancelled()) return;
@@ -741,7 +742,8 @@ public class Stargate extends JavaPlugin {
 					for (int k = -2; k < 2; k++) {
 						Block b = world.getBlockAt(cX + i, cY + j, cZ + k);
 						// We only need to worry about portal mat
-						if (b.getType() != Material.PORTAL) continue;
+						// Commented out for now, due to new Minecraft insta-nether
+						//if (b.getType() != Material.PORTAL) continue;
 						Portal portal = Portal.getByEntrance(b);
 						if (portal != null) {
 							event.setCancelled(true);
@@ -755,9 +757,14 @@ public class Stargate extends JavaPlugin {
 		@EventHandler
 		public void onPlayerMove(PlayerMoveEvent event) {
 			if (event.isCancelled()) return;
+			
+			// Check to see if the player actually moved
+			if (event.getFrom().getBlockX() == event.getTo().getBlockX() && event.getFrom().getBlockY() == event.getTo().getBlockY() && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
+				return;
+			}
+			
 			Player player = event.getPlayer();
 			Portal portal = Portal.getByEntrance(event.getTo());
-			
 			// No portal or not open
 			if (portal == null || !portal.isOpen()) return;
 

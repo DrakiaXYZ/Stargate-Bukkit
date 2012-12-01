@@ -213,6 +213,9 @@ Unable to reproduce: Stargates teleport a user into the ground/under the ground
 =============
   Changes
 =============
+[Version 0.7.9.1]
+ - Optimize gate lookup in onPlayerMove
+ - Resolve issue where Stargates would teleport players to the nether
 [Version 0.7.9.0]
  - Added BungeeCord multi-server support (Requires Stargate-Bungee for BungeeCord)
  - Updated Spanish language file

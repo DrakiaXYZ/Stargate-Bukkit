@@ -1188,7 +1188,7 @@ public class Portal {
 	}
 
 	public static Portal getByEntrance(Location location) {
-		return getByEntrance(new Blox(location).getBlock());
+		return lookupEntrances.get(new Blox(location));
 	}
 
 	public static Portal getByEntrance(Block block) {
