@@ -694,7 +694,7 @@ public class Portal {
 			Stargate.debug("Portal::drawSign", "Block: " + id.getBlock().getType() + " @ " + id.getBlock().getLocation());
 			return;
 		}
-		Sign sign = (Sign)new StargateSign(id.getBlock());
+		Sign sign = (Sign)id.getBlock().getState();
 		Stargate.setLine(sign, 0, "-" + name + "-");
 		int max = destinations.size() - 1;
 		int done = 0;

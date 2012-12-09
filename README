@@ -207,12 +207,18 @@ createConflict=Gate conflicts with existing gate
 =============
  Known Bugs
 =============
-Unable to reproduce: Stargates teleport a user to the Nether
 Unable to reproduce: Stargates teleport a user into the ground/under the ground
+Bukkit Issue: Stargate will randomly NPE when drawing a sign. Long-standing Bukkit
+              issue, that they just made worse by disallowing me to override the
+              sign class.
 
 =============
   Changes
 =============
+[Version 0.7.9.2]
+ - Remove my custom sign class. Stupid Bukkit team.
+ - Will work with CB 1.4.5 builds, but now will break randomly due to Bukkit screwup
+ - Update MetricsLite to R6
 [Version 0.7.9.1]
  - Optimize gate lookup in onPlayerMove
  - Resolve issue where Stargates would teleport players to the nether
