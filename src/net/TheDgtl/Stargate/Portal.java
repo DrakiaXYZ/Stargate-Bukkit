@@ -850,14 +850,14 @@ public class Portal {
 		} else {
 			// Check if network exists in our network list
 			if (!lookupNamesNet.containsKey(getNetwork().toLowerCase())) {
-				Stargate.debug("register", "Network not in lookupNamesNet, adding");
+				Stargate.debug("register", "Network " + getNetwork() + " not in lookupNamesNet, adding");
 				lookupNamesNet.put(getNetwork().toLowerCase(), new HashMap<String, Portal>());
 			}
 			lookupNamesNet.get(getNetwork().toLowerCase()).put(getName().toLowerCase(), this);
 			
 			// Check if this network exists
 			if (!allPortalsNet.containsKey(getNetwork().toLowerCase())) {
-				Stargate.debug("register", "Network not in allPortalsNet, adding");
+				Stargate.debug("register", "Network " + getNetwork() + " not in allPortalsNet, adding");
 				allPortalsNet.put(getNetwork().toLowerCase(), new ArrayList<String>());
 			}
 			allPortalsNet.get(getNetwork().toLowerCase()).add(getName().toLowerCase());
@@ -1204,7 +1204,7 @@ public class Portal {
 	}
 	
 	public static Portal getBungeeGate(String name) {
-		return bungeePortals.get(name);
+		return bungeePortals.get(name.toLowerCase());
 	}
 
 	public static void saveAllGates(World world) {

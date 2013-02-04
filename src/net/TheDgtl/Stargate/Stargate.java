@@ -1,9 +1,13 @@
 package net.TheDgtl.Stargate;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
@@ -40,6 +44,7 @@ import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.server.PluginDisableEvent;
@@ -116,6 +121,9 @@ public class Stargate extends JavaPlugin {
 	// Used for populating gate open/closed material.
 	public static Queue<BloxPopulator> blockPopulatorQueue = new LinkedList<BloxPopulator>();
 	
+	// HashMap of player names for Bungee support
+	public static Map<String, String> bungeeQueue = new HashMap<String, String>();
+	
 	public void onDisable() {
 		Portal.closeAllGates();
 		Portal.clearGates();
@@ -150,8 +158,8 @@ public class Stargate extends JavaPlugin {
 		
 		// Enable the required channels for Bungee support
 		if (enableBungee) {
-			Bukkit.getMessenger().registerOutgoingPluginChannel(this, "SGBungee");
-			Bukkit.getMessenger().registerIncomingPluginChannel(this, "SGBungee", new pmListener());
+			Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+			Bukkit.getMessenger().registerIncomingPluginChannel(this, "BungeeCord", new pmListener());
 		}
 		
 		// It is important to load languages here, as they are used during reloadGates()
@@ -723,6 +731,21 @@ public class Stargate extends JavaPlugin {
 	}
 	
 	private class pListener implements Listener {
+		@EventHandler
+		public void onPlayerJoin(PlayerJoinEvent event) {
+			if (!enableBungee) return;
+			
+			Player player = event.getPlayer();
+			String destination = bungeeQueue.get(player.getName().toLowerCase());
+			if (destination == null) return;
+			
+			Portal portal = Portal.getBungeeGate(destination);
+			if (portal == null) {
+				Stargate.debug("PlayerJoin", "Error fetching destination portal: " + destination);
+				return;
+			}
+			portal.teleport(player, portal, null);
+		}
 
 		@EventHandler
 		public void onPlayerPortal(PlayerPortalEvent event) {
@@ -820,19 +843,51 @@ public class Stargate extends JavaPlugin {
 			}
 			
 			Stargate.sendMessage(player, Stargate.getString("teleportMsg"), false);
+			
+			// BungeeCord Support
 			if (portal.isBungee()) {
-				
 				if (!enableBungee) {
 					player.sendMessage(Stargate.getString("bungeeDisabled"));
 					portal.close(false);
 					return;
 				}
 				
+				// Teleport the player back to this gate, for sanity's sake
 				portal.teleport(player, portal, event);
 				
-				// Teleport player via BungeeCord
-				String pMsg = portal.getNetwork() + "@#@" + portal.getDestinationName();
-				player.sendPluginMessage(stargate, "SGBungee", pMsg.getBytes());
+				// Send the SGBungee packet first, it will be queued by BC if required
+				try {
+					// Build the message, format is <player>#@#<destination>
+					String msg = event.getPlayer().getName() + "#@#" + portal.getDestinationName();
+					// Build the message data, sent over the SGBungee bungeecord channel
+					ByteArrayOutputStream bao = new ByteArrayOutputStream();
+					DataOutputStream msgData = new DataOutputStream(bao);
+					msgData.writeUTF("Forward");
+					msgData.writeUTF(portal.getNetwork());	// Server
+					msgData.writeUTF("SGBungee");			// Channel
+					msgData.writeShort(msg.length()); 	// Data Length
+					msgData.writeBytes(msg); 			// Data
+					player.sendPluginMessage(stargate, "BungeeCord", bao.toByteArray());
+				} catch (IOException ex) {
+					Stargate.log.severe("[Stargate] Error sending BungeeCord teleport packet");
+					ex.printStackTrace();
+					return;
+				}
+				
+				// Connect player to new server
+				try {
+					ByteArrayOutputStream bao = new ByteArrayOutputStream();
+					DataOutputStream msgData = new DataOutputStream(bao);
+					msgData.writeUTF("Connect");
+					msgData.writeUTF(portal.getNetwork());
+					
+					player.sendPluginMessage(stargate, "BungeeCord", bao.toByteArray());
+					bao.reset();
+				} catch(IOException ex) {
+					Stargate.log.severe("[Stargate] Error sending BungeeCord connect packet");
+					ex.printStackTrace();
+					return;
+				}
 				
 				// Close portal if required (Should never be)
 				portal.close(false);
@@ -1346,11 +1401,11 @@ public class Stargate extends JavaPlugin {
 				// Enable the required channels for Bungee support
 				if (oldEnableBungee != enableBungee) {
 					if (enableBungee) {
-						Bukkit.getMessenger().registerOutgoingPluginChannel(this, "SGBungee");
-						Bukkit.getMessenger().registerIncomingPluginChannel(this, "SGBungee", new pmListener());
+						Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+						Bukkit.getMessenger().registerIncomingPluginChannel(this, "BungeeCord", new pmListener());
 					} else {
-						Bukkit.getMessenger().unregisterIncomingPluginChannel(this, "SGBungee");
-						Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "SGBungee");
+						Bukkit.getMessenger().unregisterIncomingPluginChannel(this, "BungeeCord");
+						Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "BungeeCord");
 					}
 				}
 				
