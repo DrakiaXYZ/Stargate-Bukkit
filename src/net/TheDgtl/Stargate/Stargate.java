@@ -1104,7 +1104,6 @@ public class Stargate extends JavaPlugin {
 		
 		@EventHandler
 		public void onBlockFromTo(BlockFromToEvent event) {
-			if (!Stargate.protectEntrance) return;
 			Portal portal = Portal.getByEntrance(event.getBlock());
 
 			if (portal != null) {

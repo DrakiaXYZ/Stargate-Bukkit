@@ -215,6 +215,8 @@ Bukkit Issue: Stargate will randomly NPE when drawing a sign. Long-standing Bukk
 =============
   Changes
 =============
+[Version 0.7.9.4]
+ - Fixed an issue where water gates broke, oops
 [Version 0.7.9.3]
  - Update BungeeCord integration for b152+
 [Version 0.7.9.2]
