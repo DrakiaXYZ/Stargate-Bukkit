@@ -1101,7 +1101,17 @@ public class Stargate extends JavaPlugin {
 			portal.unregister(true);
 			Stargate.sendMessage(player, Stargate.getString("destroyMsg"), false);
 		}
-		
+
+		@EventHandler
+		public void onBlockPhysics(BlockPhysicsEvent event) {
+			// Only check for gates if it's a portal block
+			Block block = event.getBlock();
+			if (block.getTypeId() != 90) return;
+			
+			Portal portal = Portal.getByEntrance(block);
+			if (portal != null) event.setCancelled(true);
+		}
+
 		@EventHandler
 		public void onBlockFromTo(BlockFromToEvent event) {
 			Portal portal = Portal.getByEntrance(event.getBlock());
