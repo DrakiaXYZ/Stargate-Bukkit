@@ -215,6 +215,10 @@ Bukkit Issue: Stargate will randomly NPE when drawing a sign. Long-standing Bukk
 =============
   Changes
 =============
+[Version 0.7.9.6]
+ - Actually remove the player from the BungeeQueue when they connect. Oops :)
+ - Implement stargate.server nodes
+ - Improve the use of negation. You can now negate networks/worlds/servers while using stargate.use permissions.
 [Version 0.7.9.5]
  - Fixed an issue with portal material not showing up (Oh, that code WAS useful)
 [Version 0.7.9.4]

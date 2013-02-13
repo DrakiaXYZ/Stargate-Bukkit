@@ -418,10 +418,8 @@ public class Stargate extends JavaPlugin {
 	 * Check whether player can teleport to dest world
 	 */
 	public static boolean canAccessWorld(Player player, String world) {
-		// Can use all Stargate player features
-		if (hasPerm(player, "stargate.use")) return true;
-		// Can access all worlds
-		if (hasPerm(player, "stargate.world")) {
+		// Can use all Stargate player features or access all worlds
+		if (hasPerm(player, "stargate.use") || hasPerm(player, "stargate.world")) {
 			// Do a deep check to see if the player lacks this specific world node
 			if (!hasPermDeep(player, "stargate.world." + world)) return false;
 			return true;
@@ -435,10 +433,8 @@ public class Stargate extends JavaPlugin {
 	 * Check whether player can use network
 	 */
 	public static boolean canAccessNetwork(Player player, String network) {
-		// Can use all Stargate player features
-		if (hasPerm(player, "stargate.use")) return true;
-		// Can access all networks
-		if (hasPerm(player, "stargate.network")) {
+		// Can user all Stargate player features, or access all networks
+		if (hasPerm(player, "stargate.use") || hasPerm(player, "stargate.network")) {
 			// Do a deep check to see if the player lacks this specific network node
 			if (!hasPermDeep(player, "stargate.network." + network)) return false;
 			return true;
@@ -446,9 +442,24 @@ public class Stargate extends JavaPlugin {
 		// Can access this network
 		if (hasPerm(player, "stargate.network." + network)) return true;
 		// Is able to create personal gates (Assumption is made they can also access them)
-		String playerName = player.getName();
+		String playerName = player.getName().toLowerCase();
 		if (playerName.length() > 11) playerName = playerName.substring(0, 11);
 		if (network.equals(playerName) && hasPerm(player, "stargate.create.personal")) return true;
+		return false;
+	}
+	
+	/*
+	 * Check whether the player can access this server
+	 */
+	public static boolean canAccessServer(Player player, String server) {
+		// Can user all Stargate player features, or access all servers
+		if (hasPerm(player, "stargate.use") || hasPerm(player, "stargate.servers")) {
+			// Do a deep check to see if the player lacks this specific server node
+			if (!hasPermDeep(player, "stargate.server." + server)) return false;
+			return true;
+		}
+		// Can access this server
+		if (hasPerm(player, "stargate.server." + server)) return true;
 		return false;
 	}
 	
@@ -736,7 +747,7 @@ public class Stargate extends JavaPlugin {
 			if (!enableBungee) return;
 			
 			Player player = event.getPlayer();
-			String destination = bungeeQueue.get(player.getName().toLowerCase());
+			String destination = bungeeQueue.remove(player.getName().toLowerCase());
 			if (destination == null) return;
 			
 			Portal portal = Portal.getBungeeGate(destination);
@@ -802,15 +813,21 @@ public class Stargate extends JavaPlugin {
 			if (!portal.isBungee() && destination == null) return;
 			
 			boolean deny = false;
-			// Check if player has access to this network
-			// For Bungee gates this will be the target server name
-			if (!canAccessNetwork(player, portal.getNetwork())) {
-				deny = true;
-			}
-			
-			// Check if player has access to destination world
-			if (!portal.isBungee() && !canAccessWorld(player, destination.getWorld().getName())) {
-				deny = true;
+			// Check if player has access to this server for Bungee gates
+			if (portal.isBungee()) {
+				if (!canAccessServer(player, portal.getNetwork())) {
+					deny = true;
+				}
+			} else {
+				// Check if player has access to this network
+				if (!canAccessNetwork(player, portal.getNetwork())) {
+					deny = true;
+				}
+				
+				// Check if player has access to destination world
+				if (!canAccessWorld(player, destination.getWorld().getName())) {
+					deny = true;
+				}
 			}
 			
 			if (!canAccessPortal(player, portal, deny)) {
