@@ -215,6 +215,8 @@ Bukkit Issue: Stargate will randomly NPE when drawing a sign. Long-standing Bukk
 =============
   Changes
 =============
+[Version 0.7.9.7]
+ - Do the Bungee check after the gate layout check.
 [Version 0.7.9.6]
  - Actually remove the player from the BungeeQueue when they connect. Oops :)
  - Implement stargate.server nodes
