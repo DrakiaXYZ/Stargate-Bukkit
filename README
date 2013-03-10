@@ -210,7 +210,7 @@ createConflict=Gate conflicts with existing gate
 Unable to reproduce: Stargates teleport a user into the ground/under the ground
 Bukkit Issue: Stargate will randomly NPE when drawing a sign. Long-standing Bukkit
               issue, that they just made worse by disallowing me to override the
-              sign class.
+              sign class. This won't actually affect Stargate use.
 
 =============
   Changes

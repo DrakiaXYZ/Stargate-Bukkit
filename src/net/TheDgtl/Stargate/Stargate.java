@@ -31,6 +31,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
+import org.bukkit.event.Event;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -1121,14 +1122,18 @@ public class Stargate extends JavaPlugin {
 
 		@EventHandler
 		public void onBlockPhysics(BlockPhysicsEvent event) {
-			// Only check for gates if it's a portal block
 			Block block = event.getBlock();
-			if (block.getTypeId() != 90) return;
+			Portal portal = null;
 			
-			Portal portal = Portal.getByEntrance(block);
+			// Handle keeping portal material and buttons around
+			if (block.getTypeId() == 90) {
+				portal = Portal.getByEntrance(block);
+			} else if (block.getTypeId() == 77) {
+				portal = Portal.getByControl(block);
+			}
 			if (portal != null) event.setCancelled(true);
 		}
-
+		
 		@EventHandler
 		public void onBlockFromTo(BlockFromToEvent event) {
 			Portal portal = Portal.getByEntrance(event.getBlock());
