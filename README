@@ -215,6 +215,8 @@ Bukkit Issue: Stargate will randomly NPE when drawing a sign. Long-standing Bukk
 =============
   Changes
 =============
+[Version 0.7.9.8]
+ - Make sure buttons stay where they should
 [Version 0.7.9.7]
  - Do the Bungee check after the gate layout check.
 [Version 0.7.9.6]
