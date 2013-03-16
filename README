@@ -215,6 +215,8 @@ Bukkit Issue: Stargate will randomly NPE when drawing a sign. Long-standing Bukk
 =============
   Changes
 =============
+[Version 0.7.9.10]
+ - Fix personal gate permission check for players with mixed-case names
 [Version 0.7.9.9]
  - Remove "Permissions" support, we now only support SuperPerms handlers.
 [Version 0.7.9.8]

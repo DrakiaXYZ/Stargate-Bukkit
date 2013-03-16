@@ -420,7 +420,7 @@ public class Stargate extends JavaPlugin {
 		// Can access this network
 		if (hasPerm(player, "stargate.network." + network)) return true;
 		// Is able to create personal gates (Assumption is made they can also access them)
-		String playerName = player.getName().toLowerCase();
+		String playerName = player.getName();
 		if (playerName.length() > 11) playerName = playerName.substring(0, 11);
 		if (network.equals(playerName) && hasPerm(player, "stargate.create.personal")) return true;
 		return false;
