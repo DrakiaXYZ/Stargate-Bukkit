@@ -80,7 +80,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 @SuppressWarnings("unused")
 public class Stargate extends JavaPlugin {
-	public static Logger log;
 	private FileConfiguration newConfig;
 	private PluginManager pm;
 	public static Server server;
@@ -129,7 +128,6 @@ public class Stargate extends JavaPlugin {
 		PluginDescriptionFile pdfFile = this.getDescription();
 		pm = getServer().getPluginManager();
 		newConfig = this.getConfig();
-		log = Logger.getLogger("Minecraft");
 		Stargate.server = getServer();
 		Stargate.stargate = this;
 		
@@ -138,7 +136,7 @@ public class Stargate extends JavaPlugin {
 		gateFolder = getDataFolder().getPath().replaceAll("\\\\", "/") + "/gates/";
 		langFolder = getDataFolder().getPath().replaceAll("\\\\", "/") + "/lang/";
 		
-		log.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
+		getLogger.info(pdfFile.getName() + " v." + pdfFile.getVersion() + " is enabled.");
 		
 		// Register events before loading gates to stop weird things happening.
 		pm.registerEvents(new pListener(), this);
